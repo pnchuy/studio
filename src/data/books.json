@@ -1,0 +1,91 @@
+
+[
+  {
+    "id": "1",
+    "title": "The Way of Kings",
+    "author": "Brandon Sanderson",
+    "publicationDate": "2010-08-31",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "In a world of stone and storms, an unlikely hero discovers the lost magic of the Knights Radiant and fights to unite a fractured kingdom against a coming desolation.",
+    "series": "The Stormlight Archive",
+    "genre": "Epic Fantasy",
+    "youtubeLink": "https://www.youtube.com/embed/s_4d2i3H5M8"
+  },
+  {
+    "id": "2",
+    "title": "Dune",
+    "author": "Frank Herbert",
+    "publicationDate": "1965-08-01",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "The story of a young nobleman's rise to power on a desert planet that is the only source of a priceless spice, exploring themes of politics, religion, and ecology.",
+    "series": "Dune Saga",
+    "genre": "Science Fiction",
+    "youtubeLink": "https://www.youtube.com/embed/n9sFxHMi0_w"
+  },
+  {
+    "id": "3",
+    "title": "Project Hail Mary",
+    "author": "Andy Weir",
+    "publicationDate": "2021-05-04",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "An amnesiac astronaut wakes up on a solo mission in deep space, tasked with saving humanity from an extinction-level event with the help of an unexpected alien ally.",
+    "series": null,
+    "genre": "Hard Science Fiction",
+    "youtubeLink": "https://www.youtube.com/embed/cno-j2fT4gQ"
+  },
+  {
+    "id": "4",
+    "title": "The Name of the Wind",
+    "author": "Patrick Rothfuss",
+    "publicationDate": "2007-03-27",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "The tale of Kvothe, a gifted young man who grows to be the most notorious magician his world has ever seen. From a childhood in a troupe of traveling players, to years spent as an orphan in a crime-ridden city, to his daring bid to enter a legendary school of magic.",
+    "series": "The Kingkiller Chronicle",
+    "genre": "Fantasy",
+    "youtubeLink": "https://www.youtube.com/embed/J7XmF1A65e4"
+  },
+  {
+    "id": "5",
+    "title": "Mistborn: The Final Empire",
+    "author": "Brandon Sanderson",
+    "publicationDate": "2006-07-17",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "In a world where ash falls from the sky and mists rule the night, a young street urchin discovers she has a mysterious power and joins a crew of thieves to overthrow a god-like emperor.",
+    "series": "Mistborn",
+    "genre": "Fantasy",
+    "youtubeLink": "https://www.youtube.com/embed/ST5oGPG1-e0"
+  },
+  {
+    "id": "6",
+    "title": "Neuromancer",
+    "author": "William Gibson",
+    "publicationDate": "1984-07-01",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "A washed-up computer hacker is hired by a mysterious employer to pull off the ultimate hack. This novel is a cornerstone of the cyberpunk genre.",
+    "series": "Sprawl trilogy",
+    "genre": "Cyberpunk",
+    "youtubeLink": "https://www.youtube.com/embed/kxi3n42kIqI"
+  },
+    {
+    "id": "7",
+    "title": "A Wizard of Earthsea",
+    "author": "Ursula K. Le Guin",
+    "publicationDate": "1968-01-01",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "A young boy named Ged, the greatest sorcerer in all of Earthsea, who was called Sparrowhawk in his reckless youth, comes to the island of Gont, a single mountain that rises from the sea.",
+    "series": "Earthsea Cycle",
+    "genre": "Fantasy",
+    "youtubeLink": "https://www.youtube.com/embed/zpcY_s_v8kI"
+  },
+  {
+    "id": "8",
+    "title": "The Hobbit",
+    "author": "J.R.R. Tolkien",
+    "publicationDate": "1937-09-21",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "A hobbit, Bilbo Baggins, is swept into an epic quest to reclaim the lost Dwarf Kingdom of Erebor from the fearsome dragon Smaug.",
+    "series": "The Lord of the Rings",
+    "genre": "High Fantasy",
+    "youtubeLink": "https://www.youtube.com/embed/1_iU_Y5Lh20"
+  }
+]
