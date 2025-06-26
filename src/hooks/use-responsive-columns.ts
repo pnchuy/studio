@@ -30,19 +30,22 @@ const getColumns = () => {
 };
 
 export function useResponsiveColumns() {
-    const [columns, setColumns] = useState(getColumns());
+    const [columns, setColumns] = useState(5); // Start with a server-safe default
 
     useEffect(() => {
+        // This effect runs only on the client, after the initial render.
         const debouncedHandleResize = debounce(() => {
             setColumns(getColumns());
         }, 200);
 
-        window.addEventListener('resize', debouncedHandleResize);
-        
+        // Set the correct number of columns for the client's screen size
         setColumns(getColumns());
 
+        window.addEventListener('resize', debouncedHandleResize);
+        
+        // Cleanup the event listener on component unmount
         return () => window.removeEventListener('resize', debouncedHandleResize);
-    }, []);
+    }, []); // Empty dependency array ensures this runs only once on mount
 
     return columns;
 }
