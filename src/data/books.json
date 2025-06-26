@@ -87,5 +87,181 @@
     "series": "The Lord of the Rings",
     "genre": "High Fantasy",
     "youtubeLink": "https://www.youtube.com/embed/1_iU_Y5Lh20"
+  },
+  {
+    "id": "9",
+    "title": "Words of Radiance",
+    "author": "Brandon Sanderson",
+    "publicationDate": "2014-03-04",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "As the world spirals into a new war, a scholar, a soldier, and a spy must navigate political intrigue and ancient secrets to prevent the return of the Voidbringers.",
+    "series": "The Stormlight Archive",
+    "genre": "Epic Fantasy",
+    "youtubeLink": null
+  },
+  {
+    "id": "10",
+    "title": "Hyperion",
+    "author": "Dan Simmons",
+    "publicationDate": "1989-05-26",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "On the eve of Armageddon, seven pilgrims set forth on a final voyage to Hyperion seeking the answers to the unsolved riddles of their lives.",
+    "series": "Hyperion Cantos",
+    "genre": "Science Fiction",
+    "youtubeLink": null
+  },
+  {
+    "id": "11",
+    "title": "The Martian",
+    "author": "Andy Weir",
+    "publicationDate": "2011-09-27",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "An astronaut is presumed dead after a fierce storm and left behind by his crew. But he's alive and must find a way to signal to Earth that he's stranded on Mars.",
+    "series": null,
+    "genre": "Hard Science Fiction",
+    "youtubeLink": null
+  },
+  {
+    "id": "12",
+    "title": "The Wise Man's Fear",
+    "author": "Patrick Rothfuss",
+    "publicationDate": "2011-03-01",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "Kvothe's adventures continue as he travels to distant lands, learns powerful magic, and uncovers more about the mysterious Chandrian.",
+    "series": "The Kingkiller Chronicle",
+    "genre": "Fantasy",
+    "youtubeLink": null
+  },
+  {
+    "id": "13",
+    "title": "The Well of Ascension",
+    "author": "Brandon Sanderson",
+    "publicationDate": "2007-08-21",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "After overthrowing the Lord Ruler, Vin and Elend struggle to keep their new kingdom from falling into chaos from threats both internal and external.",
+    "series": "Mistborn",
+    "genre": "Fantasy",
+    "youtubeLink": null
+  },
+  {
+    "id": "14",
+    "title": "Snow Crash",
+    "author": "Neal Stephenson",
+    "publicationDate": "1992-06-01",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "In a near-future America, a pizza delivery driver for the Mafia and a hacker named Hiro Protagonist investigates a new computer virus that is also a drug.",
+    "series": null,
+    "genre": "Cyberpunk",
+    "youtubeLink": null
+  },
+  {
+    "id": "15",
+    "title": "The Tombs of Atuan",
+    "author": "Ursula K. Le Guin",
+    "publicationDate": "1971-01-01",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "A young priestess in the service of the Nameless Ones has her world turned upside down by the arrival of the wizard Ged, who seeks a legendary treasure.",
+    "series": "Earthsea Cycle",
+    "genre": "Fantasy",
+    "youtubeLink": null
+  },
+  {
+    "id": "16",
+    "title": "The Fellowship of the Ring",
+    "author": "J.R.R. Tolkien",
+    "publicationDate": "1954-07-29",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "A young hobbit, Frodo Baggins, is entrusted with an immensely powerful Ring and must begin a perilous journey to destroy it in the fires of Mount Doom.",
+    "series": "The Lord of the Rings",
+    "genre": "High Fantasy",
+    "youtubeLink": null
+  },
+  {
+    "id": "17",
+    "title": "Oathbringer",
+    "author": "Brandon Sanderson",
+    "publicationDate": "2017-11-14",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "Humanity faces a new Desolation with the return of the Voidbringers, a foe with numbers as great as their thirst for vengeance.",
+    "series": "The Stormlight Archive",
+    "genre": "Epic Fantasy",
+    "youtubeLink": null
+  },
+  {
+    "id": "18",
+    "title": "Children of Dune",
+    "author": "Frank Herbert",
+    "publicationDate": "1976-04-01",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "The children of Paul Atreides, Leto and Ghanima, contend with the political machinations of their aunt Alia and the future of the empire.",
+    "series": "Dune Saga",
+    "genre": "Science Fiction",
+    "youtubeLink": null
+  },
+  {
+    "id": "19",
+    "title": "Ancillary Justice",
+    "author": "Ann Leckie",
+    "publicationDate": "2013-10-01",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "A soldier who was once a warship's AI seeks revenge for the destruction of her ship and crew.",
+    "series": "Imperial Radch",
+    "genre": "Science Fiction",
+    "youtubeLink": null
+  },
+  {
+    "id": "20",
+    "title": "The Lies of Locke Lamora",
+    "author": "Scott Lynch",
+    "publicationDate": "2006-06-27",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "In the island city of Camorr, a talented thief and his gang, the Gentleman Bastards, con their way through the nobility.",
+    "series": "Gentleman Bastard",
+    "genre": "Fantasy",
+    "youtubeLink": null
+  },
+  {
+    "id": "21",
+    "title": "The Hero of Ages",
+    "author": "Brandon Sanderson",
+    "publicationDate": "2008-10-14",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "Vin and Elend fight to save their world from the encroaching mists and the dark god that controls them, leading to a cataclysmic final battle.",
+    "series": "Mistborn",
+    "genre": "Fantasy",
+    "youtubeLink": null
+  },
+  {
+    "id": "22",
+    "title": "Altered Carbon",
+    "author": "Richard K. Morgan",
+    "publicationDate": "2002-02-28",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "In a future where consciousness can be digitized, a former soldier is downloaded into a new body to solve a mind-bogglingly complex murder.",
+    "series": "Takeshi Kovacs",
+    "genre": "Cyberpunk",
+    "youtubeLink": null
+  },
+  {
+    "id": "23",
+    "title": "The Farthest Shore",
+    "author": "Ursula K. Le Guin",
+    "publicationDate": "1972-01-01",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "Ged, now the Archmage, and a young prince must journey to the ends of the earth to discover why magic is fading from the world.",
+    "series": "Earthsea Cycle",
+    "genre": "Fantasy",
+    "youtubeLink": null
+  },
+  {
+    "id": "24",
+    "title": "The Two Towers",
+    "author": "J.R.R. Tolkien",
+    "publicationDate": "1954-11-11",
+    "coverImage": "https://placehold.co/400x600.png",
+    "summary": "The fellowship is broken. Frodo and Sam must continue their journey to Mordor alone, while their companions face the armies of Saruman.",
+    "series": "The Lord of the Rings",
+    "genre": "High Fantasy",
+    "youtubeLink": null
   }
 ]

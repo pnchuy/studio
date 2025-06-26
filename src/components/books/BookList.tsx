@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import type { Book } from '@/types';
 import { BookCard } from './BookCard';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,11 @@ import {
 import { Search } from 'lucide-react';
 import { useSearchHistory } from '@/hooks/use-search-history';
 import { useDebounce } from '@/hooks/use-debounce';
+import { useResponsiveColumns } from '@/hooks/use-responsive-columns';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const INITIAL_ROWS = 4;
+const ROWS_TO_LOAD = 2;
 
 interface BookListProps {
   books: Book[];
@@ -25,11 +30,9 @@ export default function BookList({ books }: BookListProps) {
   const { addSearchTerm } = useSearchHistory();
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  useEffect(() => {
-    if (debouncedSearchTerm) {
-      addSearchTerm(debouncedSearchTerm);
-    }
-  }, [debouncedSearchTerm, addSearchTerm]);
+  const columns = useResponsiveColumns();
+  const [visibleCount, setVisibleCount] = useState(INITIAL_ROWS * columns);
+  const loadMoreRef = useRef(null);
 
   const filteredAndSortedBooks = useMemo(() => {
     let filtered = books.filter(
@@ -57,6 +60,44 @@ export default function BookList({ books }: BookListProps) {
       }
     });
   }, [books, searchTerm, sortOrder]);
+
+  useEffect(() => {
+    setVisibleCount(INITIAL_ROWS * columns);
+  }, [columns, searchTerm, sortOrder]);
+
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    const [target] = entries;
+    if (target.isIntersecting) {
+      setVisibleCount((prev) => Math.min(prev + ROWS_TO_LOAD * columns, filteredAndSortedBooks.length));
+    }
+  }, [columns, filteredAndSortedBooks.length]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleObserver, {
+      rootMargin: '400px', 
+    });
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [handleObserver, filteredAndSortedBooks, visibleCount]); 
+  
+  useEffect(() => {
+    if (debouncedSearchTerm) {
+      addSearchTerm(debouncedSearchTerm);
+    }
+  }, [debouncedSearchTerm, addSearchTerm]);
+
+  const booksToShow = useMemo(() => {
+    return filteredAndSortedBooks.slice(0, visibleCount);
+  }, [filteredAndSortedBooks, visibleCount]);
+  
+  const hasMore = visibleCount < filteredAndSortedBooks.length;
 
   return (
     <div className="mt-8 space-y-8">
@@ -86,12 +127,25 @@ export default function BookList({ books }: BookListProps) {
         </Select>
       </div>
 
-      {filteredAndSortedBooks.length > 0 ? (
+      {booksToShow.length > 0 ? (
+        <>
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {filteredAndSortedBooks.map((book) => (
-            <BookCard key={book.id} book={book} />
+          {booksToShow.map((book) => (
+            <BookCard key={`${book.id}-${sortOrder}`} book={book} />
           ))}
         </div>
+         {hasMore && (
+            <div ref={loadMoreRef} className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 h-20">
+              {Array.from({ length: columns }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                   <Skeleton className="aspect-[2/3] w-full" />
+                   <Skeleton className="h-6 w-3/4" />
+                   <Skeleton className="h-4 w-1/2" />
+               </div>
+              ))}
+            </div>
+          )}
+        </>
       ) : (
         <div className="text-center py-16">
             <p className="text-lg font-medium">No books found.</p>
