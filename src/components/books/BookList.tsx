@@ -17,7 +17,7 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { useResponsiveColumns } from '@/hooks/use-responsive-columns';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const INITIAL_ROWS = 4;
+const INITIAL_ROWS = 3;
 const ROWS_TO_LOAD = 2;
 
 interface BookListProps {
