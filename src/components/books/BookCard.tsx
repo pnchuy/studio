@@ -30,7 +30,7 @@ export function BookCard({ book }: BookCardProps) {
           </div>
         </CardHeader>
         <CardContent className="p-4">
-          <CardTitle className="text-lg font-headline leading-tight group-hover:text-primary">
+          <CardTitle className="text-lg font-headline leading-tight group-hover:text-primary line-clamp-2 h-[2.5em]">
             {book.title}
           </CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">{book.author}</p>
