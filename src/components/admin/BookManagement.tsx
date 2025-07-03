@@ -1,6 +1,8 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import type { Book, Author, Genre } from '@/types';
 import { getAllBooks as fetchAllBooks } from '@/lib/books';
 import { getAllAuthors as fetchAllAuthors } from '@/lib/authors';
@@ -36,6 +38,7 @@ import { useToast } from '@/hooks/use-toast';
 const BOOKS_STORAGE_KEY = 'bibliophile-books';
 const AUTHORS_STORAGE_KEY = 'bibliophile-authors';
 const GENRES_STORAGE_KEY = 'bibliophile-genres';
+const BOOKS_PER_PAGE = 50;
 
 export function BookManagement() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -43,6 +46,7 @@ export function BookManagement() {
   const [genres, setGenres] = useState<Genre[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddBookOpen, setIsAddBookOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -119,12 +123,29 @@ export function BookManagement() {
     return genreIds.map(id => genres.find(g => g.id === id)?.name).filter(Boolean).join(', ');
   }
 
+  // Pagination logic
+  const totalPages = Math.ceil(books.length / BOOKS_PER_PAGE);
+  const paginatedBooks = books.slice(
+    (currentPage - 1) * BOOKS_PER_PAGE,
+    currentPage * BOOKS_PER_PAGE
+  );
+
+  useEffect(() => {
+    const newTotalPages = Math.ceil(books.length / BOOKS_PER_PAGE);
+    if (currentPage > newTotalPages) {
+      setCurrentPage(Math.max(1, newTotalPages));
+    }
+  }, [books, currentPage]);
+
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
             <CardTitle>Quản lý sách</CardTitle>
-            <CardDescription>Thêm, sửa, xóa sách trong bộ sưu tập.</CardDescription>
+            <CardDescription>
+                Thêm, sửa, xóa sách trong bộ sưu tập. Tổng số sách: {books.length}.
+            </CardDescription>
         </div>
         <Dialog open={isAddBookOpen} onOpenChange={setIsAddBookOpen}>
             <DialogTrigger asChild>
@@ -155,52 +176,89 @@ export function BookManagement() {
             <Skeleton className="h-10 w-full" />
           </div>
         ) : (
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tiêu đề</TableHead>
-                  <TableHead>Tác giả</TableHead>
-                  <TableHead>Thể loại</TableHead>
-                  <TableHead className="text-right">Hành động</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {books.map((book) => (
-                  <TableRow key={book.id}>
-                    <TableCell className="font-medium">{book.title}</TableCell>
-                    <TableCell>{getAuthorName(book.authorId)}</TableCell>
-                    <TableCell>
-                        <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground truncate">
-                            {getGenreNames(book.genreIds)}
-                        </span>
-                    </TableCell>
-                    <TableCell className="text-right">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem disabled>
-                                    <Pencil className="mr-2 h-4 w-4"/>
-                                    Sửa (Chưa hỗ trợ)
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleBookDeleted(book.id)} className="text-destructive focus:text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4"/>
-                                    Xóa
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <>
+            <div className="border rounded-md">
+                <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead className="w-[60px]">Ảnh bìa</TableHead>
+                    <TableHead>Tiêu đề</TableHead>
+                    <TableHead>Tác giả</TableHead>
+                    <TableHead>Thể loại</TableHead>
+                    <TableHead className="text-right">Hành động</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {paginatedBooks.map((book) => (
+                    <TableRow key={book.id}>
+                        <TableCell>
+                            <Image
+                                src={book.coverImage}
+                                alt={`Bìa sách ${book.title}`}
+                                width={40}
+                                height={60}
+                                className="rounded-sm object-cover"
+                                data-ai-hint="book cover"
+                            />
+                        </TableCell>
+                        <TableCell className="font-medium">{book.title}</TableCell>
+                        <TableCell>{getAuthorName(book.authorId)}</TableCell>
+                        <TableCell>
+                            <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground truncate">
+                                {getGenreNames(book.genreIds)}
+                            </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuItem disabled>
+                                        <Pencil className="mr-2 h-4 w-4"/>
+                                        Sửa (Chưa hỗ trợ)
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleBookDeleted(book.id)} className="text-destructive focus:text-destructive">
+                                        <Trash2 className="mr-2 h-4 w-4"/>
+                                        Xóa
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                    </TableRow>
+                    ))}
+                </TableBody>
+                </Table>
+            </div>
+            {totalPages > 1 && (
+                <div className="flex items-center justify-end space-x-2 py-4">
+                    <span className="text-sm text-muted-foreground">
+                        Trang {currentPage} / {totalPages}
+                    </span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                    >
+                        Trước
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                    >
+                        Sau
+                    </Button>
+                </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
   );
 }
+
