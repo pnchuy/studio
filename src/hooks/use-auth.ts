@@ -37,7 +37,7 @@ export function useAuth() {
     if (foundUser) {
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(foundUser));
       setUser(foundUser);
-      router.push('/library');
+      router.push('/admin');
       return true;
     }
     return false;
@@ -68,7 +68,7 @@ export function useAuth() {
 
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
     setUser(newUser);
-    router.push('/library');
+    router.push('/admin');
     return { success: true };
   }, [router]);
 
