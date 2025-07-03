@@ -18,6 +18,10 @@ import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  username: z.string()
+    .min(3, { message: "Username must be at least 3 characters."})
+    .max(20, { message: "Username must not exceed 20 characters."})
+    .regex(/^[a-zA-Z0-9]+$/, { message: "Username can only contain letters and numbers."}),
   email: z.string().email({ message: "Invalid email address." }),
   password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
@@ -30,20 +34,25 @@ export function SignUpForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      username: "",
       email: "",
       password: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const success = await signup(values.name, values.email);
-    if (!success) {
+    const result = await signup(values.name, values.email, values.username);
+    if (!result.success) {
       toast({
         variant: "destructive",
         title: "Sign Up Failed",
-        description: "An account with this email already exists.",
+        description: result.message,
       });
-      form.setError("email", { message: "This email is already in use." });
+      if (result.field === 'email') {
+        form.setError("email", { message: result.message });
+      } else if (result.field === 'username') {
+        form.setError("username", { message: result.message });
+      }
     }
   }
 
@@ -58,6 +67,19 @@ export function SignUpForm() {
               <FormLabel>Name</FormLabel>
               <FormControl>
                 <Input placeholder="Jane Doe" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input placeholder="janedoe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -17,7 +17,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Invalid email address." }),
+  emailOrUsername: z.string().min(1, { message: "Email or Username is required." }),
   password: z.string().min(1, { message: "Password is required." }), // Simplified for simulation
 });
 
@@ -28,20 +28,20 @@ export function LoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      emailOrUsername: "",
       password: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const success = await login(values.email);
+    const success = await login(values.emailOrUsername);
     if (!success) {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Invalid email or password.",
+        description: "Invalid credentials.",
       });
-      form.setError("email", { message: " " });
+      form.setError("emailOrUsername", { message: " " });
       form.setError("password", { message: " " });
     }
   }
@@ -51,12 +51,12 @@ export function LoginForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="email"
+          name="emailOrUsername"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Email or Username</FormLabel>
               <FormControl>
-                <Input placeholder="admin@example.com" {...field} />
+                <Input placeholder="your_username / you@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

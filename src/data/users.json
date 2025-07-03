@@ -2,6 +2,7 @@
 [
   {
     "id": "hK2sP5",
+    "username": "adminuser",
     "name": "Admin User",
     "email": "admin@example.com",
     "joinDate": "2023-01-15",
@@ -9,6 +10,7 @@
   },
   {
     "id": "zX9vB1",
+    "username": "manageruser",
     "name": "Manager User",
     "email": "manager@example.com",
     "joinDate": "2023-02-20",
@@ -16,6 +18,7 @@
   },
   {
     "id": "mN6cQ8",
+    "username": "memberuser",
     "name": "Member User",
     "email": "member@example.com",
     "joinDate": "2023-03-10",
@@ -23,6 +26,7 @@
   },
   {
     "id": "jR4tF3",
+    "username": "deletablemember",
     "name": "Deletable Member",
     "email": "deletable.member@example.com",
     "joinDate": "2024-01-01",
@@ -30,6 +34,7 @@
   },
   {
     "id": "gY7wE9",
+    "username": "deletablemanager",
     "name": "Deletable Manager",
     "email": "deletable.manager@example.com",
     "joinDate": "2024-01-02",
