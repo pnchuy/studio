@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@/types';
 import { getAllUsers } from '@/lib/users';
@@ -8,7 +8,18 @@ import { generateId } from '@/lib/utils';
 
 const USER_STORAGE_KEY = 'bibliophile-user';
 
-export function useAuth() {
+interface AuthContextType {
+  user: User | null;
+  isLoggedIn: boolean;
+  isLoading: boolean;
+  login: (emailOrUsername: string) => Promise<boolean>;
+  logout: () => void;
+  signup: (name: string, email: string, username: string) => Promise<{ success: boolean; message?: string; field?: 'email' | 'username' }>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -86,5 +97,23 @@ export function useAuth() {
     router.push('/');
   }, [router]);
 
-  return { user, isLoggedIn: !!user, isLoading, login, logout, signup };
+  const value = {
+      user,
+      isLoggedIn: !!user,
+      isLoading,
+      login,
+      logout,
+      signup
+  };
+
+  return React.createElement(AuthContext.Provider, { value }, children);
+}
+
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }
