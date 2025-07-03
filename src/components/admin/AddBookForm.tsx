@@ -23,8 +23,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import type { Book, Author, Genre } from "@/types";
-import { getAllAuthors } from "@/lib/authors";
-import { getAllGenres } from "@/lib/genres";
 import { cn } from "@/lib/utils";
 import { ChevronsUpDown } from "lucide-react";
 
@@ -42,6 +40,8 @@ const formSchema = z.object({
 interface AddBookFormProps {
     onBookAdded: (book: Book) => void;
     onFinished: () => void;
+    authors: Author[];
+    genres: Genre[];
 }
 
 const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
@@ -70,9 +70,7 @@ const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
 };
 
 
-export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
-  const [authors, setAuthors] = useState<Author[]>([]);
-  const [genres, setGenres] = useState<Genre[]>([]);
+export function AddBookForm({ onBookAdded, onFinished, authors, genres }: AddBookFormProps) {
   const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
   const [imagePreview, setImagePreview] = useState<string | null>("https://placehold.co/400x600.png");
 
@@ -117,18 +115,6 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
       }
     }
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-        const [authorList, genreList] = await Promise.all([
-            getAllAuthors(),
-            getAllGenres()
-        ]);
-        setAuthors(authorList);
-        setGenres(genreList);
-    };
-    fetchData();
-  }, []);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const newBook: Book = {

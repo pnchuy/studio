@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { Genre } from '@/types';
-import { getAllGenres } from '@/lib/genres';
+import { getAllGenres as fetchAllGenres } from '@/lib/genres';
 import {
   Table,
   TableHeader,
@@ -31,6 +31,7 @@ import { AddGenreForm } from './AddGenreForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
+const GENRES_STORAGE_KEY = 'bibliophile-genres';
 
 export function GenreManagement() {
   const [genres, setGenres] = useState<Genre[]>([]);
@@ -38,22 +39,37 @@ export function GenreManagement() {
   const [isAddGenreOpen, setIsAddGenreOpen] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchGenres = async () => {
+ useEffect(() => {
+    const loadGenres = async () => {
+      setIsLoading(true);
       try {
-        const genreList = await getAllGenres();
-        setGenres(genreList);
+        const storedGenres = localStorage.getItem(GENRES_STORAGE_KEY);
+        if (storedGenres) {
+          setGenres(JSON.parse(storedGenres));
+        } else {
+          const initialGenres = await fetchAllGenres();
+          setGenres(initialGenres);
+          localStorage.setItem(GENRES_STORAGE_KEY, JSON.stringify(initialGenres));
+        }
       } catch (error) {
-        console.error("Failed to fetch genres", error);
+        console.error("Failed to load genres:", error);
+        const initialGenres = await fetchAllGenres();
+        setGenres(initialGenres);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchGenres();
+    loadGenres();
   }, []);
+
+  const persistGenres = (updatedGenres: Genre[]) => {
+    localStorage.setItem(GENRES_STORAGE_KEY, JSON.stringify(updatedGenres));
+    setGenres(updatedGenres);
+  };
   
   const handleGenreAdded = (newGenre: Genre) => {
-    setGenres(prev => [newGenre, ...prev]);
+    const updatedGenres = [newGenre, ...genres];
+    persistGenres(updatedGenres);
     toast({
         title: "Thêm thể loại thành công",
         description: `Thể loại "${newGenre.name}" đã được thêm.`,
@@ -62,8 +78,9 @@ export function GenreManagement() {
 
   const handleGenreDeleted = (genreId: string) => {
     const genreToDelete = genres.find(g => g.id === genreId);
-    setGenres(prev => prev.filter(genre => genre.id !== genreId));
     if (genreToDelete) {
+        const updatedGenres = genres.filter(genre => genre.id !== genreId);
+        persistGenres(updatedGenres);
         toast({
             variant: "destructive",
             title: "Đã xóa thể loại",

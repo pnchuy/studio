@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import type { Book, Author, Genre } from '@/types';
-import { getAllBooks } from '@/lib/books';
-import { getAllAuthors } from '@/lib/authors';
-import { getAllGenres } from '@/lib/genres';
+import { getAllBooks as fetchAllBooks } from '@/lib/books';
+import { getAllAuthors as fetchAllAuthors } from '@/lib/authors';
+import { getAllGenres as fetchAllGenres } from '@/lib/genres';
 import {
   Table,
   TableHeader,
@@ -33,6 +33,9 @@ import { AddBookForm } from './AddBookForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
+const BOOKS_STORAGE_KEY = 'bibliophile-books';
+const AUTHORS_STORAGE_KEY = 'bibliophile-authors';
+const GENRES_STORAGE_KEY = 'bibliophile-genres';
 
 export function BookManagement() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -44,17 +47,39 @@ export function BookManagement() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const [bookList, authorList, genreList] = await Promise.all([
-          getAllBooks(),
-          getAllAuthors(),
-          getAllGenres(),
-        ]);
-        setBooks(bookList);
-        setAuthors(authorList);
-        setGenres(genreList);
+        const storedBooks = localStorage.getItem(BOOKS_STORAGE_KEY);
+        if (storedBooks) {
+          setBooks(JSON.parse(storedBooks));
+        } else {
+          const initialBooks = await fetchAllBooks();
+          setBooks(initialBooks);
+          localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(initialBooks));
+        }
+
+        const storedAuthors = localStorage.getItem(AUTHORS_STORAGE_KEY);
+        if (storedAuthors) {
+          setAuthors(JSON.parse(storedAuthors));
+        } else {
+          const initialAuthors = await fetchAllAuthors();
+          setAuthors(initialAuthors);
+          localStorage.setItem(AUTHORS_STORAGE_KEY, JSON.stringify(initialAuthors));
+        }
+
+        const storedGenres = localStorage.getItem(GENRES_STORAGE_KEY);
+        if (storedGenres) {
+          setGenres(JSON.parse(storedGenres));
+        } else {
+          const initialGenres = await fetchAllGenres();
+          setGenres(initialGenres);
+          localStorage.setItem(GENRES_STORAGE_KEY, JSON.stringify(initialGenres));
+        }
       } catch (error) {
-        console.error("Failed to fetch data", error);
+        console.error("Failed to load data from storage, falling back to defaults", error);
+        setBooks(await fetchAllBooks());
+        setAuthors(await fetchAllAuthors());
+        setGenres(await fetchAllGenres());
       } finally {
         setIsLoading(false);
       }
@@ -63,7 +88,9 @@ export function BookManagement() {
   }, []);
   
   const handleBookAdded = (newBook: Book) => {
-    setBooks(prevBooks => [newBook, ...prevBooks]);
+    const updatedBooks = [newBook, ...books];
+    localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
+    setBooks(updatedBooks);
     toast({
         title: "Thêm sách thành công",
         description: `Sách "${newBook.title}" đã được thêm.`,
@@ -72,13 +99,15 @@ export function BookManagement() {
 
   const handleBookDeleted = (bookId: string) => {
     const bookToDelete = books.find(b => b.id === bookId);
-    setBooks(prevBooks => prevBooks.filter(book => book.id !== bookId));
     if (bookToDelete) {
-        toast({
-            variant: "destructive",
-            title: "Đã xóa sách",
-            description: `Sách "${bookToDelete.title}" đã được xóa.`,
-        });
+      const updatedBooks = books.filter(book => book.id !== bookId);
+      localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
+      setBooks(updatedBooks);
+      toast({
+          variant: "destructive",
+          title: "Đã xóa sách",
+          description: `Sách "${bookToDelete.title}" đã được xóa.`,
+      });
     }
   }
 
@@ -108,7 +137,12 @@ export function BookManagement() {
                 <DialogHeader>
                     <DialogTitle>Thêm sách mới</DialogTitle>
                 </DialogHeader>
-                <AddBookForm onBookAdded={handleBookAdded} onFinished={() => setIsAddBookOpen(false)}/>
+                <AddBookForm 
+                  onBookAdded={handleBookAdded} 
+                  onFinished={() => setIsAddBookOpen(false)}
+                  authors={authors}
+                  genres={genres}
+                />
             </DialogContent>
         </Dialog>
       </CardHeader>
