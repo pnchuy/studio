@@ -337,7 +337,7 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
             <FormItem>
               <FormLabel>Link YouTube (Trailer/Review)</FormLabel>
               <FormControl>
-                <Input placeholder="https://youtube.com/embed/..." {...field} />
+                <Input placeholder="https://youtube.com/embed/..." {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
