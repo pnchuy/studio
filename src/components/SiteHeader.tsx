@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { BookOpen, Library, LogIn, LogOut, UserPlus } from 'lucide-react';
+import { BookOpen, Library, LogIn, LogOut, UserPlus, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -24,6 +24,12 @@ export function SiteHeader() {
                 <Link href="/library">
                   <Library className="mr-2 h-4 w-4" />
                   My Library
+                </Link>
+              </Button>
+              <Button asChild variant="ghost">
+                <Link href="/admin">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Admin
                 </Link>
               </Button>
               <Button onClick={logout} variant="outline">

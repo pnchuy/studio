@@ -9,3 +9,10 @@ export type Book = {
   genre: string;
   youtubeLink: string;
 };
+
+export type User = {
+    id: string;
+    name: string;
+    email: string;
+    joinDate: string;
+};
