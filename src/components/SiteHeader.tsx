@@ -14,16 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
-// Helper function to get initials from a name
-const getInitials = (name: string = ""): string => {
-  const names = name.split(' ').filter(Boolean);
-  if (names.length === 0) return 'U'; // Default to 'U' for User
-  const firstInitial = names[0][0];
-  const lastInitial = names.length > 1 ? names[names.length - 1][0] : '';
-  return `${firstInitial}${lastInitial}`.toUpperCase();
-};
-
+import { getInitials } from '@/lib/utils';
 
 export function SiteHeader() {
   const { user, isLoggedIn, logout, isLoading } = useAuth();

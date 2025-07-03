@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Book as BookIcon, Hash, User as UserIcon } from 'lucide-react';
 import BookDetailClient from './BookDetailClient';
+import { CommentSection } from '@/components/comments/CommentSection';
 
 type BookPageProps = {
   params: {
@@ -103,6 +104,8 @@ export default async function BookPage({ params }: BookPageProps) {
                 </div>
             </div>
         )}
+
+        <CommentSection bookId={book.id} />
     </article>
   );
 }

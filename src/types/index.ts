@@ -33,3 +33,12 @@ export type User = {
     joinDate: string;
     role: 'ADMIN' | 'MANAGER' | 'MEMBER';
 };
+
+export type Comment = {
+  id: string;
+  bookId: string;
+  userId: string;
+  userName: string;
+  text: string;
+  createdAt: string; // ISO String
+};
