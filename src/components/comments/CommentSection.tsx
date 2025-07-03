@@ -109,11 +109,14 @@ export function CommentSection({ bookId }: CommentSectionProps) {
                                         <AvatarFallback>{getInitials(comment.userName)}</AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             <p className="font-semibold">{comment.userName}</p>
                                             <p className="text-xs text-muted-foreground">
                                                 {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                                             </p>
+                                            {comment.editedAt && (
+                                                <p className="text-xs text-muted-foreground italic">(đã sửa)</p>
+                                            )}
                                         </div>
                                         <p className="mt-1 text-sm text-foreground/90 whitespace-pre-wrap">{comment.text}</p>
                                     </div>

@@ -41,4 +41,5 @@ export type Comment = {
   userName: string;
   text: string;
   createdAt: string; // ISO String
+  editedAt?: string; // ISO String
 };
