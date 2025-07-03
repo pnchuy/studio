@@ -37,7 +37,11 @@ export function useAuth() {
     if (foundUser) {
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(foundUser));
       setUser(foundUser);
-      router.push('/admin');
+      if (foundUser.role === 'ADMIN' || foundUser.role === 'MANAGER') {
+        router.push('/admin');
+      } else {
+        router.push('/');
+      }
       return true;
     }
     return false;
@@ -68,7 +72,8 @@ export function useAuth() {
 
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
     setUser(newUser);
-    router.push('/admin');
+    // New users are always members, so redirect to home
+    router.push('/');
     return { success: true };
   }, [router]);
 
