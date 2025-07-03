@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import type { Book } from '@/types';
+import type { BookWithDetails } from '@/types';
 import { BookCard } from './BookCard';
 import { Input } from '@/components/ui/input';
 import {
@@ -21,7 +21,7 @@ const INITIAL_ROWS = 3;
 const ROWS_TO_LOAD = 2;
 
 interface BookListProps {
-  books: Book[];
+  books: BookWithDetails[];
 }
 
 export default function BookList({ books }: BookListProps) {
@@ -38,7 +38,7 @@ export default function BookList({ books }: BookListProps) {
     let filtered = books.filter(
       (book) =>
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.author.toLowerCase().includes(searchTerm.toLowerCase())
+        (book.author?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return filtered.sort((a, b) => {
@@ -48,9 +48,9 @@ export default function BookList({ books }: BookListProps) {
         case 'title_desc':
           return b.title.localeCompare(a.title);
         case 'author_asc':
-          return a.author.localeCompare(b.author);
+          return (a.author?.name || '').localeCompare(b.author?.name || '');
         case 'author_desc':
-          return b.author.localeCompare(a.author);
+          return (b.author?.name || '').localeCompare(a.author?.name || '');
         case 'date_newest':
           return new Date(b.publicationDate).getTime() - new Date(a.publicationDate).getTime();
         case 'date_oldest':

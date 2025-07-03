@@ -6,12 +6,12 @@ import { useSearchHistory } from '@/hooks/use-search-history';
 import { recommendBooks, RecommendBooksOutput } from '@/ai/flows/recommend-books';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import type { Book } from '@/types';
+import type { BookWithDetails } from '@/types';
 import { BookCard } from './BookCard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface BookRecommenderProps {
-  allBooks: Book[];
+  allBooks: BookWithDetails[];
 }
 
 export default function BookRecommender({ allBooks }: BookRecommenderProps) {
@@ -48,7 +48,7 @@ export default function BookRecommender({ allBooks }: BookRecommenderProps) {
 
   const recommendedBookDetails = recommendations?.recommendedBooks
     .map(title => allBooks.find(book => book.title.toLowerCase() === title.toLowerCase().replace(/['"]+/g, '')))
-    .filter((book): book is Book => book !== undefined);
+    .filter((book): book is BookWithDetails => book !== undefined);
 
   return (
     <div className="mt-6 space-y-6 rounded-lg border bg-card text-card-foreground p-6 shadow-sm">

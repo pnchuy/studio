@@ -1,8 +1,10 @@
 import { getBookById } from '@/lib/books';
+import { getAuthorById } from '@/lib/authors';
+import { getGenresByIds } from '@/lib/genres';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Book as BookIcon, Hash } from 'lucide-react';
+import { Calendar, Book as BookIcon, Hash, User as UserIcon } from 'lucide-react';
 import BookDetailClient from './BookDetailClient';
 
 type BookPageProps = {
@@ -18,8 +20,9 @@ export async function generateMetadata({ params }: BookPageProps) {
             title: 'Book Not Found'
         }
     }
+    const author = await getAuthorById(book.authorId);
     return {
-        title: `${book.title} by ${book.author} | Bibliophile`,
+        title: `${book.title} by ${author?.name || 'Unknown'} | Bibliophile`,
         description: book.summary,
     }
 }
@@ -30,6 +33,9 @@ export default async function BookPage({ params }: BookPageProps) {
   if (!book) {
     notFound();
   }
+
+  const author = await getAuthorById(book.authorId);
+  const genres = await getGenresByIds(book.genreIds);
 
   return (
     <article>
@@ -50,7 +56,10 @@ export default async function BookPage({ params }: BookPageProps) {
 
             <div className="md:col-span-2">
                 <h1 className="text-4xl font-bold font-headline leading-tight">{book.title}</h1>
-                <p className="mt-2 text-xl text-muted-foreground">{book.author}</p>
+                <div className="flex items-center gap-2 mt-2">
+                    <UserIcon className="w-5 h-5 text-muted-foreground" />
+                    <p className="text-xl text-muted-foreground">{author?.name || 'Unknown Author'}</p>
+                </div>
                 
                 <div className="mt-6 space-y-4">
                     <div className="flex items-center gap-3">
@@ -63,9 +72,11 @@ export default async function BookPage({ params }: BookPageProps) {
                             <span>Part of the <span className="font-semibold">{book.series}</span> series</span>
                         </div>
                     )}
-                     <div className="flex items-center gap-3">
-                        <Hash className="w-5 h-5 text-muted-foreground" />
-                         <Badge>{book.genre}</Badge>
+                     <div className="flex items-start gap-3">
+                        <Hash className="w-5 h-5 text-muted-foreground mt-1" />
+                        <div className="flex flex-wrap gap-2">
+                         {genres.map(genre => <Badge key={genre.id}>{genre.name}</Badge>)}
+                        </div>
                     </div>
                 </div>
 

@@ -3,8 +3,10 @@
 
 import { useEffect, useState } from 'react';
 import { useLibrary } from '@/hooks/use-library';
-import type { Book } from '@/types';
+import type { Book, Author, Genre, BookWithDetails } from '@/types';
 import { getAllBooks } from '@/lib/books';
+import { getAllAuthors } from '@/lib/authors';
+import { getAllGenres } from '@/lib/genres';
 import { BookCard } from '@/components/books/BookCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -13,23 +15,42 @@ import Link from 'next/link';
 export function FavoriteBooks() {
   const { library, isLoading: libraryLoading } = useLibrary();
   const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [allAuthors, setAllAuthors] = useState<Author[]>([]);
+  const [allGenres, setAllGenres] = useState<Genre[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchBooks() {
-      try {
-        const books = await getAllBooks();
+    async function fetchData() {
+       try {
+        const [books, authors, genres] = await Promise.all([
+            getAllBooks(),
+            getAllAuthors(),
+            getAllGenres()
+        ]);
         setAllBooks(books);
+        setAllAuthors(authors);
+        setAllGenres(genres);
       } catch (error) {
-        console.error("Failed to fetch books on client", error);
+        console.error("Failed to fetch favorite books data", error);
       } finally {
         setDataLoading(false);
       }
     }
-    fetchBooks();
+    fetchData();
   }, []);
 
-  const libraryBooks = allBooks.filter(book => library.includes(book.id));
+  const libraryBooks: BookWithDetails[] = allBooks
+    .filter(book => library.includes(book.id))
+    .map(book => {
+        const author = allAuthors.find(a => a.id === book.authorId);
+        const genres = allGenres.filter(g => book.genreIds.includes(g.id));
+        return {
+        ...book,
+        author,
+        genres,
+        };
+    });
+
   const isLoading = libraryLoading || dataLoading;
 
   if (isLoading) {

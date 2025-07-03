@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useLibrary } from '@/hooks/use-library';
-import type { Book } from '@/types';
+import type { Book, Author, Genre, BookWithDetails } from '@/types';
 import { getAllBooks } from '@/lib/books';
+import { getAllAuthors } from '@/lib/authors';
+import { getAllGenres } from '@/lib/genres';
 import { BookCard } from '@/components/books/BookCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -16,6 +18,8 @@ export default function LibraryPage() {
   const { isLoggedIn, isLoading: authLoading } = useAuth();
   const { library, isLoading: libraryLoading } = useLibrary();
   const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [allAuthors, setAllAuthors] = useState<Author[]>([]);
+  const [allGenres, setAllGenres] = useState<Genre[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -25,22 +29,37 @@ export default function LibraryPage() {
   }, [isLoggedIn, authLoading, router]);
 
   useEffect(() => {
-    async function fetchBooks() {
-      // This is a client-side fetch, which is not ideal for production
-      // but works for this simulation. A real app would use an API route.
+    async function fetchData() {
       try {
-        const books = await getAllBooks();
+        const [books, authors, genres] = await Promise.all([
+            getAllBooks(),
+            getAllAuthors(),
+            getAllGenres()
+        ]);
         setAllBooks(books);
+        setAllAuthors(authors);
+        setAllGenres(genres);
       } catch (error) {
-        console.error("Failed to fetch books on client", error);
+        console.error("Failed to fetch library data", error);
       } finally {
         setDataLoading(false);
       }
     }
-    fetchBooks();
+    fetchData();
   }, []);
 
-  const libraryBooks = allBooks.filter(book => library.includes(book.id));
+  const libraryBooks: BookWithDetails[] = allBooks
+    .filter(book => library.includes(book.id))
+    .map(book => {
+        const author = allAuthors.find(a => a.id === book.authorId);
+        const genres = allGenres.filter(g => book.genreIds.includes(g.id));
+        return {
+        ...book,
+        author,
+        genres,
+        };
+    });
+
   const isLoading = authLoading || libraryLoading || dataLoading;
 
   if (isLoading) {

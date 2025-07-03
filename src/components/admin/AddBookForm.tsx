@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,16 +15,23 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import type { Book } from "@/types";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import type { Book, Author, Genre } from "@/types";
+import { getAllAuthors } from "@/lib/authors";
+import { getAllGenres } from "@/lib/genres";
+import { cn } from "@/lib/utils";
+import { ChevronsUpDown } from "lucide-react";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Tiêu đề phải có ít nhất 2 ký tự." }),
-  author: z.string().min(2, { message: "Tác giả phải có ít nhất 2 ký tự." }),
+  authorId: z.string({ required_error: "Vui lòng chọn một tác giả." }),
   publicationDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Ngày xuất bản không hợp lệ." }),
   coverImage: z.string().url({ message: "URL ảnh bìa không hợp lệ." }),
   summary: z.string().min(10, { message: "Tóm tắt phải có ít nhất 10 ký tự." }),
   series: z.string().optional().nullable(),
-  genre: z.string().min(2, { message: "Thể loại phải có ít nhất 2 ký tự." }),
+  genreIds: z.array(z.string()).min(1, { message: "Phải chọn ít nhất một thể loại." }),
   youtubeLink: z.string().url({ message: "Link YouTube không hợp lệ." }).optional().or(z.literal('')),
 });
 
@@ -33,19 +41,34 @@ interface AddBookFormProps {
 }
 
 export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const [genres, setGenres] = useState<Genre[]>([]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
-      author: "",
+      authorId: undefined,
       publicationDate: "",
       coverImage: "https://placehold.co/400x600.png",
       summary: "",
       series: "",
-      genre: "",
+      genreIds: [],
       youtubeLink: "",
     },
   });
+
+  useEffect(() => {
+    const fetchData = async () => {
+        const [authorList, genreList] = await Promise.all([
+            getAllAuthors(),
+            getAllGenres()
+        ]);
+        setAuthors(authorList);
+        setGenres(genreList);
+    };
+    fetchData();
+  }, []);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const newBook: Book = {
@@ -57,6 +80,12 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
     onBookAdded(newBook);
     onFinished();
   }
+
+  const selectedGenres = form.watch('genreIds');
+  const selectedGenreNames = genres
+    .filter(g => selectedGenres?.includes(g.id))
+    .map(g => g.name)
+    .join(", ");
 
   return (
     <Form {...form}>
@@ -76,13 +105,66 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
         />
         <FormField
           control={form.control}
-          name="author"
+          name="authorId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tác giả</FormLabel>
-              <FormControl>
-                <Input placeholder="Brandon Sanderson" {...field} />
-              </FormControl>
+                <FormLabel>Tác giả</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Chọn một tác giả" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        {authors.map(author => (
+                            <SelectItem key={author.id} value={author.id}>
+                                {author.name}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="genreIds"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Thể loại</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button variant="outline" className={cn("w-full justify-between", !field.value?.length && "text-muted-foreground")}>
+                      <span className="truncate max-w-xs">{selectedGenreNames.length > 0 ? selectedGenreNames : "Chọn thể loại"}</span>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                    <div className="flex flex-col p-2 gap-2 max-h-60 overflow-y-auto">
+                        {genres.map((genre) => (
+                           <FormItem key={genre.id} className="flex flex-row items-center space-x-3 space-y-0">
+                                <FormControl>
+                                    <Checkbox
+                                        checked={field.value?.includes(genre.id)}
+                                        onCheckedChange={(checked) => {
+                                            const currentValue = field.value || [];
+                                            return checked
+                                            ? field.onChange([...currentValue, genre.id])
+                                            : field.onChange(currentValue.filter((value) => value !== genre.id));
+                                        }}
+                                    />
+                                </FormControl>
+                                <FormLabel className="font-normal cursor-pointer flex-1">
+                                    {genre.name}
+                                </FormLabel>
+                            </FormItem>
+                        ))}
+                    </div>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
@@ -134,19 +216,6 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
               <FormLabel>Series</FormLabel>
               <FormControl>
                 <Input placeholder="The Stormlight Archive" {...field} value={field.value ?? ''} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="genre"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Thể loại</FormLabel>
-              <FormControl>
-                <Input placeholder="Epic Fantasy" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

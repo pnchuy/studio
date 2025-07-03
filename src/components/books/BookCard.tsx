@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import type { Book } from '@/types';
+import type { BookWithDetails } from '@/types';
 import {
   Card,
   CardContent,
@@ -10,7 +10,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 interface BookCardProps {
-  book: Book;
+  book: BookWithDetails;
 }
 
 export function BookCard({ book }: BookCardProps) {
@@ -33,7 +33,7 @@ export function BookCard({ book }: BookCardProps) {
           <CardTitle className="text-lg font-headline leading-tight group-hover:text-primary line-clamp-2 h-[2.5em]">
             {book.title}
           </CardTitle>
-          <p className="mt-1 text-sm text-muted-foreground">{book.author}</p>
+          <p className="mt-1 text-sm text-muted-foreground truncate">{book.author?.name || 'Unknown Author'}</p>
           {book.series && <Badge variant="secondary" className="mt-2">{book.series}</Badge>}
         </CardContent>
       </Card>

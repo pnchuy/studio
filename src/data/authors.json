@@ -1,0 +1,51 @@
+
+[
+  {
+    "id": "author-1",
+    "name": "Brandon Sanderson"
+  },
+  {
+    "id": "author-2",
+    "name": "Frank Herbert"
+  },
+  {
+    "id": "author-3",
+    "name": "Andy Weir"
+  },
+  {
+    "id": "author-4",
+    "name": "Patrick Rothfuss"
+  },
+  {
+    "id": "author-5",
+    "name": "William Gibson"
+  },
+  {
+    "id": "author-6",
+    "name": "Ursula K. Le Guin"
+  },
+  {
+    "id": "author-7",
+    "name": "J.R.R. Tolkien"
+  },
+  {
+    "id": "author-8",
+    "name": "Dan Simmons"
+  },
+  {
+    "id": "author-9",
+    "name": "Neal Stephenson"
+  },
+  {
+    "id": "author-10",
+    "name": "Ann Leckie"
+  },
+  {
+    "id": "author-11",
+    "name": "Scott Lynch"
+  },
+  {
+    "id": "author-12",
+    "name": "Richard K. Morgan"
+  }
+]

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookManagement } from '@/components/admin/BookManagement';
+import { AuthorManagement } from '@/components/admin/AuthorManagement';
+import { GenreManagement } from '@/components/admin/GenreManagement';
 import { MemberManagement } from '@/components/admin/MemberManagement';
 import { FavoriteBooks } from '@/components/admin/FavoriteBooks';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -42,7 +44,7 @@ export default function AdminPage() {
         <div>
             <h1 className="text-3xl font-bold tracking-tight font-headline">Trang quản trị</h1>
             <p className="text-muted-foreground mt-2">
-            {isAdminOrManager ? "Quản lý sách và thành viên của Bibliophile." : "Xem bộ sưu tập sách yêu thích của bạn."}
+            {isAdminOrManager ? "Quản lý sách, tác giả, thể loại và thành viên của Bibliophile." : "Xem bộ sưu tập sách yêu thích của bạn."}
             </p>
         </div>
         <Tabs defaultValue={getDefaultTab()} className="space-y-4">
@@ -50,6 +52,8 @@ export default function AdminPage() {
             {isAdminOrManager && (
                 <>
                     <TabsTrigger value="books">Quản lý sách</TabsTrigger>
+                    <TabsTrigger value="authors">Quản lý tác giả</TabsTrigger>
+                    <TabsTrigger value="genres">Quản lý thể loại</TabsTrigger>
                     <TabsTrigger value="members">Quản lý thành viên</TabsTrigger>
                 </>
             )}
@@ -62,6 +66,12 @@ export default function AdminPage() {
                 <>
                     <TabsContent value="books">
                         <BookManagement />
+                    </TabsContent>
+                    <TabsContent value="authors">
+                        <AuthorManagement />
+                    </TabsContent>
+                     <TabsContent value="genres">
+                        <GenreManagement />
                     </TabsContent>
                     <TabsContent value="members">
                         <MemberManagement />

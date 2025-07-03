@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import type { Book } from '@/types';
+import type { Book, Author, Genre } from '@/types';
 import { getAllBooks } from '@/lib/books';
+import { getAllAuthors } from '@/lib/authors';
+import { getAllGenres } from '@/lib/genres';
 import {
   Table,
   TableHeader,
@@ -34,22 +36,30 @@ import { useToast } from '@/hooks/use-toast';
 
 export function BookManagement() {
   const [books, setBooks] = useState<Book[]>([]);
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const [genres, setGenres] = useState<Genre[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddBookOpen, setIsAddBookOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchBooks = async () => {
+    const fetchData = async () => {
       try {
-        const bookList = await getAllBooks();
+        const [bookList, authorList, genreList] = await Promise.all([
+          getAllBooks(),
+          getAllAuthors(),
+          getAllGenres(),
+        ]);
         setBooks(bookList);
+        setAuthors(authorList);
+        setGenres(genreList);
       } catch (error) {
-        console.error("Failed to fetch books", error);
+        console.error("Failed to fetch data", error);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchBooks();
+    fetchData();
   }, []);
   
   const handleBookAdded = (newBook: Book) => {
@@ -70,6 +80,14 @@ export function BookManagement() {
             description: `Sách "${bookToDelete.title}" đã được xóa.`,
         });
     }
+  }
+
+  const getAuthorName = (authorId: string) => {
+    return authors.find(a => a.id === authorId)?.name || 'N/A';
+  }
+
+  const getGenreNames = (genreIds: string[]) => {
+    return genreIds.map(id => genres.find(g => g.id === id)?.name).filter(Boolean).join(', ');
   }
 
   return (
@@ -117,10 +135,10 @@ export function BookManagement() {
                 {books.map((book) => (
                   <TableRow key={book.id}>
                     <TableCell className="font-medium">{book.title}</TableCell>
-                    <TableCell>{book.author}</TableCell>
+                    <TableCell>{getAuthorName(book.authorId)}</TableCell>
                     <TableCell>
-                        <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
-                            {book.genre}
+                        <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground truncate">
+                            {getGenreNames(book.genreIds)}
                         </span>
                     </TableCell>
                     <TableCell className="text-right">

@@ -1,14 +1,29 @@
+export type Author = {
+  id: string;
+  name: string;
+};
+
+export type Genre = {
+  id: string;
+  name: string;
+};
+
 export type Book = {
   id: string;
   title: string;
-  author: string;
+  authorId: string;
   publicationDate: string;
   coverImage: string;
   summary: string;
   series: string | null;
-  genre: string;
+  genreIds: string[];
   youtubeLink: string;
 };
+
+export type BookWithDetails = Book & {
+  author: Author | undefined;
+  genres: Genre[];
+}
 
 export type User = {
     id: string;
