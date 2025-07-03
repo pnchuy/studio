@@ -282,7 +282,7 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
                       </div>
                   </RadioGroup>
                   <FormControl>
-                    <>
+                    <div>
                       {uploadType === 'url' ? (
                           <Input
                               placeholder="https://..."
@@ -297,7 +297,7 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
                               className="pt-2 h-11"
                           />
                       )}
-                    </>
+                    </div>
                   </FormControl>
                   <FormMessage />
               </FormItem>
