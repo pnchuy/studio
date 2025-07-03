@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AddBookForm } from './AddBookForm';
+import { EditBookForm } from './EditBookForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -51,7 +52,11 @@ export function BookManagement() {
   const [authors, setAuthors] = useState<Author[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
   const [isAddBookOpen, setIsAddBookOpen] = useState(false);
+  const [isEditBookOpen, setIsEditBookOpen] = useState(false);
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [booksPerPage, setBooksPerPage] = useState(50);
   const { toast } = useToast();
@@ -108,6 +113,16 @@ export function BookManagement() {
     });
   };
 
+  const handleBookUpdated = (updatedBook: Book) => {
+    const updatedBooks = books.map(book => book.id === updatedBook.id ? updatedBook : book);
+    localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
+    setBooks(updatedBooks);
+    toast({
+        title: "Cập nhật sách thành công",
+        description: `Sách "${updatedBook.title}" đã được cập nhật.`,
+    });
+  };
+
   const handleBookDeleted = (bookId: string) => {
     const bookToDelete = books.find(b => b.id === bookId);
     if (bookToDelete) {
@@ -121,6 +136,11 @@ export function BookManagement() {
       });
     }
   }
+
+  const handleEditClick = (book: Book) => {
+    setEditingBook(book);
+    setIsEditBookOpen(true);
+  };
 
   const getAuthorName = (authorId: string) => {
     return authors.find(a => a.id === authorId)?.name || 'N/A';
@@ -228,9 +248,9 @@ export function BookManagement() {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    <DropdownMenuItem disabled>
+                                    <DropdownMenuItem onClick={() => handleEditClick(book)}>
                                         <Pencil className="mr-2 h-4 w-4"/>
-                                        Sửa (Chưa hỗ trợ)
+                                        Sửa
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleBookDeleted(book.id)} className="text-destructive focus:text-destructive">
                                         <Trash2 className="mr-2 h-4 w-4"/>
@@ -292,6 +312,26 @@ export function BookManagement() {
             </div>
           </>
         )}
+         {/* Edit Book Dialog */}
+        <Dialog open={isEditBookOpen} onOpenChange={setIsEditBookOpen}>
+            <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Sửa thông tin sách</DialogTitle>
+                </DialogHeader>
+                {editingBook && (
+                    <EditBookForm 
+                        bookToEdit={editingBook}
+                        onBookUpdated={handleBookUpdated} 
+                        onFinished={() => {
+                            setIsEditBookOpen(false);
+                            setEditingBook(null);
+                        }}
+                        authors={authors}
+                        genres={genres}
+                    />
+                )}
+            </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
