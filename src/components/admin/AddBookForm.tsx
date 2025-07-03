@@ -1,9 +1,11 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,7 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import type { Book, Author, Genre } from "@/types";
 import { getAllAuthors } from "@/lib/authors";
 import { getAllGenres } from "@/lib/genres";
@@ -28,7 +32,7 @@ const formSchema = z.object({
   title: z.string().min(2, { message: "Tiêu đề phải có ít nhất 2 ký tự." }),
   authorId: z.string({ required_error: "Vui lòng chọn một tác giả." }),
   publicationDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Ngày xuất bản không hợp lệ." }),
-  coverImage: z.string().url({ message: "URL ảnh bìa không hợp lệ." }),
+  coverImage: z.string().min(1, { message: "URL ảnh bìa hoặc file là bắt buộc." }),
   summary: z.string().min(10, { message: "Tóm tắt phải có ít nhất 10 ký tự." }),
   series: z.string().optional().nullable(),
   genreIds: z.array(z.string()).min(1, { message: "Phải chọn ít nhất một thể loại." }),
@@ -43,6 +47,8 @@ interface AddBookFormProps {
 export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
   const [authors, setAuthors] = useState<Author[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
+  const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
+  const [imagePreview, setImagePreview] = useState<string | null>("https://placehold.co/400x600.png");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,6 +63,27 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
       youtubeLink: "",
     },
   });
+
+  const coverImageValue = form.watch('coverImage');
+  useEffect(() => {
+    if (coverImageValue && (coverImageValue.startsWith('http') || coverImageValue.startsWith('data:'))) {
+      setImagePreview(coverImageValue);
+    } else if (!coverImageValue) {
+      setImagePreview(null);
+    }
+  }, [coverImageValue]);
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        form.setValue('coverImage', dataUrl, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -182,19 +209,68 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
             </FormItem>
           )}
         />
+
+        {imagePreview && (
+          <div className="w-32 mx-auto">
+              <p className="text-center text-sm font-medium mb-2">Ảnh bìa xem trước</p>
+              <Image
+                  src={imagePreview}
+                  alt="Xem trước ảnh bìa"
+                  width={400}
+                  height={600}
+                  className="rounded-md object-cover aspect-[2/3]"
+                  data-ai-hint="book cover"
+              />
+          </div>
+        )}
+        
         <FormField
           control={form.control}
           name="coverImage"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>URL Ảnh bìa</FormLabel>
-              <FormControl>
-                <Input placeholder="https://..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+              <FormItem>
+                  <FormLabel>Ảnh bìa</FormLabel>
+                  <RadioGroup
+                      value={uploadType}
+                      className="flex space-x-4"
+                      onValueChange={(value: 'url' | 'file') => {
+                          setUploadType(value);
+                          const defaultValue = value === 'url' ? 'https://placehold.co/400x600.png' : '';
+                          field.onChange(defaultValue);
+                      }}
+                  >
+                      <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="url" id="r1" />
+                          <Label htmlFor="r1">Từ URL</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="file" id="r2" />
+                          <Label htmlFor="r2">Tải lên từ máy</Label>
+                      </div>
+                  </RadioGroup>
+                  <FormControl>
+                    <>
+                      {uploadType === 'url' ? (
+                          <Input
+                              placeholder="https://..."
+                              value={field.value.startsWith('data:') ? '' : field.value}
+                              onChange={field.onChange}
+                          />
+                      ) : (
+                          <Input
+                              type="file"
+                              accept="image/png, image/jpeg, image/webp"
+                              onChange={handleFileChange}
+                              className="pt-2 h-11"
+                          />
+                      )}
+                    </>
+                  </FormControl>
+                  <FormMessage />
+              </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
           name="summary"
@@ -242,3 +318,5 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
     </Form>
   );
 }
+
+    
