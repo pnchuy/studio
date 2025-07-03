@@ -15,4 +15,5 @@ export type User = {
     name: string;
     email: string;
     joinDate: string;
+    role: 'ADMIN' | 'MANAGER' | 'MEMBER';
 };

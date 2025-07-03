@@ -14,14 +14,16 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+  password: z.string().min(1, { message: "Password is required." }), // Simplified for simulation
 });
 
 export function LoginForm() {
   const { login } = useAuth();
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -31,11 +33,17 @@ export function LoginForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you'd verify credentials here.
-    // For this simulation, we'll just log the user in.
-    console.log("Simulating login for:", values.email);
-    login();
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const success = await login(values.email);
+    if (!success) {
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: "Invalid email or password.",
+      });
+      form.setError("email", { message: " " });
+      form.setError("password", { message: " " });
+    }
   }
 
   return (
@@ -48,7 +56,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="you@example.com" {...field} />
+                <Input placeholder="admin@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -67,8 +75,8 @@ export function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">
-          Login
+        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? "Logging in..." : "Login"}
         </Button>
       </form>
     </Form>

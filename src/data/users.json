@@ -1,20 +1,38 @@
+
 [
   {
     "id": "user-1",
-    "name": "Alice Johnson",
-    "email": "alice.j@example.com",
-    "joinDate": "2023-01-15"
+    "name": "Admin User",
+    "email": "admin@example.com",
+    "joinDate": "2023-01-15",
+    "role": "ADMIN"
   },
   {
     "id": "user-2",
-    "name": "Bob Smith",
-    "email": "bob.smith@example.com",
-    "joinDate": "2023-02-20"
+    "name": "Manager User",
+    "email": "manager@example.com",
+    "joinDate": "2023-02-20",
+    "role": "MANAGER"
   },
   {
     "id": "user-3",
-    "name": "Charlie Brown",
-    "email": "charlie.b@example.com",
-    "joinDate": "2023-03-10"
+    "name": "Member User",
+    "email": "member@example.com",
+    "joinDate": "2023-03-10",
+    "role": "MEMBER"
+  },
+  {
+    "id": "user-4",
+    "name": "Deletable Member",
+    "email": "deletable.member@example.com",
+    "joinDate": "2024-01-01",
+    "role": "MEMBER"
+  },
+  {
+    "id": "user-5",
+    "name": "Deletable Manager",
+    "email": "deletable.manager@example.com",
+    "joinDate": "2024-01-02",
+    "role": "MANAGER"
   }
 ]
