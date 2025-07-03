@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -22,7 +23,8 @@ const formSchema = z.object({
 });
 
 export function SignUpForm() {
-  const { login } = useAuth();
+  const { signup } = useAuth();
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -33,11 +35,16 @@ export function SignUpForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, you'd create a new user here.
-    // For this simulation, we'll just log them in.
-    console.log("Simulating sign up for:", values.email);
-    login();
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const success = await signup(values.name, values.email);
+    if (!success) {
+      toast({
+        variant: "destructive",
+        title: "Sign Up Failed",
+        description: "An account with this email already exists.",
+      });
+      form.setError("email", { message: "This email is already in use." });
+    }
   }
 
   return (
@@ -82,8 +89,8 @@ export function SignUpForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">
-          Create Account
+        <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+          {form.formState.isSubmitting ? "Creating Account..." : "Create Account"}
         </Button>
       </form>
     </Form>
