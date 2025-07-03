@@ -44,6 +44,32 @@ interface AddBookFormProps {
     onFinished: () => void;
 }
 
+const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = document.createElement('img');
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const scaleFactor = maxWidth / img.width;
+                canvas.width = maxWidth;
+                canvas.height = img.height * scaleFactor;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    return reject(new Error('Could not get canvas context'));
+                }
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL('image/webp', 0.8)); // Convert to WebP with 80% quality
+            };
+            img.onerror = reject;
+        };
+        reader.onerror = reject;
+    });
+};
+
+
 export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
   const [authors, setAuthors] = useState<Author[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
@@ -73,15 +99,22 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
     }
   }, [coverImageValue]);
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result as string;
-        form.setValue('coverImage', dataUrl, { shouldValidate: true });
-      };
-      reader.readAsDataURL(file);
+      try {
+        const resizedDataUrl = await resizeImage(file);
+        form.setValue('coverImage', resizedDataUrl, { shouldValidate: true });
+      } catch (error) {
+        console.error("Failed to resize image", error);
+        // Fallback to original if resize fails
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const dataUrl = reader.result as string;
+            form.setValue('coverImage', dataUrl, { shouldValidate: true });
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -318,5 +351,3 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
     </Form>
   );
 }
-
-    
