@@ -285,12 +285,14 @@ export function AddBookForm({ onBookAdded, onFinished }: AddBookFormProps) {
                     <div>
                       {uploadType === 'url' ? (
                           <Input
+                              key="cover-image-url"
                               placeholder="https://..."
                               value={field.value.startsWith('data:') ? '' : field.value}
                               onChange={field.onChange}
                           />
                       ) : (
                           <Input
+                              key="cover-image-file"
                               type="file"
                               accept="image/png, image/jpeg, image/webp"
                               onChange={handleFileChange}
