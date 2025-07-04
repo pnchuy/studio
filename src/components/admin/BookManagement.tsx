@@ -65,7 +65,7 @@ export function BookManagement() {
   const [editingBook, setEditingBook] = useState<Book | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [booksPerPage, setBooksPerPage] = useState(50);
+  const [booksPerPage, setBooksPerPage] = useState(10);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -400,7 +400,7 @@ export function BookManagement() {
                                     <SelectValue placeholder={`${booksPerPage}`} />
                                 </SelectTrigger>
                                 <SelectContent side="top">
-                                    {[20, 50, 100].map((pageSize) => (
+                                    {[10, 20, 50].map((pageSize) => (
                                     <SelectItem key={pageSize} value={`${pageSize}`}>
                                         {pageSize}
                                     </SelectItem>
@@ -490,5 +490,7 @@ export function BookManagement() {
     </>
   );
 }
+
+    
 
     

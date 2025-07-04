@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Genre } from '@/types';
 import {
   Table,
@@ -28,6 +29,13 @@ import {
 import { AddGenreForm } from './AddGenreForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface GenreManagementProps {
     genres: Genre[];
@@ -39,6 +47,28 @@ interface GenreManagementProps {
 export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDeleted }: GenreManagementProps) {
   const [isAddGenreOpen, setIsAddGenreOpen] = useState(false);
   const { toast } = useToast();
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const totalPages = Math.ceil(genres.length / itemsPerPage);
+  const paginatedGenres = useMemo(() => {
+    return genres.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+  }, [genres, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    const newTotalPages = Math.ceil(genres.length / itemsPerPage);
+    if (currentPage > newTotalPages) {
+      setCurrentPage(Math.max(1, newTotalPages));
+    }
+  }, [genres.length, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage]);
 
   const handleGenreAdded = (newGenre: Genre) => {
     onGenreAdded(newGenre);
@@ -90,40 +120,91 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDelete
             <Skeleton className="h-10 w-full" />
           </div>
         ) : (
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tên thể loại</TableHead>
-                  <TableHead className="text-right">Hành động</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {genres.map((genre) => (
-                  <TableRow key={genre.id}>
-                    <TableCell className="font-medium">{genre.name}</TableCell>
-                    <TableCell className="text-right">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem onClick={() => handleGenreDeleted(genre.id)} className="text-destructive focus:text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4"/>
-                                    Xóa
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <>
+            <p className="text-sm text-muted-foreground mb-4">Tổng số thể loại: {genres.length}.</p>
+            <div className="border rounded-md">
+                <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>Tên thể loại</TableHead>
+                    <TableHead className="text-right">Hành động</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {paginatedGenres.map((genre) => (
+                    <TableRow key={genre.id}>
+                        <TableCell className="font-medium">{genre.name}</TableCell>
+                        <TableCell className="text-right">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={() => handleGenreDeleted(genre.id)} className="text-destructive focus:text-destructive">
+                                        <Trash2 className="mr-2 h-4 w-4"/>
+                                        Xóa
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                    </TableRow>
+                    ))}
+                </TableBody>
+                </Table>
+            </div>
+             <div className="flex items-center justify-between py-4">
+                <div className="flex items-center space-x-2">
+                    <p className="text-sm text-muted-foreground">Hiển thị</p>
+                    <Select
+                        value={`${itemsPerPage}`}
+                        onValueChange={(value) => {
+                            setItemsPerPage(Number(value));
+                        }}
+                    >
+                        <SelectTrigger className="h-8 w-[70px]">
+                            <SelectValue placeholder={`${itemsPerPage}`} />
+                        </SelectTrigger>
+                        <SelectContent side="top">
+                            {[10, 20, 50].map((pageSize) => (
+                            <SelectItem key={pageSize} value={`${pageSize}`}>
+                                {pageSize}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">kết quả</p>
+                </div>
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-end space-x-2">
+                        <span className="text-sm text-muted-foreground">
+                            Trang {currentPage} / {totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                        >
+                            Trước
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                        >
+                            Sau
+                        </Button>
+                    </div>
+                )}
+            </div>
+          </>
         )}
       </div>
     </div>
   );
 }
+
+    

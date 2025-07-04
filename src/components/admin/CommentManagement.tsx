@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import type { Comment, Book } from '@/types';
@@ -23,6 +24,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const COMMENTS_STORAGE_KEY_PREFIX = 'bibliophile-comments-';
 
@@ -34,6 +42,9 @@ export function CommentManagement() {
     const [editingComment, setEditingComment] = useState<Comment | null>(null);
     const [editedText, setEditedText] = useState("");
     const { toast } = useToast();
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     const loadAllData = useCallback(async () => {
         setIsLoading(true);
@@ -119,6 +130,28 @@ export function CommentManagement() {
     };
 
     const getBookTitle = (bookId: string) => allBooks.find(b => b.id === bookId)?.title || "Sách không xác định";
+    
+    const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
+    const commentsToDisplay = isAdminOrManager ? allComments : allComments.filter(c => c.userId === user?.id);
+
+    const totalPages = Math.ceil(commentsToDisplay.length / itemsPerPage);
+    const paginatedComments = useMemo(() => {
+        return commentsToDisplay.slice(
+            (currentPage - 1) * itemsPerPage,
+            currentPage * itemsPerPage
+        );
+    }, [commentsToDisplay, currentPage, itemsPerPage]);
+
+    useEffect(() => {
+        const newTotalPages = Math.ceil(commentsToDisplay.length / itemsPerPage);
+        if (currentPage > newTotalPages) {
+        setCurrentPage(Math.max(1, newTotalPages));
+        }
+    }, [commentsToDisplay.length, currentPage, itemsPerPage]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [itemsPerPage]);
 
     if (isLoading) {
         return (
@@ -135,9 +168,6 @@ export function CommentManagement() {
              </Card>
         );
     }
-    
-    const isAdminOrManager = user?.role === 'ADMIN' || user?.role === 'MANAGER';
-    const commentsToDisplay = isAdminOrManager ? allComments : allComments.filter(c => c.userId === user?.id);
 
     return (
         <>
@@ -158,6 +188,8 @@ export function CommentManagement() {
                             </AlertDescription>
                         </Alert>
                     ) : (
+                        <>
+                        <p className="text-sm text-muted-foreground mb-4">Tổng số bình luận: {commentsToDisplay.length}.</p>
                         <div className="border rounded-md">
                             <Table>
                                 <TableHeader>
@@ -170,7 +202,7 @@ export function CommentManagement() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {commentsToDisplay.map((comment) => (
+                                    {paginatedComments.map((comment) => (
                                         <TableRow key={comment.id}>
                                             <TableCell>
                                                 <p className="line-clamp-2">{comment.text}</p>
@@ -215,6 +247,53 @@ export function CommentManagement() {
                                 </TableBody>
                             </Table>
                         </div>
+                        <div className="flex items-center justify-between py-4">
+                            <div className="flex items-center space-x-2">
+                                <p className="text-sm text-muted-foreground">Hiển thị</p>
+                                <Select
+                                    value={`${itemsPerPage}`}
+                                    onValueChange={(value) => {
+                                        setItemsPerPage(Number(value));
+                                    }}
+                                >
+                                    <SelectTrigger className="h-8 w-[70px]">
+                                        <SelectValue placeholder={`${itemsPerPage}`} />
+                                    </SelectTrigger>
+                                    <SelectContent side="top">
+                                        {[10, 20, 50].map((pageSize) => (
+                                        <SelectItem key={pageSize} value={`${pageSize}`}>
+                                            {pageSize}
+                                        </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-sm text-muted-foreground">kết quả</p>
+                            </div>
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-end space-x-2">
+                                    <span className="text-sm text-muted-foreground">
+                                        Trang {currentPage} / {totalPages}
+                                    </span>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        Trước
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        Sau
+                                    </Button>
+                                </div>
+                            )}
+                        </div>
+                        </>
                     )}
                 </CardContent>
             </Card>
@@ -240,3 +319,5 @@ export function CommentManagement() {
         </>
     );
 }
+
+    

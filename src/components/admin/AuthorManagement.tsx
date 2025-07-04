@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Author, Book } from '@/types';
 import {
   Table,
@@ -28,6 +29,13 @@ import {
 import { AddAuthorForm } from './AddAuthorForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AuthorManagementProps {
     authors: Author[];
@@ -40,6 +48,28 @@ interface AuthorManagementProps {
 export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onAuthorDeleted }: AuthorManagementProps) {
   const [isAddAuthorOpen, setIsAddAuthorOpen] = useState(false);
   const { toast } = useToast();
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  const totalPages = Math.ceil(authors.length / itemsPerPage);
+  const paginatedAuthors = useMemo(() => {
+    return authors.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+  }, [authors, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    const newTotalPages = Math.ceil(authors.length / itemsPerPage);
+    if (currentPage > newTotalPages) {
+      setCurrentPage(Math.max(1, newTotalPages));
+    }
+  }, [authors.length, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage]);
   
   const handleAuthorAdded = (newAuthor: Author) => {
     onAuthorAdded(newAuthor);
@@ -91,42 +121,93 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
             <Skeleton className="h-10 w-full" />
           </div>
         ) : (
-          <div className="border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tên tác giả</TableHead>
-                  <TableHead>Số lượng sách</TableHead>
-                  <TableHead className="text-right">Hành động</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {authors.map((author) => (
-                  <TableRow key={author.id}>
-                    <TableCell className="font-medium">{author.name}</TableCell>
-                    <TableCell>{books.filter(b => b.authorId === author.id).length}</TableCell>
-                    <TableCell className="text-right">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem onClick={() => handleAuthorDeleted(author.id)} className="text-destructive focus:text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4"/>
-                                    Xóa
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <>
+            <p className="text-sm text-muted-foreground mb-4">Tổng số tác giả: {authors.length}.</p>
+            <div className="border rounded-md">
+                <Table>
+                <TableHeader>
+                    <TableRow>
+                    <TableHead>Tên tác giả</TableHead>
+                    <TableHead>Số lượng sách</TableHead>
+                    <TableHead className="text-right">Hành động</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {paginatedAuthors.map((author) => (
+                    <TableRow key={author.id}>
+                        <TableCell className="font-medium">{author.name}</TableCell>
+                        <TableCell>{books.filter(b => b.authorId === author.id).length}</TableCell>
+                        <TableCell className="text-right">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={() => handleAuthorDeleted(author.id)} className="text-destructive focus:text-destructive">
+                                        <Trash2 className="mr-2 h-4 w-4"/>
+                                        Xóa
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                    </TableRow>
+                    ))}
+                </TableBody>
+                </Table>
+            </div>
+            <div className="flex items-center justify-between py-4">
+                <div className="flex items-center space-x-2">
+                    <p className="text-sm text-muted-foreground">Hiển thị</p>
+                    <Select
+                        value={`${itemsPerPage}`}
+                        onValueChange={(value) => {
+                            setItemsPerPage(Number(value));
+                        }}
+                    >
+                        <SelectTrigger className="h-8 w-[70px]">
+                            <SelectValue placeholder={`${itemsPerPage}`} />
+                        </SelectTrigger>
+                        <SelectContent side="top">
+                            {[10, 20, 50].map((pageSize) => (
+                            <SelectItem key={pageSize} value={`${pageSize}`}>
+                                {pageSize}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">kết quả</p>
+                </div>
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-end space-x-2">
+                        <span className="text-sm text-muted-foreground">
+                            Trang {currentPage} / {totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                        >
+                            Trước
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                        >
+                            Sau
+                        </Button>
+                    </div>
+                )}
+            </div>
+          </>
         )}
       </div>
     </div>
   );
 }
+
+    
