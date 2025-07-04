@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import type { Author } from '@/types';
+import type { Author, Book } from '@/types';
 import {
   Table,
   TableHeader,
@@ -31,12 +31,13 @@ import { useToast } from '@/hooks/use-toast';
 
 interface AuthorManagementProps {
     authors: Author[];
+    books: Book[];
     isLoading: boolean;
     onAuthorAdded: (newAuthor: Author) => void;
     onAuthorDeleted: (authorId: string) => void;
 }
 
-export function AuthorManagement({ authors, isLoading, onAuthorAdded, onAuthorDeleted }: AuthorManagementProps) {
+export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onAuthorDeleted }: AuthorManagementProps) {
   const [isAddAuthorOpen, setIsAddAuthorOpen] = useState(false);
   const { toast } = useToast();
   
@@ -95,6 +96,7 @@ export function AuthorManagement({ authors, isLoading, onAuthorAdded, onAuthorDe
               <TableHeader>
                 <TableRow>
                   <TableHead>Tên tác giả</TableHead>
+                  <TableHead>Số lượng sách</TableHead>
                   <TableHead className="text-right">Hành động</TableHead>
                 </TableRow>
               </TableHeader>
@@ -102,6 +104,7 @@ export function AuthorManagement({ authors, isLoading, onAuthorAdded, onAuthorDe
                 {authors.map((author) => (
                   <TableRow key={author.id}>
                     <TableCell className="font-medium">{author.name}</TableCell>
+                    <TableCell>{books.filter(b => b.authorId === author.id).length}</TableCell>
                     <TableCell className="text-right">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>

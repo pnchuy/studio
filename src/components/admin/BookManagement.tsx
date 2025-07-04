@@ -439,6 +439,7 @@ export function BookManagement() {
             <TabsContent value="authors" className="mt-4">
                 <AuthorManagement 
                   authors={authors}
+                  books={books}
                   isLoading={isLoading}
                   onAuthorAdded={handleAuthorAdded}
                   onAuthorDeleted={handleAuthorDeleted}
