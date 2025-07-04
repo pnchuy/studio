@@ -18,12 +18,22 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button, buttonVariants } from '../ui/button';
 import { useToast } from '@/hooks/use-toast';
 import {
   Select,
@@ -38,6 +48,7 @@ export function MemberManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -89,6 +100,7 @@ export function MemberManagement() {
 
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Quản lý thành viên</CardTitle>
@@ -140,7 +152,7 @@ export function MemberManagement() {
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent>
-                                            <DropdownMenuItem onClick={() => handleUserDeleted(user.id)} className="text-destructive focus:text-destructive" disabled={!canDelete}>
+                                            <DropdownMenuItem onClick={() => setUserToDelete(user)} className="text-destructive focus:text-destructive" disabled={!canDelete}>
                                                 <Trash2 className="mr-2 h-4 w-4"/>
                                                 Xóa
                                             </DropdownMenuItem>
@@ -203,7 +215,31 @@ export function MemberManagement() {
         )}
       </CardContent>
     </Card>
+
+    <AlertDialog open={!!userToDelete} onOpenChange={(isOpen) => !isOpen && setUserToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Bạn có chắc chắn không?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Hành động này không thể hoàn tác. Thao tác này sẽ xóa vĩnh viễn thành viên "{userToDelete?.name}".
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                <AlertDialogAction 
+                    onClick={() => {
+                        if (userToDelete) {
+                            handleUserDeleted(userToDelete.id);
+                            setUserToDelete(null);
+                        }
+                    }} 
+                    className={buttonVariants({ variant: "destructive" })}
+                >
+                    Xóa
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
-
-    

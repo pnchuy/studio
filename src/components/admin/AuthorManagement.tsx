@@ -11,7 +11,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Trash2 } from 'lucide-react';
 import {
   Dialog,
@@ -20,6 +20,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,6 +58,7 @@ interface AuthorManagementProps {
 export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onAuthorDeleted }: AuthorManagementProps) {
   const [isAddAuthorOpen, setIsAddAuthorOpen] = useState(false);
   const { toast } = useToast();
+  const [authorToDelete, setAuthorToDelete] = useState<Author | null>(null);
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -92,6 +103,7 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
   }
 
   return (
+    <>
     <div className="space-y-6">
       <div className="flex flex-row items-center justify-between">
         <div>
@@ -145,7 +157,7 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    <DropdownMenuItem onClick={() => handleAuthorDeleted(author.id)} className="text-destructive focus:text-destructive">
+                                    <DropdownMenuItem onClick={() => setAuthorToDelete(author)} className="text-destructive focus:text-destructive">
                                         <Trash2 className="mr-2 h-4 w-4"/>
                                         Xóa
                                     </DropdownMenuItem>
@@ -207,6 +219,31 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
         )}
       </div>
     </div>
+     <AlertDialog open={!!authorToDelete} onOpenChange={(isOpen) => !isOpen && setAuthorToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Bạn có chắc chắn không?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Hành động này không thể hoàn tác. Thao tác này sẽ xóa vĩnh viễn tác giả "{authorToDelete?.name}". Việc này có thể ảnh hưởng đến các sách có liên quan.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                <AlertDialogAction 
+                    onClick={() => {
+                        if (authorToDelete) {
+                            handleAuthorDeleted(authorToDelete.id);
+                            setAuthorToDelete(null);
+                        }
+                    }} 
+                    className={buttonVariants({ variant: "destructive" })}
+                >
+                    Xóa
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
 

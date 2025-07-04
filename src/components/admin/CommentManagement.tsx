@@ -17,9 +17,19 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { MoreHorizontal, Pencil, Trash2, MessageSquare } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -41,6 +51,7 @@ export function CommentManagement() {
     const [allBooks, setAllBooks] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [editingComment, setEditingComment] = useState<Comment | null>(null);
+    const [commentToDelete, setCommentToDelete] = useState<Comment | null>(null);
     const [editedText, setEditedText] = useState("");
     const { toast } = useToast();
 
@@ -241,7 +252,7 @@ export function CommentManagement() {
                                                                 Sửa
                                                             </DropdownMenuItem>
                                                         )}
-                                                        <DropdownMenuItem onClick={() => handleDelete(comment)} className="text-destructive focus:text-destructive cursor-pointer">
+                                                        <DropdownMenuItem onClick={() => setCommentToDelete(comment)} className="text-destructive focus:text-destructive cursor-pointer">
                                                             <Trash2 className="mr-2 h-4 w-4"/>
                                                             Xóa
                                                         </DropdownMenuItem>
@@ -322,6 +333,31 @@ export function CommentManagement() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <AlertDialog open={!!commentToDelete} onOpenChange={(isOpen) => !isOpen && setCommentToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Bạn có chắc chắn không?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Hành động này không thể hoàn tác. Thao tác này sẽ xóa vĩnh viễn bình luận.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Hủy</AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={() => {
+                                if (commentToDelete) {
+                                    handleDelete(commentToDelete);
+                                    setCommentToDelete(null);
+                                }
+                            }} 
+                            className={buttonVariants({ variant: "destructive" })}
+                        >
+                            Xóa
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

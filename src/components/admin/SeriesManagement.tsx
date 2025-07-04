@@ -11,7 +11,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Trash2, Pencil, Book as BookIcon } from 'lucide-react';
 import {
   Dialog,
@@ -20,6 +20,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +62,7 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
   const [isAddSeriesOpen, setIsAddSeriesOpen] = useState(false);
   const [isEditSeriesOpen, setIsEditSeriesOpen] = useState(false);
   const [editingSeries, setEditingSeries] = useState<string | null>(null);
+  const [seriesToDelete, setSeriesToDelete] = useState<string | null>(null);
   const { toast } = useToast();
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -162,7 +173,7 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
                                         <Pencil className="mr-2 h-4 w-4"/>
                                         Sửa
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => onSeriesDeleted(seriesName)} className="text-destructive focus:text-destructive">
+                                    <DropdownMenuItem onClick={() => setSeriesToDelete(seriesName)} className="text-destructive focus:text-destructive">
                                         <Trash2 className="mr-2 h-4 w-4"/>
                                         Xóa
                                     </DropdownMenuItem>
@@ -242,8 +253,30 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
               )}
           </DialogContent>
       </Dialog>
+      <AlertDialog open={!!seriesToDelete} onOpenChange={(isOpen) => !isOpen && setSeriesToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Bạn có chắc chắn không?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Hành động này không thể hoàn tác. Thao tác này sẽ xóa vĩnh viễn series "{seriesToDelete}".
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                <AlertDialogAction 
+                    onClick={() => {
+                        if (seriesToDelete) {
+                            onSeriesDeleted(seriesToDelete);
+                            setSeriesToDelete(null);
+                        }
+                    }} 
+                    className={buttonVariants({ variant: "destructive" })}
+                >
+                    Xóa
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }
-
-    

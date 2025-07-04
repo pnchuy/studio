@@ -16,7 +16,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import {
   Dialog,
@@ -25,6 +25,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,6 +73,7 @@ export function BookManagement() {
   const [isAddBookOpen, setIsAddBookOpen] = useState(false);
   const [isEditBookOpen, setIsEditBookOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [booksPerPage, setBooksPerPage] = useState(10);
@@ -375,7 +386,7 @@ export function BookManagement() {
                                                 <Pencil className="mr-2 h-4 w-4"/>
                                                 Sửa
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleBookDeleted(book.id)} className="text-destructive focus:text-destructive">
+                                            <DropdownMenuItem onClick={() => setBookToDelete(book)} className="text-destructive focus:text-destructive">
                                                 <Trash2 className="mr-2 h-4 w-4"/>
                                                 Xóa
                                             </DropdownMenuItem>
@@ -487,10 +498,31 @@ export function BookManagement() {
             )}
         </DialogContent>
     </Dialog>
+
+    <AlertDialog open={!!bookToDelete} onOpenChange={(isOpen) => !isOpen && setBookToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Bạn có chắc chắn không?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Hành động này không thể hoàn tác. Thao tác này sẽ xóa vĩnh viễn sách "{bookToDelete?.title}".
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                <AlertDialogAction 
+                    onClick={() => {
+                        if (bookToDelete) {
+                            handleBookDeleted(bookToDelete.id);
+                            setBookToDelete(null);
+                        }
+                    }} 
+                    className={buttonVariants({ variant: "destructive" })}
+                >
+                    Xóa
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }
-
-    
-
-    

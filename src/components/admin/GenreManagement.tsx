@@ -11,7 +11,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Trash2 } from 'lucide-react';
 import {
   Dialog,
@@ -20,6 +20,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,6 +56,7 @@ interface GenreManagementProps {
 
 export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDeleted }: GenreManagementProps) {
   const [isAddGenreOpen, setIsAddGenreOpen] = useState(false);
+  const [genreToDelete, setGenreToDelete] = useState<Genre | null>(null);
   const { toast } = useToast();
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -91,6 +102,7 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDelete
   }
 
   return (
+    <>
     <div className="space-y-6">
       <div className="flex flex-row items-center justify-between">
         <div>
@@ -142,7 +154,7 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDelete
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    <DropdownMenuItem onClick={() => handleGenreDeleted(genre.id)} className="text-destructive focus:text-destructive">
+                                    <DropdownMenuItem onClick={() => setGenreToDelete(genre)} className="text-destructive focus:text-destructive">
                                         <Trash2 className="mr-2 h-4 w-4"/>
                                         Xóa
                                     </DropdownMenuItem>
@@ -204,7 +216,30 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDelete
         )}
       </div>
     </div>
+    <AlertDialog open={!!genreToDelete} onOpenChange={(isOpen) => !isOpen && setGenreToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Bạn có chắc chắn không?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Hành động này không thể hoàn tác. Thao tác này sẽ xóa vĩnh viễn thể loại "{genreToDelete?.name}".
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Hủy</AlertDialogCancel>
+                <AlertDialogAction 
+                    onClick={() => {
+                        if (genreToDelete) {
+                            handleGenreDeleted(genreToDelete.id);
+                            setGenreToDelete(null);
+                        }
+                    }} 
+                    className={buttonVariants({ variant: "destructive" })}
+                >
+                    Xóa
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
-
-    
