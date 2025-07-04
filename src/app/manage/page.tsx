@@ -6,8 +6,9 @@ import { useAuth } from '@/hooks/use-auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FavoriteBooks } from '@/components/admin/FavoriteBooks';
 import { CommentManagement } from '@/components/admin/CommentManagement';
+import { SecurityTab } from '@/components/manage/SecurityTab';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Heart, MessageSquare } from 'lucide-react';
+import { Heart, MessageSquare, Lock } from 'lucide-react';
 
 export default function ManagePage() {
     const router = useRouter();
@@ -33,7 +34,7 @@ export default function ManagePage() {
             <div>
                 <h1 className="text-3xl font-bold tracking-tight font-headline">Trang cá nhân</h1>
                 <p className="text-muted-foreground mt-2">
-                    Quản lý sách yêu thích và bình luận của bạn.
+                    Quản lý sách yêu thích, bình luận và bảo mật tài khoản.
                 </p>
             </div>
             <Tabs defaultValue="favorites" className="space-y-4">
@@ -46,12 +47,19 @@ export default function ManagePage() {
                         <MessageSquare className="mr-2 h-4 w-4" />
                         Bình luận của bạn
                     </TabsTrigger>
+                    <TabsTrigger value="security">
+                        <Lock className="mr-2 h-4 w-4" />
+                        Bảo mật
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value="favorites">
                     <FavoriteBooks />
                 </TabsContent>
                 <TabsContent value="comments">
                     <CommentManagement />
+                </TabsContent>
+                <TabsContent value="security">
+                    <SecurityTab />
                 </TabsContent>
             </Tabs>
         </div>
