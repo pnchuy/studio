@@ -42,6 +42,7 @@ interface AddBookFormProps {
     onFinished: () => void;
     authors: Author[];
     genres: Genre[];
+    seriesList: string[];
 }
 
 const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
@@ -70,7 +71,7 @@ const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
 };
 
 
-export function AddBookForm({ onBookAdded, onFinished, authors, genres }: AddBookFormProps) {
+export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesList }: AddBookFormProps) {
   const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
   const [imagePreview, setImagePreview] = useState<string | null>("https://placehold.co/400x600.png");
 
@@ -310,11 +311,23 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres }: AddBoo
           name="series"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Series</FormLabel>
-              <FormControl>
-                <Input placeholder="The Stormlight Archive" {...field} value={field.value ?? ''} />
-              </FormControl>
-              <FormMessage />
+                <FormLabel>Series (Tùy chọn)</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
+                    <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Chọn series có sẵn" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="">Không có</SelectItem>
+                        {seriesList.map(series => (
+                            <SelectItem key={series} value={series}>
+                                {series}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+                <FormMessage />
             </FormItem>
           )}
         />

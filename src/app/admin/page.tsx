@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookManagement } from '@/components/admin/BookManagement';
-import { AuthorManagement } from '@/components/admin/AuthorManagement';
-import { GenreManagement } from '@/components/admin/GenreManagement';
 import { MemberManagement } from '@/components/admin/MemberManagement';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -44,18 +42,10 @@ export default function AdminPage() {
             <Tabs defaultValue="books" className="space-y-4">
                 <TabsList>
                     <TabsTrigger value="books">Quản lý sách</TabsTrigger>
-                    <TabsTrigger value="authors">Quản lý tác giả</TabsTrigger>
-                    <TabsTrigger value="genres">Quản lý thể loại</TabsTrigger>
                     <TabsTrigger value="members">Quản lý thành viên</TabsTrigger>
                 </TabsList>
                 <TabsContent value="books">
                     <BookManagement />
-                </TabsContent>
-                <TabsContent value="authors">
-                    <AuthorManagement />
-                </TabsContent>
-                    <TabsContent value="genres">
-                    <GenreManagement />
                 </TabsContent>
                 <TabsContent value="members">
                     <MemberManagement />

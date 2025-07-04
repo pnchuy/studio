@@ -43,6 +43,7 @@ interface EditBookFormProps {
     onFinished: () => void;
     authors: Author[];
     genres: Genre[];
+    seriesList: string[];
 }
 
 const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
@@ -70,7 +71,7 @@ const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
     });
 };
 
-export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, genres }: EditBookFormProps) {
+export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, genres, seriesList }: EditBookFormProps) {
   const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
   const [imagePreview, setImagePreview] = useState<string | null>(bookToEdit.coverImage);
 
@@ -319,10 +320,22 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
           name="series"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Series</FormLabel>
-              <FormControl>
-                <Input placeholder="The Stormlight Archive" {...field} value={field.value ?? ''} />
-              </FormControl>
+              <FormLabel>Series (Tùy chọn)</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
+                    <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Chọn series có sẵn" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="">Không có</SelectItem>
+                        {seriesList.map(series => (
+                            <SelectItem key={series} value={series}>
+                                {series}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
               <FormMessage />
             </FormItem>
           )}

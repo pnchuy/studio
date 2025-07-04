@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
 import type { Book, Author, Genre } from '@/types';
 import { getAllBooks as fetchAllBooks } from '@/lib/books';
@@ -31,8 +31,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AddBookForm } from './AddBookForm';
 import { EditBookForm } from './EditBookForm';
+import { AuthorManagement } from './AuthorManagement';
+import { GenreManagement } from './GenreManagement';
+import { SeriesManagement } from './SeriesManagement';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -103,6 +107,13 @@ export function BookManagement() {
     fetchData();
   }, []);
   
+  const uniqueSeries = useMemo(() => {
+    const allSeries = books
+      .map(book => book.series)
+      .filter((series): series is string => !!series && series.trim() !== '');
+    return [...new Set(allSeries)].sort();
+  }, [books]);
+  
   const handleBookAdded = (newBook: Book) => {
     const updatedBooks = [newBook, ...books];
     localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
@@ -171,12 +182,13 @@ export function BookManagement() {
 
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-            <CardTitle>Quản lý sách</CardTitle>
+            <CardTitle>Quản lý Bộ sưu tập sách</CardTitle>
             <CardDescription>
-                Thêm, sửa, xóa sách trong bộ sưu tập. Tổng số sách: {books.length}.
+                Thêm, sửa, xóa sách, tác giả, thể loại và series.
             </CardDescription>
         </div>
         <Dialog open={isAddBookOpen} onOpenChange={setIsAddBookOpen}>
@@ -195,144 +207,167 @@ export function BookManagement() {
                   onFinished={() => setIsAddBookOpen(false)}
                   authors={authors}
                   genres={genres}
+                  seriesList={uniqueSeries}
                 />
             </DialogContent>
         </Dialog>
       </CardHeader>
       <CardContent>
-         {isLoading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-        ) : (
-          <>
-            <div className="border rounded-md">
-                <Table>
-                <TableHeader>
-                    <TableRow>
-                    <TableHead className="w-[60px]">Ảnh bìa</TableHead>
-                    <TableHead>Tiêu đề</TableHead>
-                    <TableHead>Tác giả</TableHead>
-                    <TableHead>Thể loại</TableHead>
-                    <TableHead className="text-right">Hành động</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {paginatedBooks.map((book) => (
-                    <TableRow key={book.id}>
-                        <TableCell>
-                            <Image
-                                src={book.coverImage}
-                                alt={`Bìa sách ${book.title}`}
-                                width={40}
-                                height={60}
-                                className="rounded-sm object-cover"
-                                data-ai-hint="book cover"
-                            />
-                        </TableCell>
-                        <TableCell className="font-medium">{book.title}</TableCell>
-                        <TableCell>{getAuthorName(book.authorId)}</TableCell>
-                        <TableCell>
-                            <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground truncate">
-                                {getGenreNames(book.genreIds)}
-                            </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuItem onClick={() => handleEditClick(book)}>
-                                        <Pencil className="mr-2 h-4 w-4"/>
-                                        Sửa
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleBookDeleted(book.id)} className="text-destructive focus:text-destructive">
-                                        <Trash2 className="mr-2 h-4 w-4"/>
-                                        Xóa
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </TableCell>
-                    </TableRow>
-                    ))}
-                </TableBody>
-                </Table>
-            </div>
-            <div className="flex items-center justify-between py-4">
-                <div className="flex items-center space-x-2">
-                    <p className="text-sm text-muted-foreground">Hiển thị</p>
-                    <Select
-                        value={`${booksPerPage}`}
-                        onValueChange={(value) => {
-                            setBooksPerPage(Number(value));
-                        }}
-                    >
-                        <SelectTrigger className="h-8 w-[70px]">
-                            <SelectValue placeholder={`${booksPerPage}`} />
-                        </SelectTrigger>
-                        <SelectContent side="top">
-                            {[20, 50, 100].map((pageSize) => (
-                            <SelectItem key={pageSize} value={`${pageSize}`}>
-                                {pageSize}
-                            </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                     <p className="text-sm text-muted-foreground">kết quả</p>
+         <Tabs defaultValue="books">
+            <TabsList>
+                <TabsTrigger value="books">Sách</TabsTrigger>
+                <TabsTrigger value="authors">Tác giả</TabsTrigger>
+                <TabsTrigger value="genres">Thể loại</TabsTrigger>
+                <TabsTrigger value="series">Series</TabsTrigger>
+            </TabsList>
+            <TabsContent value="books" className="mt-4">
+                {isLoading ? (
+                <div className="space-y-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
                 </div>
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-end space-x-2">
-                        <span className="text-sm text-muted-foreground">
-                            Trang {currentPage} / {totalPages}
-                        </span>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                        >
-                            Trước
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                        >
-                            Sau
-                        </Button>
+                ) : (
+                <>
+                    <p className="text-sm text-muted-foreground mb-4">Tổng số sách: {books.length}.</p>
+                    <div className="border rounded-md">
+                        <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead className="w-[60px]">Ảnh bìa</TableHead>
+                            <TableHead>Tiêu đề</TableHead>
+                            <TableHead>Tác giả</TableHead>
+                            <TableHead>Thể loại</TableHead>
+                            <TableHead className="text-right">Hành động</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {paginatedBooks.map((book) => (
+                            <TableRow key={book.id}>
+                                <TableCell>
+                                    <Image
+                                        src={book.coverImage}
+                                        alt={`Bìa sách ${book.title}`}
+                                        width={40}
+                                        height={60}
+                                        className="rounded-sm object-cover"
+                                        data-ai-hint="book cover"
+                                    />
+                                </TableCell>
+                                <TableCell className="font-medium">{book.title}</TableCell>
+                                <TableCell>{getAuthorName(book.authorId)}</TableCell>
+                                <TableCell>
+                                    <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground truncate">
+                                        {getGenreNames(book.genreIds)}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuItem onClick={() => handleEditClick(book)}>
+                                                <Pencil className="mr-2 h-4 w-4"/>
+                                                Sửa
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleBookDeleted(book.id)} className="text-destructive focus:text-destructive">
+                                                <Trash2 className="mr-2 h-4 w-4"/>
+                                                Xóa
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                            </TableRow>
+                            ))}
+                        </TableBody>
+                        </Table>
                     </div>
+                    <div className="flex items-center justify-between py-4">
+                        <div className="flex items-center space-x-2">
+                            <p className="text-sm text-muted-foreground">Hiển thị</p>
+                            <Select
+                                value={`${booksPerPage}`}
+                                onValueChange={(value) => {
+                                    setBooksPerPage(Number(value));
+                                }}
+                            >
+                                <SelectTrigger className="h-8 w-[70px]">
+                                    <SelectValue placeholder={`${booksPerPage}`} />
+                                </SelectTrigger>
+                                <SelectContent side="top">
+                                    {[20, 50, 100].map((pageSize) => (
+                                    <SelectItem key={pageSize} value={`${pageSize}`}>
+                                        {pageSize}
+                                    </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-sm text-muted-foreground">kết quả</p>
+                        </div>
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-end space-x-2">
+                                <span className="text-sm text-muted-foreground">
+                                    Trang {currentPage} / {totalPages}
+                                </span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                >
+                                    Trước
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                >
+                                    Sau
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </>
                 )}
-            </div>
-          </>
-        )}
-         {/* Edit Book Dialog */}
-        <Dialog open={isEditBookOpen} onOpenChange={setIsEditBookOpen}>
-            <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                    <DialogTitle>Sửa thông tin sách</DialogTitle>
-                </DialogHeader>
-                {editingBook && (
-                    <EditBookForm 
-                        bookToEdit={editingBook}
-                        onBookUpdated={handleBookUpdated} 
-                        onFinished={() => {
-                            setIsEditBookOpen(false);
-                            setEditingBook(null);
-                        }}
-                        authors={authors}
-                        genres={genres}
-                    />
-                )}
-            </DialogContent>
-        </Dialog>
+            </TabsContent>
+            <TabsContent value="authors" className="mt-4">
+                <AuthorManagement />
+            </TabsContent>
+            <TabsContent value="genres" className="mt-4">
+                <GenreManagement />
+            </TabsContent>
+            <TabsContent value="series" className="mt-4">
+                <SeriesManagement books={books} />
+            </TabsContent>
+         </Tabs>
       </CardContent>
     </Card>
+     
+    <Dialog open={isEditBookOpen} onOpenChange={setIsEditBookOpen}>
+        <DialogContent className="max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>Sửa thông tin sách</DialogTitle>
+            </DialogHeader>
+            {editingBook && (
+                <EditBookForm 
+                    bookToEdit={editingBook}
+                    onBookUpdated={handleBookUpdated} 
+                    onFinished={() => {
+                        setIsEditBookOpen(false);
+                        setEditingBook(null);
+                    }}
+                    authors={authors}
+                    genres={genres}
+                    seriesList={uniqueSeries}
+                />
+            )}
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }
