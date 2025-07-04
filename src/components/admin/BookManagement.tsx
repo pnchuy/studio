@@ -226,6 +226,30 @@ export function BookManagement() {
     });
   };
 
+  const handleSeriesUpdated = (oldName: string, newName: string) => {
+    if (series.some(s => s.toLowerCase() === newName.toLowerCase() && s.toLowerCase() !== oldName.toLowerCase())) {
+        toast({
+            variant: "destructive",
+            title: "Series đã tồn tại",
+            description: `Series "${newName}" đã có trong danh sách.`,
+        });
+        return;
+    }
+
+    const updatedSeries = series.map(s => s === oldName ? newName : s).sort();
+    localStorage.setItem(SERIES_STORAGE_KEY, JSON.stringify(updatedSeries));
+    setSeries(updatedSeries);
+
+    const updatedBooks = books.map(book => {
+        if (book.series === oldName) {
+            return { ...book, series: newName };
+        }
+        return book;
+    });
+    localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
+    setBooks(updatedBooks);
+  };
+
   const handleEditClick = (book: Book) => {
     setEditingBook(book);
     setIsEditBookOpen(true);
@@ -435,6 +459,7 @@ export function BookManagement() {
                   isLoading={isLoading}
                   onSeriesAdded={handleSeriesAdded}
                   onSeriesDeleted={handleSeriesDeleted}
+                  onSeriesUpdated={handleSeriesUpdated}
                 />
             </TabsContent>
          </Tabs>
