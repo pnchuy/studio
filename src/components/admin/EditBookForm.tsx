@@ -138,7 +138,7 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
         id: bookToEdit.id, // Keep the same ID
         ...values,
         series: values.series === 'none' ? null : (values.series || null),
-        youtubeLink: values.youtubeLink?.map(link => convertYoutubeUrlToEmbed(link)).filter(Boolean) ?? [],
+        youtubeLink: values.youtubeLink?.map(link => convertYoutubeUrlToEmbed(link)).filter(Boolean) as string[] ?? [],
         amazonLink: values.amazonLink || "",
     };
     onBookUpdated(updatedBook);

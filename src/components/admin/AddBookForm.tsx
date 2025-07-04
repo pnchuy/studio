@@ -129,7 +129,7 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
         id: `book-${Date.now()}`, 
         ...values,
         series: values.series === 'none' ? null : (values.series || null),
-        youtubeLink: values.youtubeLink?.map(link => convertYoutubeUrlToEmbed(link)).filter(Boolean) ?? [],
+        youtubeLink: values.youtubeLink?.map(link => convertYoutubeUrlToEmbed(link)).filter(Boolean) as string[] ?? [],
         amazonLink: values.amazonLink || "",
     };
     onBookAdded(newBook);
