@@ -1,8 +1,8 @@
+
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Author } from '@/types';
-import { getAllAuthors as fetchAllAuthors } from '@/lib/authors';
 import {
   Table,
   TableHeader,
@@ -31,45 +31,19 @@ import { AddAuthorForm } from './AddAuthorForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
-const AUTHORS_STORAGE_KEY = 'bibliophile-authors';
+interface AuthorManagementProps {
+    authors: Author[];
+    isLoading: boolean;
+    onAuthorAdded: (newAuthor: Author) => void;
+    onAuthorDeleted: (authorId: string) => void;
+}
 
-export function AuthorManagement() {
-  const [authors, setAuthors] = useState<Author[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function AuthorManagement({ authors, isLoading, onAuthorAdded, onAuthorDeleted }: AuthorManagementProps) {
   const [isAddAuthorOpen, setIsAddAuthorOpen] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const loadAuthors = async () => {
-      setIsLoading(true);
-      try {
-        const storedAuthors = localStorage.getItem(AUTHORS_STORAGE_KEY);
-        if (storedAuthors) {
-          setAuthors(JSON.parse(storedAuthors));
-        } else {
-          const initialAuthors = await fetchAllAuthors();
-          setAuthors(initialAuthors);
-          localStorage.setItem(AUTHORS_STORAGE_KEY, JSON.stringify(initialAuthors));
-        }
-      } catch (error) {
-        console.error("Failed to load authors:", error);
-        const initialAuthors = await fetchAllAuthors();
-        setAuthors(initialAuthors);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadAuthors();
-  }, []);
-
-  const persistAuthors = (updatedAuthors: Author[]) => {
-    localStorage.setItem(AUTHORS_STORAGE_KEY, JSON.stringify(updatedAuthors));
-    setAuthors(updatedAuthors);
-  };
   
   const handleAuthorAdded = (newAuthor: Author) => {
-    const updatedAuthors = [newAuthor, ...authors];
-    persistAuthors(updatedAuthors);
+    onAuthorAdded(newAuthor);
     toast({
         title: "Thêm tác giả thành công",
         description: `Tác giả "${newAuthor.name}" đã được thêm.`,
@@ -78,9 +52,8 @@ export function AuthorManagement() {
 
   const handleAuthorDeleted = (authorId: string) => {
     const authorToDelete = authors.find(b => b.id === authorId);
+    onAuthorDeleted(authorId);
     if (authorToDelete) {
-      const updatedAuthors = authors.filter(author => author.id !== authorId);
-      persistAuthors(updatedAuthors);
       toast({
           variant: "destructive",
           title: "Đã xóa tác giả",
@@ -156,3 +129,5 @@ export function AuthorManagement() {
     </Card>
   );
 }
+
+    

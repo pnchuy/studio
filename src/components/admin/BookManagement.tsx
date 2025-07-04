@@ -50,11 +50,14 @@ import {
 const BOOKS_STORAGE_KEY = 'bibliophile-books';
 const AUTHORS_STORAGE_KEY = 'bibliophile-authors';
 const GENRES_STORAGE_KEY = 'bibliophile-genres';
+const SERIES_STORAGE_KEY = 'bibliophile-series';
 
 export function BookManagement() {
   const [books, setBooks] = useState<Book[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
+  const [series, setSeries] = useState<string[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
   
   const [isAddBookOpen, setIsAddBookOpen] = useState(false);
@@ -69,14 +72,15 @@ export function BookManagement() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
+        let initialBooks: Book[] = [];
         const storedBooks = localStorage.getItem(BOOKS_STORAGE_KEY);
         if (storedBooks) {
-          setBooks(JSON.parse(storedBooks));
+          initialBooks = JSON.parse(storedBooks);
         } else {
-          const initialBooks = await fetchAllBooks();
-          setBooks(initialBooks);
+          initialBooks = await fetchAllBooks();
           localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(initialBooks));
         }
+        setBooks(initialBooks);
 
         const storedAuthors = localStorage.getItem(AUTHORS_STORAGE_KEY);
         if (storedAuthors) {
@@ -95,11 +99,22 @@ export function BookManagement() {
           setGenres(initialGenres);
           localStorage.setItem(GENRES_STORAGE_KEY, JSON.stringify(initialGenres));
         }
+        
+        const storedSeries = localStorage.getItem(SERIES_STORAGE_KEY);
+        if (storedSeries) {
+          setSeries(JSON.parse(storedSeries));
+        } else {
+          const initialSeries = [...new Set(initialBooks.map(b => b.series).filter((s): s is string => !!s))].sort();
+          setSeries(initialSeries);
+          localStorage.setItem(SERIES_STORAGE_KEY, JSON.stringify(initialSeries));
+        }
+
       } catch (error) {
         console.error("Failed to load data from storage, falling back to defaults", error);
         setBooks(await fetchAllBooks());
         setAuthors(await fetchAllAuthors());
         setGenres(await fetchAllGenres());
+        setSeries([]);
       } finally {
         setIsLoading(false);
       }
@@ -107,17 +122,13 @@ export function BookManagement() {
     fetchData();
   }, []);
   
-  const uniqueSeries = useMemo(() => {
-    const allSeries = books
-      .map(book => book.series)
-      .filter((series): series is string => !!series && series.trim() !== '');
-    return [...new Set(allSeries)].sort();
-  }, [books]);
-  
   const handleBookAdded = (newBook: Book) => {
     const updatedBooks = [newBook, ...books];
     localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
     setBooks(updatedBooks);
+    if (newBook.series && !series.includes(newBook.series)) {
+        handleSeriesAdded(newBook.series, false);
+    }
     toast({
         title: "Thêm sách thành công",
         description: `Sách "${newBook.title}" đã được thêm.`,
@@ -128,6 +139,9 @@ export function BookManagement() {
     const updatedBooks = books.map(book => book.id === updatedBook.id ? updatedBook : book);
     localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
     setBooks(updatedBooks);
+     if (updatedBook.series && !series.includes(updatedBook.series)) {
+        handleSeriesAdded(updatedBook.series, false);
+    }
     toast({
         title: "Cập nhật sách thành công",
         description: `Sách "${updatedBook.title}" đã được cập nhật.`,
@@ -147,6 +161,70 @@ export function BookManagement() {
       });
     }
   }
+
+  const handleAuthorAdded = (newAuthor: Author) => {
+    const updatedAuthors = [newAuthor, ...authors];
+    localStorage.setItem(AUTHORS_STORAGE_KEY, JSON.stringify(updatedAuthors));
+    setAuthors(updatedAuthors);
+  };
+
+  const handleAuthorDeleted = (authorId: string) => {
+    const updatedAuthors = authors.filter(author => author.id !== authorId);
+    localStorage.setItem(AUTHORS_STORAGE_KEY, JSON.stringify(updatedAuthors));
+    setAuthors(updatedAuthors);
+  }
+  
+  const handleGenreAdded = (newGenre: Genre) => {
+    const updatedGenres = [newGenre, ...genres];
+    localStorage.setItem(GENRES_STORAGE_KEY, JSON.stringify(updatedGenres));
+    setGenres(updatedGenres);
+  };
+
+  const handleGenreDeleted = (genreId: string) => {
+    const updatedGenres = genres.filter(genre => genre.id !== genreId);
+    localStorage.setItem(GENRES_STORAGE_KEY, JSON.stringify(updatedGenres));
+    setGenres(updatedGenres);
+  }
+
+  const handleSeriesAdded = (newSeries: string, showToast = true) => {
+    if (series.includes(newSeries)) {
+      toast({
+        variant: "destructive",
+        title: "Series đã tồn tại",
+        description: `Series "${newSeries}" đã có trong danh sách.`,
+      });
+      return;
+    }
+    const updatedSeries = [...series, newSeries].sort();
+    localStorage.setItem(SERIES_STORAGE_KEY, JSON.stringify(updatedSeries));
+    setSeries(updatedSeries);
+    if (showToast) {
+       toast({
+        title: "Thêm series thành công",
+        description: `Series "${newSeries}" đã được thêm.`,
+      });
+    }
+  };
+
+  const handleSeriesDeleted = (seriesName: string) => {
+    const isSeriesInUse = books.some(book => book.series === seriesName);
+    if (isSeriesInUse) {
+        toast({
+            variant: "destructive",
+            title: "Không thể xóa Series",
+            description: `Series "${seriesName}" đang được sử dụng bởi một hoặc nhiều sách.`,
+        });
+        return;
+    }
+    const updatedSeries = series.filter(s => s !== seriesName);
+    localStorage.setItem(SERIES_STORAGE_KEY, JSON.stringify(updatedSeries));
+    setSeries(updatedSeries);
+    toast({
+        variant: "destructive",
+        title: "Đã xóa Series",
+        description: `Series "${seriesName}" đã được xóa.`,
+    });
+  };
 
   const handleEditClick = (book: Book) => {
     setEditingBook(book);
@@ -176,7 +254,6 @@ export function BookManagement() {
   }, [books, currentPage, booksPerPage]);
 
   useEffect(() => {
-    // Reset to page 1 when books per page changes to avoid being on a non-existent page
     setCurrentPage(1);
   }, [booksPerPage]);
 
@@ -207,7 +284,7 @@ export function BookManagement() {
                   onFinished={() => setIsAddBookOpen(false)}
                   authors={authors}
                   genres={genres}
-                  seriesList={uniqueSeries}
+                  seriesList={series}
                 />
             </DialogContent>
         </Dialog>
@@ -336,13 +413,29 @@ export function BookManagement() {
                 )}
             </TabsContent>
             <TabsContent value="authors" className="mt-4">
-                <AuthorManagement />
+                <AuthorManagement 
+                  authors={authors}
+                  isLoading={isLoading}
+                  onAuthorAdded={handleAuthorAdded}
+                  onAuthorDeleted={handleAuthorDeleted}
+                />
             </TabsContent>
             <TabsContent value="genres" className="mt-4">
-                <GenreManagement />
+                <GenreManagement 
+                  genres={genres}
+                  isLoading={isLoading}
+                  onGenreAdded={handleGenreAdded}
+                  onGenreDeleted={handleGenreDeleted}
+                />
             </TabsContent>
             <TabsContent value="series" className="mt-4">
-                <SeriesManagement books={books} />
+                <SeriesManagement 
+                  series={series}
+                  books={books}
+                  isLoading={isLoading}
+                  onSeriesAdded={handleSeriesAdded}
+                  onSeriesDeleted={handleSeriesDeleted}
+                />
             </TabsContent>
          </Tabs>
       </CardContent>
@@ -363,7 +456,7 @@ export function BookManagement() {
                     }}
                     authors={authors}
                     genres={genres}
-                    seriesList={uniqueSeries}
+                    seriesList={series}
                 />
             )}
         </DialogContent>
@@ -371,3 +464,5 @@ export function BookManagement() {
     </>
   );
 }
+
+    

@@ -1,8 +1,8 @@
+
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { Genre } from '@/types';
-import { getAllGenres as fetchAllGenres } from '@/lib/genres';
 import {
   Table,
   TableHeader,
@@ -31,45 +31,19 @@ import { AddGenreForm } from './AddGenreForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 
-const GENRES_STORAGE_KEY = 'bibliophile-genres';
+interface GenreManagementProps {
+    genres: Genre[];
+    isLoading: boolean;
+    onGenreAdded: (newGenre: Genre) => void;
+    onGenreDeleted: (genreId: string) => void;
+}
 
-export function GenreManagement() {
-  const [genres, setGenres] = useState<Genre[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDeleted }: GenreManagementProps) {
   const [isAddGenreOpen, setIsAddGenreOpen] = useState(false);
   const { toast } = useToast();
 
- useEffect(() => {
-    const loadGenres = async () => {
-      setIsLoading(true);
-      try {
-        const storedGenres = localStorage.getItem(GENRES_STORAGE_KEY);
-        if (storedGenres) {
-          setGenres(JSON.parse(storedGenres));
-        } else {
-          const initialGenres = await fetchAllGenres();
-          setGenres(initialGenres);
-          localStorage.setItem(GENRES_STORAGE_KEY, JSON.stringify(initialGenres));
-        }
-      } catch (error) {
-        console.error("Failed to load genres:", error);
-        const initialGenres = await fetchAllGenres();
-        setGenres(initialGenres);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadGenres();
-  }, []);
-
-  const persistGenres = (updatedGenres: Genre[]) => {
-    localStorage.setItem(GENRES_STORAGE_KEY, JSON.stringify(updatedGenres));
-    setGenres(updatedGenres);
-  };
-  
   const handleGenreAdded = (newGenre: Genre) => {
-    const updatedGenres = [newGenre, ...genres];
-    persistGenres(updatedGenres);
+    onGenreAdded(newGenre);
     toast({
         title: "Thêm thể loại thành công",
         description: `Thể loại "${newGenre.name}" đã được thêm.`,
@@ -78,9 +52,8 @@ export function GenreManagement() {
 
   const handleGenreDeleted = (genreId: string) => {
     const genreToDelete = genres.find(g => g.id === genreId);
+    onGenreDeleted(genreId);
     if (genreToDelete) {
-        const updatedGenres = genres.filter(genre => genre.id !== genreId);
-        persistGenres(updatedGenres);
         toast({
             variant: "destructive",
             title: "Đã xóa thể loại",
@@ -156,3 +129,5 @@ export function GenreManagement() {
     </Card>
   );
 }
+
+    
