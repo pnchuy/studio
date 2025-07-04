@@ -23,17 +23,19 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import type { Book, Author, Genre } from "@/types";
-import { cn, convertYoutubeUrlToEmbed } from "@/lib/utils";
+import { cn, convertYoutubeUrlToEmbed, generateId } from "@/lib/utils";
 import { ChevronsUpDown, PlusCircle, Trash2 } from "lucide-react";
+import { Badge } from "../ui/badge";
+import { Separator } from "../ui/separator";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Tiêu đề phải có ít nhất 2 ký tự." }),
   authorId: z.string({ required_error: "Vui lòng chọn một tác giả." }),
-  publicationDate: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Ngày xuất bản không hợp lệ." }),
-  coverImage: z.string().min(1, { message: "URL ảnh bìa hoặc file là bắt buộc." }),
-  summary: z.string().min(10, { message: "Tóm tắt phải có ít nhất 10 ký tự." }),
+  publicationDate: z.string().min(1, { message: "Ngày xuất bản là bắt buộc." }).refine((val) => !isNaN(Date.parse(val)), { message: "Ngày xuất bản không hợp lệ." }),
+  coverImage: z.string().optional().or(z.literal('')),
+  summary: z.string().optional(),
   series: z.string().optional().nullable(),
-  genreIds: z.array(z.string()).min(1, { message: "Phải chọn ít nhất một thể loại." }),
+  genreIds: z.array(z.string()).optional().default([]),
   youtubeLink: z.array(z.string().url({ message: "Link YouTube không hợp lệ." }).or(z.literal(''))).optional(),
   amazonLink: z.string().url({ message: "Link Amazon không hợp lệ." }).optional().or(z.literal('')),
 });
@@ -44,6 +46,7 @@ interface AddBookFormProps {
     authors: Author[];
     genres: Genre[];
     seriesList: string[];
+    onGenreAdded: (genre: Genre) => void;
 }
 
 const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
@@ -72,9 +75,10 @@ const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
 };
 
 
-export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesList }: AddBookFormProps) {
+export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesList, onGenreAdded }: AddBookFormProps) {
   const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
   const [imagePreview, setImagePreview] = useState<string | null>("https://placehold.co/400x600.png");
+  const [newGenreName, setNewGenreName] = useState('');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -82,7 +86,7 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
       title: "",
       authorId: undefined,
       publicationDate: "",
-      coverImage: "https://placehold.co/400x600.png",
+      coverImage: "",
       summary: "",
       series: "",
       genreIds: [],
@@ -100,8 +104,8 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
   useEffect(() => {
     if (coverImageValue && (coverImageValue.startsWith('http') || coverImageValue.startsWith('data:'))) {
       setImagePreview(coverImageValue);
-    } else if (!coverImageValue) {
-      setImagePreview(null);
+    } else {
+      setImagePreview("https://placehold.co/400x600.png");
     }
   }, [coverImageValue]);
   
@@ -113,7 +117,6 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
         form.setValue('coverImage', resizedDataUrl, { shouldValidate: true });
       } catch (error) {
         console.error("Failed to resize image", error);
-        // Fallback to original if resize fails
         const reader = new FileReader();
         reader.onloadend = () => {
             const dataUrl = reader.result as string;
@@ -124,10 +127,23 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
     }
   };
 
+  const handleAddNewGenre = () => {
+    if (!newGenreName.trim()) return;
+    const newGenre: Genre = {
+      id: `genre-${generateId()}`,
+      name: newGenreName.trim(),
+    };
+    onGenreAdded(newGenre);
+    const currentGenreIds = form.getValues('genreIds') || [];
+    form.setValue('genreIds', [...currentGenreIds, newGenre.id]);
+    setNewGenreName('');
+  };
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     const newBook: Book = {
         id: `book-${Date.now()}`, 
         ...values,
+        coverImage: values.coverImage || "https://placehold.co/400x600.png",
         series: values.series === 'none' ? null : (values.series || null),
         youtubeLink: values.youtubeLink?.map(link => convertYoutubeUrlToEmbed(link)).filter(Boolean) as string[] ?? [],
         amazonLink: values.amazonLink || "",
@@ -136,11 +152,8 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
     onFinished();
   }
 
-  const selectedGenres = form.watch('genreIds');
-  const selectedGenreNames = genres
-    .filter(g => selectedGenres?.includes(g.id))
-    .map(g => g.name)
-    .join(", ");
+  const selectedGenreIds = form.watch('genreIds') || [];
+  const selectedGenres = genres.filter(g => selectedGenreIds.includes(g.id));
 
   return (
     <Form {...form}>
@@ -182,7 +195,7 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
             </FormItem>
           )}
         />
-         <FormField
+        <FormField
           control={form.control}
           name="genreIds"
           render={({ field }) => (
@@ -190,15 +203,18 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
               <FormLabel>Thể loại</FormLabel>
               <Popover>
                 <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button variant="outline" className={cn("w-full justify-between", !field.value?.length && "text-muted-foreground")}>
-                      <span className="truncate max-w-xs">{selectedGenreNames.length > 0 ? selectedGenreNames : "Chọn thể loại"}</span>
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
+                  <Button variant="outline" className={cn("w-full justify-start text-left h-auto min-h-10", !field.value?.length && "text-muted-foreground")}>
+                    {selectedGenres.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {selectedGenres.map(genre => (
+                            <Badge key={genre.id} variant="secondary">{genre.name}</Badge>
+                        ))}
+                      </div>
+                    ) : "Chọn thể loại"}
+                  </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                    <div className="flex flex-col p-2 gap-2 max-h-60 overflow-y-auto">
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <div className="flex flex-col p-2 gap-2 max-h-48 overflow-y-auto">
                         {genres.map((genre) => (
                            <FormItem key={genre.id} className="flex flex-row items-center space-x-3 space-y-0">
                                 <FormControl>
@@ -217,6 +233,21 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
                                 </FormLabel>
                             </FormItem>
                         ))}
+                    </div>
+                    <Separator />
+                    <div className="p-2 flex items-center gap-2">
+                        <Input 
+                            placeholder="Thêm thể loại mới..." 
+                            value={newGenreName} 
+                            onChange={(e) => setNewGenreName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddNewGenre();
+                              }
+                            }}
+                        />
+                        <Button type="button" size="sm" onClick={handleAddNewGenre}>Thêm</Button>
                     </div>
                 </PopoverContent>
               </Popover>
@@ -263,8 +294,7 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
                       className="flex space-x-4"
                       onValueChange={(value: 'url' | 'file') => {
                           setUploadType(value);
-                          const defaultValue = value === 'url' ? 'https://placehold.co/400x600.png' : '';
-                          field.onChange(defaultValue);
+                          form.setValue('coverImage', '', { shouldValidate: true });
                       }}
                   >
                       <div className="flex items-center space-x-2">

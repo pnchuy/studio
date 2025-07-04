@@ -189,6 +189,10 @@ export function BookManagement() {
     const updatedGenres = [newGenre, ...genres];
     localStorage.setItem(GENRES_STORAGE_KEY, JSON.stringify(updatedGenres));
     setGenres(updatedGenres);
+    toast({
+      title: "Thêm thể loại thành công",
+      description: `Thể loại "${newGenre.name}" đã được thêm.`,
+    });
   };
 
   const handleGenreDeleted = (genreId: string) => {
@@ -320,6 +324,7 @@ export function BookManagement() {
                   authors={authors}
                   genres={genres}
                   seriesList={series}
+                  onGenreAdded={handleGenreAdded}
                 />
             </DialogContent>
         </Dialog>
@@ -494,6 +499,7 @@ export function BookManagement() {
                     authors={authors}
                     genres={genres}
                     seriesList={series}
+                    onGenreAdded={handleGenreAdded}
                 />
             )}
         </DialogContent>
