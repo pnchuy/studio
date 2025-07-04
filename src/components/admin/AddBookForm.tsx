@@ -121,7 +121,7 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
     const newBook: Book = {
         id: `book-${Date.now()}`, 
         ...values,
-        series: values.series || null,
+        series: values.series === 'none' ? null : (values.series || null),
         youtubeLink: values.youtubeLink || "",
     };
     onBookAdded(newBook);
@@ -319,7 +319,7 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
                         </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                        <SelectItem value="">Không có</SelectItem>
+                        <SelectItem value="none">Không có</SelectItem>
                         {seriesList.map(series => (
                             <SelectItem key={series} value={series}>
                                 {series}

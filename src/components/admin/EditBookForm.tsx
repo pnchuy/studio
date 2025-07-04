@@ -130,7 +130,7 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
     const updatedBook: Book = {
         id: bookToEdit.id, // Keep the same ID
         ...values,
-        series: values.series || null,
+        series: values.series === 'none' ? null : (values.series || null),
         youtubeLink: values.youtubeLink || "",
     };
     onBookUpdated(updatedBook);
@@ -328,7 +328,7 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
                         </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                        <SelectItem value="">Không có</SelectItem>
+                        <SelectItem value="none">Không có</SelectItem>
                         {seriesList.map(series => (
                             <SelectItem key={series} value={series}>
                                 {series}
