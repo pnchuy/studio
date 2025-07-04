@@ -23,7 +23,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import type { Book, Author, Genre } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, convertYoutubeUrlToEmbed } from "@/lib/utils";
 import { ChevronsUpDown } from "lucide-react";
 
 const formSchema = z.object({
@@ -133,7 +133,7 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
         id: bookToEdit.id, // Keep the same ID
         ...values,
         series: values.series === 'none' ? null : (values.series || null),
-        youtubeLink: values.youtubeLink || "",
+        youtubeLink: convertYoutubeUrlToEmbed(values.youtubeLink),
         amazonLink: values.amazonLink || "",
     };
     onBookUpdated(updatedBook);
@@ -350,7 +350,7 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
             <FormItem>
               <FormLabel>Link YouTube (Trailer/Review)</FormLabel>
               <FormControl>
-                <Input placeholder="https://youtube.com/embed/..." {...field} value={field.value ?? ''} />
+                <Input placeholder="https://youtube.com/watch?v=..." {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>

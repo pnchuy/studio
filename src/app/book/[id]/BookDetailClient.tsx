@@ -15,6 +15,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { convertYoutubeUrlToEmbed } from '@/lib/utils';
 
 interface BookDetailClientProps {
     book: Book;
@@ -30,6 +31,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
         addViewedBook(book.title);
     }, [book.title, addViewedBook]);
 
+    const embeddableYoutubeLink = convertYoutubeUrlToEmbed(book.youtubeLink);
     const isBookInLibrary = isInLibrary(book.id);
 
     const handleToggleLibrary = () => {
@@ -66,12 +68,12 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
 
              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
-                    <Button size="lg" disabled={!book.youtubeLink} className="flex-grow sm:flex-grow-0 bg-accent text-accent-foreground hover:bg-accent/90">
+                    <Button size="lg" disabled={!embeddableYoutubeLink} className="flex-grow sm:flex-grow-0 bg-accent text-accent-foreground hover:bg-accent/90">
                         <Headphones className="mr-2 h-5 w-5" />
                         Listen and Read
                     </Button>
                 </DialogTrigger>
-                {book.youtubeLink && (
+                {embeddableYoutubeLink && (
                     <DialogContent className="max-w-4xl h-auto p-4 sm:p-6">
                         <DialogHeader>
                             <DialogTitle>{book.title}</DialogTitle>
@@ -79,7 +81,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                         <div className="aspect-video w-full mt-2">
                             <iframe
                                 className="w-full h-full rounded-lg"
-                                src={book.youtubeLink}
+                                src={embeddableYoutubeLink}
                                 title="YouTube video player"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                 allowFullScreen

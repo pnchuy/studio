@@ -35,3 +35,38 @@ export function slugify(text: string): string {
     .replace(/^-+/, '')             // Trim - from start of text
     .replace(/-+$/, '');            // Trim - from end of text
 }
+
+
+export function convertYoutubeUrlToEmbed(url: string | null | undefined): string {
+    if (!url) {
+        return '';
+    }
+
+    let videoId = '';
+    
+    // Standard youtube.com/watch?v=...
+    let match = url.match(/[?&]v=([^&]+)/);
+    if (match) {
+        videoId = match[1];
+    } else {
+        // Shortened youtu.be/...
+        match = url.match(/youtu\.be\/([^?&]+)/);
+        if (match) {
+            videoId = match[1];
+        } else {
+            // Already an embed link
+             match = url.match(/embed\/([^?&]+)/);
+             if (match) {
+                videoId = match[1];
+            }
+        }
+    }
+
+    if (videoId) {
+        // Return the embeddable URL
+        return `https://www.youtube.com/embed/${videoId}`;
+    }
+
+    // If no valid YouTube Video ID is found, return an empty string
+    return '';
+}
