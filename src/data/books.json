@@ -9,7 +9,8 @@
     "summary": "In a world of stone and storms, an unlikely hero discovers the lost magic of the Knights Radiant and fights to unite a fractured kingdom against a coming desolation.",
     "series": "The Stormlight Archive",
     "genreIds": ["genre-1"],
-    "youtubeLink": "https://www.youtube.com/embed/s_4d2i3H5M8"
+    "youtubeLink": "https://www.youtube.com/embed/s_4d2i3H5M8",
+    "amazonLink": ""
   },
   {
     "id": "aB1cD2e",
@@ -20,7 +21,8 @@
     "summary": "The story of a young nobleman's rise to power on a desert planet that is the only source of a priceless spice, exploring themes of politics, religion, and ecology.",
     "series": "Dune Saga",
     "genreIds": ["genre-2"],
-    "youtubeLink": "https://www.youtube.com/embed/n9sFxHMi0_w"
+    "youtubeLink": "https://www.youtube.com/embed/n9sFxHMi0_w",
+    "amazonLink": ""
   },
   {
     "id": "fG3hI4j",
@@ -31,7 +33,8 @@
     "summary": "An amnesiac astronaut wakes up on a solo mission in deep space, tasked with saving humanity from an extinction-level event with the help of an unexpected alien ally.",
     "series": null,
     "genreIds": ["genre-3"],
-    "youtubeLink": "https://www.youtube.com/embed/cno-j2fT4gQ"
+    "youtubeLink": "https://www.youtube.com/embed/cno-j2fT4gQ",
+    "amazonLink": ""
   },
   {
     "id": "kL5mN6o",
@@ -42,7 +45,8 @@
     "summary": "The tale of Kvothe, a gifted young man who grows to be the most notorious magician his world has ever seen. From a childhood in a troupe of traveling players, to years spent as an orphan in a crime-ridden city, to his daring bid to enter a legendary school of magic.",
     "series": "The Kingkiller Chronicle",
     "genreIds": ["genre-4"],
-    "youtubeLink": "https://www.youtube.com/embed/J7XmF1A65e4"
+    "youtubeLink": "https://www.youtube.com/embed/J7XmF1A65e4",
+    "amazonLink": ""
   },
   {
     "id": "pQ7rS8t",
@@ -53,7 +57,8 @@
     "summary": "In a world where ash falls from the sky and mists rule the night, a young street urchin discovers she has a mysterious power and joins a crew of thieves to overthrow a god-like emperor.",
     "series": "Mistborn",
     "genreIds": ["genre-4"],
-    "youtubeLink": "https://www.youtube.com/embed/ST5oGPG1-e0"
+    "youtubeLink": "https://www.youtube.com/embed/ST5oGPG1-e0",
+    "amazonLink": ""
   },
   {
     "id": "uV9wX1y",
@@ -64,7 +69,8 @@
     "summary": "A washed-up computer hacker is hired by a mysterious employer to pull off the ultimate hack. This novel is a cornerstone of the cyberpunk genre.",
     "series": "Sprawl trilogy",
     "genreIds": ["genre-5"],
-    "youtubeLink": "https://www.youtube.com/embed/kxi3n42kIqI"
+    "youtubeLink": "https://www.youtube.com/embed/kxi3n42kIqI",
+    "amazonLink": ""
   },
     {
     "id": "Z2aB3cD",
@@ -75,7 +81,8 @@
     "summary": "A young boy named Ged, the greatest sorcerer in all of Earthsea, who was called Sparrowhawk in his reckless youth, comes to the island of Gont, a single mountain that rises from the sea.",
     "series": "Earthsea Cycle",
     "genreIds": ["genre-4"],
-    "youtubeLink": "https://www.youtube.com/embed/zpcY_s_v8kI"
+    "youtubeLink": "https://www.youtube.com/embed/zpcY_s_v8kI",
+    "amazonLink": ""
   },
   {
     "id": "eF4gH5i",
@@ -86,7 +93,8 @@
     "summary": "A hobbit, Bilbo Baggins, is swept into an epic quest to reclaim the lost Dwarf Kingdom of Erebor from the fearsome dragon Smaug.",
     "series": "The Lord of the Rings",
     "genreIds": ["genre-6"],
-    "youtubeLink": "https://www.youtube.com/embed/1_iU_Y5Lh20"
+    "youtubeLink": "https://www.youtube.com/embed/1_iU_Y5Lh20",
+    "amazonLink": ""
   },
   {
     "id": "J6kL7mN",
@@ -97,7 +105,8 @@
     "summary": "As the world spirals into a new war, a scholar, a soldier, and a spy must navigate political intrigue and ancient secrets to prevent the return of the Voidbringers.",
     "series": "The Stormlight Archive",
     "genreIds": ["genre-1"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "oP8qR9s",
@@ -108,7 +117,8 @@
     "summary": "On the eve of Armageddon, seven pilgrims set forth on a final voyage to Hyperion seeking the answers to the unsolved riddles of their lives.",
     "series": "Hyperion Cantos",
     "genreIds": ["genre-2"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "T1uV2wX",
@@ -119,7 +129,8 @@
     "summary": "An astronaut is presumed dead after a fierce storm and left behind by his crew. But he's alive and must find a way to signal to Earth that he's stranded on Mars.",
     "series": null,
     "genreIds": ["genre-3"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "yZ3aB4c",
@@ -130,7 +141,8 @@
     "summary": "Kvothe's adventures continue as he travels to distant lands, learns powerful magic, and uncovers more about the mysterious Chandrian.",
     "series": "The Kingkiller Chronicle",
     "genreIds": ["genre-4"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "D5eF6gH",
@@ -141,7 +153,8 @@
     "summary": "After overthrowing the Lord Ruler, Vin and Elend struggle to keep their new kingdom from falling into chaos from threats both internal and external.",
     "series": "Mistborn",
     "genreIds": ["genre-4"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "iJ7kL8m",
@@ -152,7 +165,8 @@
     "summary": "In a near-future America, a pizza delivery driver for the Mafia and a hacker named Hiro Protagonist investigates a new computer virus that is also a drug.",
     "series": null,
     "genreIds": ["genre-5"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "N9oP1qR",
@@ -163,7 +177,8 @@
     "summary": "A young priestess in the service of the Nameless Ones has her world turned upside down by the arrival of the wizard Ged, who seeks a legendary treasure.",
     "series": "Earthsea Cycle",
     "genreIds": ["genre-4"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "sT2uV3w",
@@ -174,7 +189,8 @@
     "summary": "A young hobbit, Frodo Baggins, is entrusted with an immensely powerful Ring and must begin a perilous journey to destroy it in the fires of Mount Doom.",
     "series": "The Lord of the Rings",
     "genreIds": ["genre-6"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "X4yZ5aB",
@@ -185,7 +201,8 @@
     "summary": "Humanity faces a new Desolation with the return of the Voidbringers, a foe with numbers as great as their thirst for vengeance.",
     "series": "The Stormlight Archive",
     "genreIds": ["genre-1"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "c6dE7fG",
@@ -196,7 +213,8 @@
     "summary": "The children of Paul Atreides, Leto and Ghanima, contend with the political machinations of their aunt Alia and the future of the empire.",
     "series": "Dune Saga",
     "genreIds": ["genre-2"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "h8iJ9kL",
@@ -207,7 +225,8 @@
     "summary": "A soldier who was once a warship's AI seeks revenge for the destruction of her ship and crew.",
     "series": "Imperial Radch",
     "genreIds": ["genre-2"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "mN1oP2q",
@@ -218,7 +237,8 @@
     "summary": "In the island city of Camorr, a talented thief and his gang, the Gentleman Bastards, con their way through the nobility.",
     "series": "Gentleman Bastard",
     "genreIds": ["genre-4"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "R3sT4uV",
@@ -229,7 +249,8 @@
     "summary": "Vin and Elend fight to save their world from the encroaching mists and the dark god that controls them, leading to a cataclysmic final battle.",
     "series": "Mistborn",
     "genreIds": ["genre-4"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "wX5yZ6a",
@@ -240,7 +261,8 @@
     "summary": "In a future where consciousness can be digitized, a former soldier is downloaded into a new body to solve a mind-bogglingly complex murder.",
     "series": "Takeshi Kovacs",
     "genreIds": ["genre-5"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "B7c8d9E",
@@ -251,7 +273,8 @@
     "summary": "Ged, now the Archmage, and a young prince must journey to the ends of the earth to discover why magic is fading from the world.",
     "series": "Earthsea Cycle",
     "genreIds": ["genre-4"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   },
   {
     "id": "fG1hI2j",
@@ -262,6 +285,7 @@
     "summary": "The fellowship is broken. Frodo and Sam must continue their journey to Mordor alone, while their companions face the armies of Saruman.",
     "series": "The Lord of the Rings",
     "genreIds": ["genre-6"],
-    "youtubeLink": null
+    "youtubeLink": null,
+    "amazonLink": ""
   }
 ]

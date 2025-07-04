@@ -35,6 +35,7 @@ const formSchema = z.object({
   series: z.string().optional().nullable(),
   genreIds: z.array(z.string()).min(1, { message: "Phải chọn ít nhất một thể loại." }),
   youtubeLink: z.string().url({ message: "Link YouTube không hợp lệ." }).optional().or(z.literal('')),
+  amazonLink: z.string().url({ message: "Link Amazon không hợp lệ." }).optional().or(z.literal('')),
 });
 
 interface AddBookFormProps {
@@ -86,6 +87,7 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
       series: "",
       genreIds: [],
       youtubeLink: "",
+      amazonLink: "",
     },
   });
 
@@ -123,6 +125,7 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
         ...values,
         series: values.series === 'none' ? null : (values.series || null),
         youtubeLink: values.youtubeLink || "",
+        amazonLink: values.amazonLink || "",
     };
     onBookAdded(newBook);
     onFinished();
@@ -339,6 +342,19 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
               <FormLabel>Link YouTube (Trailer/Review)</FormLabel>
               <FormControl>
                 <Input placeholder="https://youtube.com/embed/..." {...field} value={field.value ?? ''} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="amazonLink"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Link Amazon (Tùy chọn)</FormLabel>
+              <FormControl>
+                <Input placeholder="https://amazon.com/dp/..." {...field} value={field.value ?? ''} />
               </FormControl>
               <FormMessage />
             </FormItem>

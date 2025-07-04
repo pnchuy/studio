@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect } from 'react';
+import Link from 'next/link';
 import type { Book } from '@/types';
 import { useLibrary } from '@/hooks/use-library';
 import { useSearchHistory } from '@/hooks/use-search-history';
 import { Button } from '@/components/ui/button';
-import { BookmarkPlus, BookmarkCheck } from 'lucide-react';
+import { BookmarkPlus, BookmarkCheck, ShoppingCart } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface BookDetailClientProps {
@@ -40,8 +41,8 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
     };
 
     return (
-        <div className="mt-8 border-t pt-8">
-            <Button onClick={handleToggleLibrary} size="lg" className="w-full md:w-auto">
+        <div className="mt-8 border-t pt-8 flex flex-wrap items-center gap-4">
+            <Button onClick={handleToggleLibrary} size="lg" className="flex-grow sm:flex-grow-0">
                 {isBookInLibrary ? (
                     <>
                         <BookmarkCheck className="mr-2 h-5 w-5" />
@@ -54,6 +55,14 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                     </>
                 )}
             </Button>
+            {book.amazonLink && (
+                 <Button asChild size="lg" variant="outline" className="flex-grow sm:flex-grow-0">
+                    <Link href={book.amazonLink} target="_blank" rel="noopener noreferrer">
+                        <ShoppingCart className="mr-2 h-5 w-5" />
+                        Buy on Amazon
+                    </Link>
+                </Button>
+            )}
         </div>
     );
 }

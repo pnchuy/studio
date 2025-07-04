@@ -18,6 +18,7 @@ export type Book = {
   series: string | null;
   genreIds: string[];
   youtubeLink: string;
+  amazonLink: string;
 };
 
 export type BookWithDetails = Book & {
