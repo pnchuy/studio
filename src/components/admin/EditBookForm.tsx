@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
@@ -24,7 +24,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import type { Book, Author, Genre } from "@/types";
 import { cn, convertYoutubeUrlToEmbed } from "@/lib/utils";
-import { ChevronsUpDown } from "lucide-react";
+import { ChevronsUpDown, PlusCircle, Trash2 } from "lucide-react";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Tiêu đề phải có ít nhất 2 ký tự." }),
@@ -34,7 +34,7 @@ const formSchema = z.object({
   summary: z.string().min(10, { message: "Tóm tắt phải có ít nhất 10 ký tự." }),
   series: z.string().optional().nullable(),
   genreIds: z.array(z.string()).min(1, { message: "Phải chọn ít nhất một thể loại." }),
-  youtubeLink: z.string().url({ message: "Link YouTube không hợp lệ." }).optional().or(z.literal('')),
+  youtubeLink: z.array(z.string().url({ message: "Link YouTube không hợp lệ." }).optional().or(z.literal(''))).optional(),
   amazonLink: z.string().url({ message: "Link Amazon không hợp lệ." }).optional().or(z.literal('')),
 });
 
@@ -86,9 +86,14 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
       summary: bookToEdit.summary,
       series: bookToEdit.series || "",
       genreIds: bookToEdit.genreIds,
-      youtubeLink: bookToEdit.youtubeLink || "",
+      youtubeLink: bookToEdit.youtubeLink && bookToEdit.youtubeLink.length > 0 ? bookToEdit.youtubeLink : [""],
       amazonLink: bookToEdit.amazonLink || "",
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "youtubeLink",
   });
 
   const coverImageValue = form.watch('coverImage');
@@ -133,7 +138,7 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
         id: bookToEdit.id, // Keep the same ID
         ...values,
         series: values.series === 'none' ? null : (values.series || null),
-        youtubeLink: convertYoutubeUrlToEmbed(values.youtubeLink),
+        youtubeLink: values.youtubeLink?.map(link => convertYoutubeUrlToEmbed(link)).filter(Boolean) ?? [],
         amazonLink: values.amazonLink || "",
     };
     onBookUpdated(updatedBook);
@@ -343,19 +348,41 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="youtubeLink"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Link YouTube (Trailer/Review)</FormLabel>
-              <FormControl>
-                <Input placeholder="https://youtube.com/watch?v=..." {...field} value={field.value ?? ''} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="space-y-2">
+            <FormLabel>Link YouTube (Trailer/Review)</FormLabel>
+            {fields.map((item, index) => (
+              <FormField
+                key={item.id}
+                control={form.control}
+                name={`youtubeLink.${index}`}
+                render={({ field }) => (
+                    <FormItem>
+                        <div className="flex items-center gap-2">
+                            <FormControl>
+                                <Input placeholder="https://youtube.com/watch?v=..." {...field} value={field.value ?? ''} />
+                            </FormControl>
+                            {fields.length > 1 && (
+                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                            )}
+                        </div>
+                        <FormMessage />
+                    </FormItem>
+                )}
+              />
+            ))}
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => append("")}
+            >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Thêm link
+            </Button>
+        </div>
         <FormField
           control={form.control}
           name="amazonLink"

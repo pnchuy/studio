@@ -31,7 +31,8 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
         addViewedBook(book.title);
     }, [book.title, addViewedBook]);
 
-    const embeddableYoutubeLink = convertYoutubeUrlToEmbed(book.youtubeLink);
+    const firstYoutubeLink = book.youtubeLink?.[0];
+    const embeddableYoutubeLink = convertYoutubeUrlToEmbed(firstYoutubeLink);
     const isBookInLibrary = isInLibrary(book.id);
 
     const handleToggleLibrary = () => {
