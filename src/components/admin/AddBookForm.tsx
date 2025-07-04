@@ -34,7 +34,7 @@ const formSchema = z.object({
   summary: z.string().min(10, { message: "Tóm tắt phải có ít nhất 10 ký tự." }),
   series: z.string().optional().nullable(),
   genreIds: z.array(z.string()).min(1, { message: "Phải chọn ít nhất một thể loại." }),
-  youtubeLink: z.array(z.string().url({ message: "Link YouTube không hợp lệ." }).optional().or(z.literal(''))).optional(),
+  youtubeLink: z.array(z.string().url({ message: "Link YouTube không hợp lệ." }).or(z.literal(''))).optional(),
   amazonLink: z.string().url({ message: "Link Amazon không hợp lệ." }).optional().or(z.literal('')),
 });
 
