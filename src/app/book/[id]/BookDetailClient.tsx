@@ -109,6 +109,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                                         {selectedYoutubeLink && (
                                             <div className="aspect-video w-full mt-4">
                                                 <iframe
+                                                    key={selectedYoutubeLink}
                                                     className="w-full h-full rounded-lg"
                                                     src={selectedYoutubeLink}
                                                     title={`YouTube video player for ${book.title}`}
