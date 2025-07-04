@@ -66,7 +66,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
 
              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogTrigger asChild>
-                    <Button variant="secondary" size="lg" disabled={!book.youtubeLink} className="flex-grow sm:flex-grow-0">
+                    <Button size="lg" disabled={!book.youtubeLink} className="flex-grow sm:flex-grow-0 bg-accent text-accent-foreground hover:bg-accent/90">
                         <Headphones className="mr-2 h-5 w-5" />
                         Listen and Read
                     </Button>
