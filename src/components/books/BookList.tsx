@@ -16,6 +16,7 @@ import { useSearchHistory } from '@/hooks/use-search-history';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useResponsiveColumns } from '@/hooks/use-responsive-columns';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
 
 const INITIAL_ROWS = 3;
 const ROWS_TO_LOAD = 2;
@@ -101,31 +102,35 @@ export default function BookList({ books }: BookListProps) {
 
   return (
     <div className="mt-8 space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row">
-        <div className="relative flex-grow">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search by title or author..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full"
-          />
-        </div>
-        <Select value={sortOrder} onValueChange={setSortOrder}>
-          <SelectTrigger className="w-full md:w-[240px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="title_asc">Title (A-Z)</SelectItem>
-            <SelectItem value="title_desc">Title (Z-A)</SelectItem>
-            <SelectItem value="author_asc">Author (A-Z)</SelectItem>
-            <SelectItem value="author_desc">Author (Z-A)</SelectItem>
-            <SelectItem value="date_newest">Publication Date (Newest)</SelectItem>
-            <SelectItem value="date_oldest">Publication Date (Oldest)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col gap-4 md:flex-row">
+            <div className="relative flex-grow">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search by title or author..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-full"
+              />
+            </div>
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger className="w-full md:w-[240px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="title_asc">Title (A-Z)</SelectItem>
+                <SelectItem value="title_desc">Title (Z-A)</SelectItem>
+                <SelectItem value="author_asc">Author (A-Z)</SelectItem>
+                <SelectItem value="author_desc">Author (Z-A)</SelectItem>
+                <SelectItem value="date_newest">Publication Date (Newest)</SelectItem>
+                <SelectItem value="date_oldest">Publication Date (Oldest)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
       {booksToShow.length > 0 ? (
         <>
