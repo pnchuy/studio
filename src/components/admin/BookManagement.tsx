@@ -324,7 +324,6 @@ export function BookManagement() {
                   authors={authors}
                   genres={genres}
                   seriesList={series}
-                  onGenreAdded={handleGenreAdded}
                 />
             </DialogContent>
         </Dialog>
@@ -499,7 +498,6 @@ export function BookManagement() {
                     authors={authors}
                     genres={genres}
                     seriesList={series}
-                    onGenreAdded={handleGenreAdded}
                 />
             )}
         </DialogContent>

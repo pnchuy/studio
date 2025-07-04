@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,13 +20,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import type { Book, Author, Genre } from "@/types";
-import { cn, convertYoutubeUrlToEmbed, generateId } from "@/lib/utils";
-import { ChevronsUpDown, PlusCircle, Trash2 } from "lucide-react";
+import { convertYoutubeUrlToEmbed } from "@/lib/utils";
+import { PlusCircle, Trash2, X } from "lucide-react";
 import { Badge } from "../ui/badge";
-import { Separator } from "../ui/separator";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Tiêu đề phải có ít nhất 2 ký tự." }),
@@ -47,7 +45,6 @@ interface EditBookFormProps {
     authors: Author[];
     genres: Genre[];
     seriesList: string[];
-    onGenreAdded: (genre: Genre) => void;
 }
 
 const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
@@ -75,10 +72,13 @@ const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
     });
 };
 
-export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, genres, seriesList, onGenreAdded }: EditBookFormProps) {
+export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, genres, seriesList }: EditBookFormProps) {
   const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
   const [imagePreview, setImagePreview] = useState<string | null>(bookToEdit.coverImage);
-  const [newGenreName, setNewGenreName] = useState('');
+  
+  const [genreInputValue, setGenreInputValue] = useState("");
+  const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
+  const genreInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -135,18 +135,6 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
     }
   };
 
-  const handleAddNewGenre = () => {
-    if (!newGenreName.trim()) return;
-    const newGenre: Genre = {
-      id: `genre-${generateId()}`,
-      name: newGenreName.trim(),
-    };
-    onGenreAdded(newGenre);
-    const currentGenreIds = form.getValues('genreIds') || [];
-    form.setValue('genreIds', [...currentGenreIds, newGenre.id]);
-    setNewGenreName('');
-  };
-
   function onSubmit(values: z.infer<typeof formSchema>) {
     const updatedBook: Book = {
         id: bookToEdit.id,
@@ -162,6 +150,54 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
 
   const selectedGenreIds = form.watch('genreIds') || [];
   const selectedGenres = genres.filter(g => selectedGenreIds.includes(g.id));
+
+    const handleGenreRemove = (genreId: string) => {
+        const newGenreIds = selectedGenreIds.filter((id: string) => id !== genreId);
+        form.setValue('genreIds', newGenreIds, { shouldValidate: true });
+    };
+
+    const processGenreInput = (input: string) => {
+        const newGenreNames = input.split(',').map(name => name.trim()).filter(Boolean);
+        if (newGenreNames.length === 0) return;
+
+        const newGenreIds = newGenreNames.reduce((acc, name) => {
+            const foundGenre = genres.find(g => g.name.toLowerCase() === name.toLowerCase());
+            if (foundGenre && !selectedGenreIds.includes(foundGenre.id)) {
+            acc.push(foundGenre.id);
+            }
+            return acc;
+        }, [] as string[]);
+        
+        if (newGenreIds.length > 0) {
+            form.setValue('genreIds', [...selectedGenreIds, ...newGenreIds], { shouldValidate: true });
+        }
+        setGenreInputValue("");
+    };
+
+    const handleGenreInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === ',' || e.key === 'Enter') {
+            e.preventDefault();
+            processGenreInput(genreInputValue);
+            setIsSuggestionsOpen(false);
+        } else if (e.key === 'Backspace' && genreInputValue === '' && selectedGenreIds.length > 0) {
+            const lastGenreId = selectedGenreIds[selectedGenreIds.length - 1];
+            handleGenreRemove(lastGenreId);
+        }
+    };
+
+    const handleSuggestionClick = (genreId: string) => {
+        form.setValue('genreIds', [...selectedGenreIds, genreId], { shouldValidate: true });
+        setGenreInputValue("");
+        setIsSuggestionsOpen(false);
+        genreInputRef.current?.focus();
+    };
+
+    const filteredSuggestions = genres.filter(genre => 
+        !selectedGenreIds.includes(genre.id) &&
+        genre.name.toLowerCase().includes(genreInputValue.toLowerCase()) &&
+        genreInputValue.length > 0
+    );
+
 
   return (
     <Form {...form}>
@@ -207,55 +243,57 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
           control={form.control}
           name="genreIds"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
+            <FormItem>
               <FormLabel>Thể loại</FormLabel>
-              <Popover>
+              <Popover open={isSuggestionsOpen && filteredSuggestions.length > 0} onOpenChange={setIsSuggestionsOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className={cn("w-full justify-start text-left h-auto min-h-10", !field.value?.length && "text-muted-foreground")}>
-                    {selectedGenres.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {selectedGenres.map(genre => (
-                            <Badge key={genre.id} variant="secondary">{genre.name}</Badge>
-                        ))}
-                      </div>
-                    ) : "Chọn thể loại"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                    <div className="flex flex-col p-2 gap-2 max-h-48 overflow-y-auto">
-                        {genres.map((genre) => (
-                           <FormItem key={genre.id} className="flex flex-row items-center space-x-3 space-y-0">
-                                <FormControl>
-                                    <Checkbox
-                                        checked={field.value?.includes(genre.id)}
-                                        onCheckedChange={(checked) => {
-                                            const currentValue = field.value || [];
-                                            return checked
-                                            ? field.onChange([...currentValue, genre.id])
-                                            : field.onChange(currentValue.filter((value) => value !== genre.id));
-                                        }}
-                                    />
-                                </FormControl>
-                                <FormLabel className="font-normal cursor-pointer flex-1">
-                                    {genre.name}
-                                </FormLabel>
-                            </FormItem>
-                        ))}
+                    <div className="flex flex-wrap gap-2 rounded-md border border-input min-h-10 p-1.5 items-center" onClick={() => genreInputRef.current?.focus()}>
+                    {selectedGenres.map(genre => (
+                        <Badge key={genre.id} variant="secondary" className="flex items-center gap-1">
+                        {genre.name}
+                        <button
+                            type="button"
+                            className="rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            onClick={() => handleGenreRemove(genre.id)}
+                        >
+                            <X className="h-3 w-3" />
+                        </button>
+                        </Badge>
+                    ))}
+                    <input
+                        ref={genreInputRef}
+                        type="text"
+                        value={genreInputValue}
+                        onChange={(e) => {
+                            setGenreInputValue(e.target.value);
+                            if (!isSuggestionsOpen) setIsSuggestionsOpen(true);
+                        }}
+                        onKeyDown={handleGenreInputKeyDown}
+                        onBlur={() => {
+                            processGenreInput(genreInputValue);
+                            setIsSuggestionsOpen(false);
+                        }}
+                        className="inline-flex flex-grow bg-transparent outline-none placeholder:text-muted-foreground text-sm px-1"
+                        placeholder={selectedGenres.length > 0 ? "" : "Nhập thể loại, cách nhau bởi dấu phẩy"}
+                    />
                     </div>
-                    <Separator />
-                    <div className="p-2 flex items-center gap-2">
-                        <Input 
-                            placeholder="Thêm thể loại mới..." 
-                            value={newGenreName} 
-                            onChange={(e) => setNewGenreName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleAddNewGenre();
-                              }
-                            }}
-                        />
-                        <Button type="button" size="sm" onClick={handleAddNewGenre}>Thêm</Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+                    <div className="max-h-60 overflow-y-auto">
+                    {filteredSuggestions.map((genre) => (
+                        <Button
+                        key={genre.id}
+                        type="button"
+                        variant="ghost"
+                        className="w-full justify-start rounded-md"
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleSuggestionClick(genre.id);
+                        }}
+                        >
+                        {genre.name}
+                        </Button>
+                    ))}
                     </div>
                 </PopoverContent>
               </Popover>
