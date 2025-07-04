@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { convertYoutubeUrlToEmbed } from '@/lib/utils';
 
 interface BookDetailClientProps {
     book: Book;
@@ -111,7 +112,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                                                 <iframe
                                                     key={selectedYoutubeLink}
                                                     className="w-full h-full rounded-lg"
-                                                    src={selectedYoutubeLink}
+                                                    src={convertYoutubeUrlToEmbed(selectedYoutubeLink)}
                                                     title={`YouTube video player for ${book.title}`}
                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                                     allowFullScreen
