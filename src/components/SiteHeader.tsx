@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { BookOpen, Library, LogIn, LogOut, UserPlus, Shield } from 'lucide-react';
+import { BookOpen, LogIn, LogOut, UserPlus, Shield, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import {
@@ -50,9 +50,9 @@ export function SiteHeader() {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     <DropdownMenuItem asChild className="cursor-pointer">
-                        <Link href="/library">
-                            <Library className="mr-2 h-4 w-4" />
-                            <span>My Library</span>
+                        <Link href="/manage">
+                            <UserCog className="mr-2 h-4 w-4" />
+                            <span>Quản lý</span>
                         </Link>
                     </DropdownMenuItem>
                     {(user.role === 'ADMIN' || user.role === 'MANAGER') && (

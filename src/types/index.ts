@@ -42,4 +42,7 @@ export type Comment = {
   text: string;
   createdAt: string; // ISO String
   editedAt?: string; // ISO String
+  likes: string[];
+  dislikes: string[];
+  parentId: string | null;
 };

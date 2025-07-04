@@ -8,8 +8,6 @@ import { BookManagement } from '@/components/admin/BookManagement';
 import { AuthorManagement } from '@/components/admin/AuthorManagement';
 import { GenreManagement } from '@/components/admin/GenreManagement';
 import { MemberManagement } from '@/components/admin/MemberManagement';
-import { FavoriteBooks } from '@/components/admin/FavoriteBooks';
-import { CommentManagement } from '@/components/admin/CommentManagement';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminPage() {
@@ -17,12 +15,16 @@ export default function AdminPage() {
     const { user, isLoggedIn, isLoading: authLoading } = useAuth();
 
     useEffect(() => {
-        if (!authLoading && !isLoggedIn) {
-            router.push('/login');
+        if (!authLoading) {
+            if (!isLoggedIn) {
+                router.push('/login');
+            } else if (user?.role === 'MEMBER') {
+                router.push('/manage');
+            }
         }
-    }, [isLoggedIn, authLoading, router]);
+    }, [isLoggedIn, authLoading, router, user]);
 
-    if (authLoading || !isLoggedIn || !user) {
+    if (authLoading || !isLoggedIn || !user || user.role === 'MEMBER') {
         return (
              <div className="space-y-4">
                 <Skeleton className="h-10 w-1/4" />
@@ -30,65 +32,35 @@ export default function AdminPage() {
             </div>
         );
     }
-
-    const isAdminOrManager = user.role === 'ADMIN' || user.role === 'MANAGER';
-    const isMember = user.role === 'MEMBER';
     
-    const getDefaultTab = () => {
-        if (isAdminOrManager) return "books";
-        if (isMember) return "favorites";
-        return "comments";
-    }
-
     return (
         <div className="space-y-6">
-        <div>
-            <h1 className="text-3xl font-bold tracking-tight font-headline">Trang quản trị</h1>
-            <p className="text-muted-foreground mt-2">
-            {isAdminOrManager ? "Quản lý sách, tác giả, thể loại và thành viên của Bibliophile." : "Quản lý các mục yêu thích và bình luận của bạn."}
-            </p>
-        </div>
-        <Tabs defaultValue={getDefaultTab()} className="space-y-4">
-            <TabsList>
-            {isAdminOrManager && (
-                <>
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight font-headline">Trang quản trị</h1>
+                <p className="text-muted-foreground mt-2">
+                    Quản lý sách, tác giả, thể loại và thành viên của Bibliophile.
+                </p>
+            </div>
+            <Tabs defaultValue="books" className="space-y-4">
+                <TabsList>
                     <TabsTrigger value="books">Quản lý sách</TabsTrigger>
                     <TabsTrigger value="authors">Quản lý tác giả</TabsTrigger>
                     <TabsTrigger value="genres">Quản lý thể loại</TabsTrigger>
                     <TabsTrigger value="members">Quản lý thành viên</TabsTrigger>
-                </>
-            )}
-             {isMember && (
-                <TabsTrigger value="favorites">Sách yêu thích</TabsTrigger>
-             )}
-             <TabsTrigger value="comments">Bình luận</TabsTrigger>
-            </TabsList>
-
-            {isAdminOrManager && (
-                <>
-                    <TabsContent value="books">
-                        <BookManagement />
-                    </TabsContent>
-                    <TabsContent value="authors">
-                        <AuthorManagement />
-                    </TabsContent>
-                     <TabsContent value="genres">
-                        <GenreManagement />
-                    </TabsContent>
-                    <TabsContent value="members">
-                        <MemberManagement />
-                    </TabsContent>
-                </>
-            )}
-            {isMember && (
-                 <TabsContent value="favorites">
-                    <FavoriteBooks />
+                </TabsList>
+                <TabsContent value="books">
+                    <BookManagement />
                 </TabsContent>
-            )}
-             <TabsContent value="comments">
-                <CommentManagement />
-            </TabsContent>
-        </Tabs>
+                <TabsContent value="authors">
+                    <AuthorManagement />
+                </TabsContent>
+                    <TabsContent value="genres">
+                    <GenreManagement />
+                </TabsContent>
+                <TabsContent value="members">
+                    <MemberManagement />
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
