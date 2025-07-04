@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -11,7 +10,6 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Trash2, Book as BookIcon } from 'lucide-react';
 import {
@@ -47,11 +45,11 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-row items-center justify-between">
         <div>
-            <CardTitle>Quản lý Series</CardTitle>
-            <CardDescription>Thêm hoặc xóa series sách trong hệ thống.</CardDescription>
+            <h3 className="text-xl font-semibold tracking-tight">Quản lý Series</h3>
+            <p className="text-sm text-muted-foreground mt-1">Thêm hoặc xóa series sách trong hệ thống.</p>
         </div>
         <Dialog open={isAddSeriesOpen} onOpenChange={setIsAddSeriesOpen}>
             <DialogTrigger asChild>
@@ -67,8 +65,8 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
                 <AddSeriesForm onSeriesAdded={handleSeriesAdded} onFinished={() => setIsAddSeriesOpen(false)}/>
             </DialogContent>
         </Dialog>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div>
          {isLoading ? (
             <div className="space-y-4">
                 <Skeleton className="h-10 w-full" />
@@ -121,9 +119,7 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
             </Table>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
-
-    

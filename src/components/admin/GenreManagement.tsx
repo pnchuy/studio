@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -11,7 +10,6 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Trash2 } from 'lucide-react';
 import {
@@ -63,11 +61,11 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDelete
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-row items-center justify-between">
         <div>
-            <CardTitle>Quản lý thể loại</CardTitle>
-            <CardDescription>Thêm, xóa thể loại sách.</CardDescription>
+            <h3 className="text-xl font-semibold tracking-tight">Quản lý thể loại</h3>
+            <p className="text-sm text-muted-foreground mt-1">Thêm, xóa thể loại sách.</p>
         </div>
         <Dialog open={isAddGenreOpen} onOpenChange={setIsAddGenreOpen}>
             <DialogTrigger asChild>
@@ -83,8 +81,8 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDelete
                 <AddGenreForm onGenreAdded={handleGenreAdded} onFinished={() => setIsAddGenreOpen(false)}/>
             </DialogContent>
         </Dialog>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div>
          {isLoading ? (
           <div className="space-y-4">
             <Skeleton className="h-10 w-full" />
@@ -125,9 +123,7 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDelete
             </Table>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
-
-    
