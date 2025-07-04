@@ -1,13 +1,20 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { Book } from '@/types';
 import { useLibrary } from '@/hooks/use-library';
 import { useSearchHistory } from '@/hooks/use-search-history';
 import { Button } from '@/components/ui/button';
-import { BookmarkPlus, BookmarkCheck, ShoppingCart } from 'lucide-react';
+import { BookmarkPlus, BookmarkCheck, ShoppingCart, Headphones } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface BookDetailClientProps {
     book: Book;
@@ -17,6 +24,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
     const { addToLibrary, removeFromLibrary, isInLibrary } = useLibrary();
     const { addViewedBook } = useSearchHistory();
     const { toast } = useToast();
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         addViewedBook(book.title);
@@ -55,6 +63,32 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                     </>
                 )}
             </Button>
+
+             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="secondary" size="lg" disabled={!book.youtubeLink} className="flex-grow sm:flex-grow-0">
+                        <Headphones className="mr-2 h-5 w-5" />
+                        Listen and Read
+                    </Button>
+                </DialogTrigger>
+                {book.youtubeLink && (
+                    <DialogContent className="max-w-4xl h-auto p-4 sm:p-6">
+                        <DialogHeader>
+                            <DialogTitle>{book.title}</DialogTitle>
+                        </DialogHeader>
+                        <div className="aspect-video w-full mt-2">
+                            <iframe
+                                className="w-full h-full rounded-lg"
+                                src={book.youtubeLink}
+                                title="YouTube video player"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowFullScreen
+                            ></iframe>
+                        </div>
+                    </DialogContent>
+                )}
+            </Dialog>
+
             {book.amazonLink && (
                  <Button asChild size="lg" variant="outline" className="flex-grow sm:flex-grow-0">
                     <Link href={book.amazonLink} target="_blank" rel="noopener noreferrer">

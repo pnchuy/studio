@@ -90,21 +90,6 @@ export default async function BookPage({ params }: BookPageProps) {
             <p className="prose dark:prose-invert max-w-none text-lg leading-relaxed">{book.summary}</p>
         </div>
         
-        {book.youtubeLink && (
-            <div className="mt-12">
-                <h2 className="text-2xl font-bold font-headline mb-4">Book Trailer / Review</h2>
-                <div className="aspect-video w-full">
-                <iframe
-                    className="w-full h-full rounded-lg shadow-xl"
-                    src={book.youtubeLink}
-                    title="YouTube video player"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                ></iframe>
-                </div>
-            </div>
-        )}
-
         <CommentSection bookId={book.id} />
     </article>
   );
