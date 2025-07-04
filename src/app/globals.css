@@ -39,11 +39,11 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222.2 84% 9.9%;
     --foreground: 0 0% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 84% 9.9%;
     --card-foreground: 0 0% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 222.2 84% 9.9%;
     --popover-foreground: 0 0% 98%;
     --primary: 231 48% 48%;
     --primary-foreground: 0 0% 98%;
