@@ -7,6 +7,7 @@ import { formatDistanceToNow } from 'date-fns';
 import type { Comment, Book } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
 import { getAllBooks } from '@/lib/books';
+import { slugify } from '@/lib/utils';
 import {
   Table,
   TableHeader,
@@ -202,7 +203,12 @@ export function CommentManagement() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {paginatedComments.map((comment) => (
+                                    {paginatedComments.map((comment) => {
+                                        const bookTitle = getBookTitle(comment.bookId);
+                                        const bookSlug = slugify(bookTitle);
+                                        const bookUrl = `/book/${comment.bookId}${bookSlug ? `-${bookSlug}` : ''}`;
+                                        
+                                        return (
                                         <TableRow key={comment.id}>
                                             <TableCell>
                                                 <p className="line-clamp-2">{comment.text}</p>
@@ -211,8 +217,8 @@ export function CommentManagement() {
                                             {isAdminOrManager && <TableCell>{comment.userName}</TableCell>}
                                             <TableCell>
                                                 <Button variant="link" asChild className="p-0 h-auto font-normal">
-                                                    <Link href={`/book/${comment.bookId}`} className="line-clamp-1 text-left">
-                                                        {getBookTitle(comment.bookId)}
+                                                    <Link href={bookUrl} className="line-clamp-1 text-left">
+                                                        {bookTitle}
                                                     </Link>
                                                 </Button>
                                             </TableCell>
@@ -243,7 +249,7 @@ export function CommentManagement() {
                                                 </DropdownMenu>
                                             </TableCell>
                                         </TableRow>
-                                    ))}
+                                    )})}
                                 </TableBody>
                             </Table>
                         </div>
@@ -319,5 +325,3 @@ export function CommentManagement() {
         </>
     );
 }
-
-    

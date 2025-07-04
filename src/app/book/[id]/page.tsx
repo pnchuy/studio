@@ -15,7 +15,9 @@ type BookPageProps = {
 };
 
 export async function generateMetadata({ params }: BookPageProps) {
-    const book = await getBookById(params.id);
+    const bookId = params.id.split('-')[0];
+    const book = await getBookById(bookId);
+    
     if (!book) {
         return {
             title: 'Book Not Found'
@@ -29,7 +31,8 @@ export async function generateMetadata({ params }: BookPageProps) {
 }
 
 export default async function BookPage({ params }: BookPageProps) {
-  const book = await getBookById(params.id);
+  const bookId = params.id.split('-')[0];
+  const book = await getBookById(bookId);
 
   if (!book) {
     notFound();

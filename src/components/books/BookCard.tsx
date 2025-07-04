@@ -8,14 +8,18 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { slugify } from '@/lib/utils';
 
 interface BookCardProps {
   book: BookWithDetails;
 }
 
 export function BookCard({ book }: BookCardProps) {
+  const bookSlug = slugify(book.title);
+  const bookUrl = `/book/${book.id}${bookSlug ? `-${bookSlug}` : ''}`;
+
   return (
-    <Link href={`/book/${book.id}`} className="group block">
+    <Link href={bookUrl} className="group block">
       <Card className="h-full overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
         <CardHeader className="p-0">
           <div className="relative aspect-[2/3] w-full">
