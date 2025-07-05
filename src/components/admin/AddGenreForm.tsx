@@ -94,7 +94,7 @@ export function AddGenreForm({ genres, onGenreAdded, onFinished }: AddGenreFormP
                <Popover open={filteredSuggestions.length > 0 && form.formState.isDirty}>
                 <PopoverTrigger asChild>
                     <FormControl>
-                        <Input placeholder="Epic Fantasy" {...field} autoComplete="off" />
+                        <Input placeholder="Epic Fantasy" {...field} autoComplete="off" type="text" />
                     </FormControl>
                 </PopoverTrigger>
                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>

@@ -88,7 +88,7 @@ export function AddSeriesForm({ series, onSeriesAdded, onFinished }: AddSeriesFo
               <Popover open={filteredSuggestions.length > 0 && form.formState.isDirty}>
                 <PopoverTrigger asChild>
                     <FormControl>
-                        <Input placeholder="The Stormlight Archive" {...field} autoComplete="off" />
+                        <Input placeholder="The Stormlight Archive" {...field} autoComplete="off" type="text" />
                     </FormControl>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
