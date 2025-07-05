@@ -148,14 +148,11 @@ export function BookManagement() {
     });
   };
 
-  const handleBooksImported = (importedBooks: Book[]) => {
-    const existingTitles = new Set(books.map(b => b.title.toLowerCase()));
-    const newBooks = importedBooks.filter(book => !existingTitles.has(book.title.toLowerCase()));
-
+  const handleBooksImported = (newBooks: Book[]) => {
     if (newBooks.length === 0) {
       toast({
-        title: "Không có sách mới",
-        description: "Tất cả sách trong tệp đã tồn tại trong bộ sưu tập của bạn."
+        title: "Không có sách mới nào được thêm",
+        description: "Có thể tất cả sách trong tệp đã tồn tại hoặc không hợp lệ.",
       });
       return;
     }
@@ -348,11 +345,13 @@ export function BookManagement() {
                         Import sách
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>Import sách từ file JSON</DialogTitle>
                     </DialogHeader>
                     <ImportBooksDialog
+                      existingBooks={books}
+                      existingAuthors={authors}
                       onBooksImported={handleBooksImported}
                       onFinished={() => setIsImportBookOpen(false)}
                     />
