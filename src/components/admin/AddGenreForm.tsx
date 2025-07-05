@@ -16,7 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import type { Genre } from "@/types";
 import { generateId } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Tên thể loại phải có ít nhất 2 ký tự." }),
@@ -29,13 +30,34 @@ interface AddGenreFormProps {
 }
 
 export function AddGenreForm({ genres, onGenreAdded, onFinished }: AddGenreFormProps) {
-  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
     },
+    mode: "onChange",
   });
+
+  const nameValue = form.watch("name");
+
+  useEffect(() => {
+    if (nameValue && form.formState.isDirty) {
+        const isDuplicate = genres.some(
+            (genre) => genre.name.toLowerCase() === nameValue.toLowerCase()
+        );
+        if (isDuplicate) {
+            form.setError("name", { type: "manual", message: "Thể loại này đã tồn tại." });
+        } else {
+            form.clearErrors("name");
+        }
+    }
+  }, [nameValue, genres, form]);
+
+  const filteredSuggestions = genres.filter(genre => 
+    genre.name.toLowerCase().includes(nameValue.toLowerCase()) && 
+    nameValue.length > 0 &&
+    genre.name.toLowerCase() !== nameValue.toLowerCase()
+  );
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const isDuplicate = genres.some(
@@ -43,11 +65,7 @@ export function AddGenreForm({ genres, onGenreAdded, onFinished }: AddGenreFormP
     );
 
     if (isDuplicate) {
-      toast({
-        variant: "destructive",
-        title: "Thể loại đã tồn tại",
-        description: `Một thể loại với tên "${values.name}" đã có trong danh sách.`,
-      });
+      form.setError("name", { type: "manual", message: "Thể loại này đã tồn tại." });
       return; 
     }
 
@@ -59,6 +77,11 @@ export function AddGenreForm({ genres, onGenreAdded, onFinished }: AddGenreFormP
     onFinished();
   }
 
+  const handleSuggestionClick = (name: string) => {
+    form.setValue("name", name, { shouldValidate: true });
+    form.clearErrors("name");
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -68,9 +91,31 @@ export function AddGenreForm({ genres, onGenreAdded, onFinished }: AddGenreFormP
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tên thể loại</FormLabel>
-              <FormControl>
-                <Input placeholder="Epic Fantasy" {...field} />
-              </FormControl>
+               <Popover open={filteredSuggestions.length > 0 && form.formState.isDirty}>
+                <PopoverTrigger asChild>
+                    <FormControl>
+                        <Input placeholder="Epic Fantasy" {...field} autoComplete="off" />
+                    </FormControl>
+                </PopoverTrigger>
+                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+                    <div className="max-h-60 overflow-y-auto">
+                    {filteredSuggestions.map((genre) => (
+                        <Button
+                        key={genre.id}
+                        type="button"
+                        variant="ghost"
+                        className="w-full justify-start rounded-md"
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleSuggestionClick(genre.name);
+                        }}
+                        >
+                        {genre.name}
+                        </Button>
+                    ))}
+                    </div>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}

@@ -14,7 +14,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Tên series phải có ít nhất 2 ký tự." }),
@@ -27,13 +28,34 @@ interface AddSeriesFormProps {
 }
 
 export function AddSeriesForm({ series, onSeriesAdded, onFinished }: AddSeriesFormProps) {
-  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
     },
+    mode: "onChange",
   });
+
+  const nameValue = form.watch("name");
+
+  useEffect(() => {
+    if (nameValue && form.formState.isDirty) {
+        const isDuplicate = series.some(
+            (seriesName) => seriesName.toLowerCase() === nameValue.toLowerCase()
+        );
+        if (isDuplicate) {
+            form.setError("name", { type: "manual", message: "Series này đã tồn tại." });
+        } else {
+            form.clearErrors("name");
+        }
+    }
+  }, [nameValue, series, form]);
+
+  const filteredSuggestions = series.filter(seriesName => 
+    seriesName.toLowerCase().includes(nameValue.toLowerCase()) && 
+    nameValue.length > 0 &&
+    seriesName.toLowerCase() !== nameValue.toLowerCase()
+  );
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const isDuplicate = series.some(
@@ -41,16 +63,17 @@ export function AddSeriesForm({ series, onSeriesAdded, onFinished }: AddSeriesFo
     );
 
     if (isDuplicate) {
-      toast({
-        variant: "destructive",
-        title: "Series đã tồn tại",
-        description: `Một series với tên "${values.name}" đã có trong danh sách.`,
-      });
+      form.setError("name", { type: "manual", message: "Series này đã tồn tại." });
       return;
     }
 
     onSeriesAdded(values.name);
     onFinished();
+  }
+
+  const handleSuggestionClick = (name: string) => {
+    form.setValue("name", name, { shouldValidate: true });
+    form.clearErrors("name");
   }
 
   return (
@@ -62,9 +85,31 @@ export function AddSeriesForm({ series, onSeriesAdded, onFinished }: AddSeriesFo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tên Series</FormLabel>
-              <FormControl>
-                <Input placeholder="The Stormlight Archive" {...field} />
-              </FormControl>
+              <Popover open={filteredSuggestions.length > 0 && form.formState.isDirty}>
+                <PopoverTrigger asChild>
+                    <FormControl>
+                        <Input placeholder="The Stormlight Archive" {...field} autoComplete="off" />
+                    </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+                    <div className="max-h-60 overflow-y-auto">
+                    {filteredSuggestions.map((seriesName) => (
+                        <Button
+                        key={seriesName}
+                        type="button"
+                        variant="ghost"
+                        className="w-full justify-start rounded-md"
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleSuggestionClick(seriesName);
+                        }}
+                        >
+                        {seriesName}
+                        </Button>
+                    ))}
+                    </div>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}

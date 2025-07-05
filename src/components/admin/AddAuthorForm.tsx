@@ -16,7 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import type { Author } from "@/types";
 import { generateId } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Tên tác giả phải có ít nhất 2 ký tự." }),
@@ -29,13 +30,34 @@ interface AddAuthorFormProps {
 }
 
 export function AddAuthorForm({ authors, onAuthorAdded, onFinished }: AddAuthorFormProps) {
-  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
     },
+    mode: "onChange"
   });
+
+  const nameValue = form.watch("name");
+
+  useEffect(() => {
+    if (nameValue && form.formState.isDirty) {
+        const isDuplicate = authors.some(
+            (author) => author.name.toLowerCase() === nameValue.toLowerCase()
+        );
+        if (isDuplicate) {
+            form.setError("name", { type: "manual", message: "Tác giả này đã tồn tại." });
+        } else {
+            form.clearErrors("name");
+        }
+    }
+  }, [nameValue, authors, form]);
+
+  const filteredSuggestions = authors.filter(author => 
+    author.name.toLowerCase().includes(nameValue.toLowerCase()) && 
+    nameValue.length > 0 &&
+    author.name.toLowerCase() !== nameValue.toLowerCase()
+  );
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const isDuplicate = authors.some(
@@ -43,12 +65,8 @@ export function AddAuthorForm({ authors, onAuthorAdded, onFinished }: AddAuthorF
     );
 
     if (isDuplicate) {
-      toast({
-        variant: "destructive",
-        title: "Tác giả đã tồn tại",
-        description: `Một tác giả với tên "${values.name}" đã có trong danh sách.`,
-      });
-      return; 
+        form.setError("name", { type: "manual", message: "Tác giả này đã tồn tại." });
+        return; 
     }
     
     const newAuthor: Author = {
@@ -57,6 +75,11 @@ export function AddAuthorForm({ authors, onAuthorAdded, onFinished }: AddAuthorF
     };
     onAuthorAdded(newAuthor);
     onFinished();
+  }
+  
+  const handleSuggestionClick = (name: string) => {
+    form.setValue("name", name, { shouldValidate: true });
+    form.clearErrors("name");
   }
 
   return (
@@ -68,9 +91,31 @@ export function AddAuthorForm({ authors, onAuthorAdded, onFinished }: AddAuthorF
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tên tác giả</FormLabel>
-              <FormControl>
-                <Input placeholder="Brandon Sanderson" {...field} />
-              </FormControl>
+              <Popover open={filteredSuggestions.length > 0 && form.formState.isDirty}>
+                <PopoverTrigger asChild>
+                    <FormControl>
+                        <Input placeholder="Brandon Sanderson" {...field} autoComplete="off" />
+                    </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+                    <div className="max-h-60 overflow-y-auto">
+                    {filteredSuggestions.map((author) => (
+                        <Button
+                        key={author.id}
+                        type="button"
+                        variant="ghost"
+                        className="w-full justify-start rounded-md"
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleSuggestionClick(author.name);
+                        }}
+                        >
+                        {author.name}
+                        </Button>
+                    ))}
+                    </div>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
