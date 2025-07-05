@@ -39,9 +39,9 @@ export function AddGenreForm({ genres, onGenreAdded, onFinished }: AddGenreFormP
 
   const nameValue = form.watch("name");
 
-  const { setError, clearErrors, formState } = form;
+  const { setError, clearErrors, formState: { isDirty } } = form;
   useEffect(() => {
-    if (nameValue && formState.isDirty) {
+    if (nameValue && isDirty) {
         const isDuplicate = genres.some(
             (genre) => genre.name.toLowerCase() === nameValue.toLowerCase()
         );
@@ -51,7 +51,7 @@ export function AddGenreForm({ genres, onGenreAdded, onFinished }: AddGenreFormP
             clearErrors("name");
         }
     }
-  }, [nameValue, genres, setError, clearErrors, formState]);
+  }, [nameValue, genres, setError, clearErrors, isDirty]);
 
   const filteredSuggestions = genres.filter(genre => 
     genre.name.toLowerCase().includes(nameValue.toLowerCase()) && 
@@ -91,7 +91,7 @@ export function AddGenreForm({ genres, onGenreAdded, onFinished }: AddGenreFormP
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tên thể loại</FormLabel>
-               <Popover open={filteredSuggestions.length > 0 && form.formState.isDirty}>
+               <Popover open={filteredSuggestions.length > 0 && isDirty}>
                 <PopoverTrigger asChild>
                     <FormControl>
                         <Input placeholder="Epic Fantasy" {...field} autoComplete="off" type="text" />

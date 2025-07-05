@@ -39,9 +39,9 @@ export function AddAuthorForm({ authors, onAuthorAdded, onFinished }: AddAuthorF
 
   const nameValue = form.watch("name");
 
-  const { setError, clearErrors, formState } = form;
+  const { setError, clearErrors, formState: { isDirty } } = form;
   useEffect(() => {
-    if (nameValue && formState.isDirty) {
+    if (nameValue && isDirty) {
         const isDuplicate = authors.some(
             (author) => author.name.toLowerCase() === nameValue.toLowerCase()
         );
@@ -51,7 +51,7 @@ export function AddAuthorForm({ authors, onAuthorAdded, onFinished }: AddAuthorF
             clearErrors("name");
         }
     }
-  }, [nameValue, authors, setError, clearErrors, formState]);
+  }, [nameValue, authors, setError, clearErrors, isDirty]);
 
   const filteredSuggestions = authors.filter(author => 
     author.name.toLowerCase().includes(nameValue.toLowerCase()) && 
@@ -91,7 +91,7 @@ export function AddAuthorForm({ authors, onAuthorAdded, onFinished }: AddAuthorF
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tên tác giả</FormLabel>
-              <Popover open={filteredSuggestions.length > 0 && form.formState.isDirty}>
+              <Popover open={filteredSuggestions.length > 0 && isDirty}>
                 <PopoverTrigger asChild>
                     <FormControl>
                         <Input placeholder="Brandon Sanderson" {...field} autoComplete="off" type="text" />

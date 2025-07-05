@@ -37,9 +37,9 @@ export function AddSeriesForm({ series, onSeriesAdded, onFinished }: AddSeriesFo
 
   const nameValue = form.watch("name");
 
-  const { setError, clearErrors, formState } = form;
+  const { setError, clearErrors, formState: { isDirty } } = form;
   useEffect(() => {
-    if (nameValue && formState.isDirty) {
+    if (nameValue && isDirty) {
         const isDuplicate = series.some(
             (seriesName) => seriesName.toLowerCase() === nameValue.toLowerCase()
         );
@@ -49,7 +49,7 @@ export function AddSeriesForm({ series, onSeriesAdded, onFinished }: AddSeriesFo
             clearErrors("name");
         }
     }
-  }, [nameValue, series, setError, clearErrors, formState]);
+  }, [nameValue, series, setError, clearErrors, isDirty]);
 
   const filteredSuggestions = series.filter(seriesName => 
     seriesName.toLowerCase().includes(nameValue.toLowerCase()) && 
@@ -85,7 +85,7 @@ export function AddSeriesForm({ series, onSeriesAdded, onFinished }: AddSeriesFo
           render={({ field }) => (
             <FormItem>
               <FormLabel>Tên Series</FormLabel>
-              <Popover open={filteredSuggestions.length > 0 && form.formState.isDirty}>
+              <Popover open={filteredSuggestions.length > 0 && isDirty}>
                 <PopoverTrigger asChild>
                     <FormControl>
                         <Input placeholder="The Stormlight Archive" {...field} autoComplete="off" type="text" />
