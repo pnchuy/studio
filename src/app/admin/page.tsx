@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookManagement } from '@/components/admin/BookManagement';
 import { MemberManagement } from '@/components/admin/MemberManagement';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Book, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+type Section = 'books' | 'members';
 
 export default function AdminPage() {
     const router = useRouter();
     const { user, isLoggedIn, isLoading: authLoading } = useAuth();
+    const [activeSection, setActiveSection] = useState<Section>('books');
 
     useEffect(() => {
         if (!authLoading) {
@@ -24,12 +28,30 @@ export default function AdminPage() {
 
     if (authLoading || !isLoggedIn || !user || user.role === 'MEMBER') {
         return (
-             <div className="space-y-4">
-                <Skeleton className="h-10 w-1/4" />
-                <Skeleton className="h-64 w-full" />
+            <div className="space-y-6">
+                <div className="space-y-2">
+                    <Skeleton className="h-8 w-1/3" />
+                    <Skeleton className="h-4 w-1/2" />
+                </div>
+                <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
+                    <aside className="lg:w-1/4">
+                        <div className="space-y-2">
+                            <Skeleton className="h-9 w-full" />
+                            <Skeleton className="h-9 w-full" />
+                        </div>
+                    </aside>
+                    <div className="flex-1">
+                        <Skeleton className="h-96 w-full rounded-lg" />
+                    </div>
+                </div>
             </div>
         );
     }
+
+    const navItems = [
+        { id: 'books', label: 'Quản lý sách', icon: Book },
+        { id: 'members', label: 'Quản lý thành viên', icon: Users },
+    ];
     
     return (
         <div className="space-y-6">
@@ -39,18 +61,28 @@ export default function AdminPage() {
                     Quản lý sách, tác giả, thể loại và thành viên của Bibliophile.
                 </p>
             </div>
-            <Tabs defaultValue="books" className="space-y-4">
-                <TabsList>
-                    <TabsTrigger value="books">Quản lý sách</TabsTrigger>
-                    <TabsTrigger value="members">Quản lý thành viên</TabsTrigger>
-                </TabsList>
-                <TabsContent value="books">
-                    <BookManagement />
-                </TabsContent>
-                <TabsContent value="members">
-                    <MemberManagement />
-                </TabsContent>
-            </Tabs>
+            
+            <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
+                <aside className="lg:w-1/4">
+                    <nav className="flex flex-col space-y-1">
+                        {navItems.map((item) => (
+                            <Button
+                                key={item.id}
+                                variant={activeSection === item.id ? 'default' : 'ghost'}
+                                className="w-full justify-start px-3"
+                                onClick={() => setActiveSection(item.id as Section)}
+                            >
+                                <item.icon className="mr-2 h-4 w-4" />
+                                {item.label}
+                            </Button>
+                        ))}
+                    </nav>
+                </aside>
+                <div className="flex-1">
+                    {activeSection === 'books' && <BookManagement />}
+                    {activeSection === 'members' && <MemberManagement />}
+                </div>
+            </div>
         </div>
     );
 }
