@@ -62,8 +62,8 @@ export default function ManagePage() {
                 </p>
             </div>
             
-            <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
-                <aside className="lg:w-1/4">
+            <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-8 lg:space-y-0">
+                <aside className="lg:w-60">
                     <nav className="flex flex-col space-y-1">
                         {navItems.map((item) => (
                             <Button
