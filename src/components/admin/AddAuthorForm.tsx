@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -40,18 +39,19 @@ export function AddAuthorForm({ authors, onAuthorAdded, onFinished }: AddAuthorF
 
   const nameValue = form.watch("name");
 
+  const { setError, clearErrors, formState } = form;
   useEffect(() => {
-    if (nameValue && form.formState.isDirty) {
+    if (nameValue && formState.isDirty) {
         const isDuplicate = authors.some(
             (author) => author.name.toLowerCase() === nameValue.toLowerCase()
         );
         if (isDuplicate) {
-            form.setError("name", { type: "manual", message: "Tác giả này đã tồn tại." });
+            setError("name", { type: "manual", message: "Tác giả này đã tồn tại." });
         } else {
-            form.clearErrors("name");
+            clearErrors("name");
         }
     }
-  }, [nameValue, authors, form]);
+  }, [nameValue, authors, setError, clearErrors, formState]);
 
   const filteredSuggestions = authors.filter(author => 
     author.name.toLowerCase().includes(nameValue.toLowerCase()) && 

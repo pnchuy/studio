@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -40,18 +39,19 @@ export function AddGenreForm({ genres, onGenreAdded, onFinished }: AddGenreFormP
 
   const nameValue = form.watch("name");
 
+  const { setError, clearErrors, formState } = form;
   useEffect(() => {
-    if (nameValue && form.formState.isDirty) {
+    if (nameValue && formState.isDirty) {
         const isDuplicate = genres.some(
             (genre) => genre.name.toLowerCase() === nameValue.toLowerCase()
         );
         if (isDuplicate) {
-            form.setError("name", { type: "manual", message: "Thể loại này đã tồn tại." });
+            setError("name", { type: "manual", message: "Thể loại này đã tồn tại." });
         } else {
-            form.clearErrors("name");
+            clearErrors("name");
         }
     }
-  }, [nameValue, genres, form]);
+  }, [nameValue, genres, setError, clearErrors, formState]);
 
   const filteredSuggestions = genres.filter(genre => 
     genre.name.toLowerCase().includes(nameValue.toLowerCase()) && 

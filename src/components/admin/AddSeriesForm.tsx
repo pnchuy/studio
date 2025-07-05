@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -38,18 +37,19 @@ export function AddSeriesForm({ series, onSeriesAdded, onFinished }: AddSeriesFo
 
   const nameValue = form.watch("name");
 
+  const { setError, clearErrors, formState } = form;
   useEffect(() => {
-    if (nameValue && form.formState.isDirty) {
+    if (nameValue && formState.isDirty) {
         const isDuplicate = series.some(
             (seriesName) => seriesName.toLowerCase() === nameValue.toLowerCase()
         );
         if (isDuplicate) {
-            form.setError("name", { type: "manual", message: "Series này đã tồn tại." });
+            setError("name", { type: "manual", message: "Series này đã tồn tại." });
         } else {
-            form.clearErrors("name");
+            clearErrors("name");
         }
     }
-  }, [nameValue, series, form]);
+  }, [nameValue, series, setError, clearErrors, formState]);
 
   const filteredSuggestions = series.filter(seriesName => 
     seriesName.toLowerCase().includes(nameValue.toLowerCase()) && 
