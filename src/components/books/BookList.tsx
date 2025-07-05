@@ -17,29 +17,45 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { useResponsiveColumns } from '@/hooks/use-responsive-columns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
-
-const INITIAL_ROWS = 3;
-const ROWS_TO_LOAD = 2;
+import { fetchMoreBooks } from '@/app/actions';
 
 interface BookListProps {
-  books: BookWithDetails[];
+  initialBooks: BookWithDetails[];
+  initialHasMore: boolean;
 }
 
-export default function BookList({ books }: BookListProps) {
+export default function BookList({ initialBooks, initialHasMore }: BookListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('title_asc');
   const { addSearchTerm } = useSearchHistory();
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const columns = useResponsiveColumns();
-  const [visibleCount, setVisibleCount] = useState(INITIAL_ROWS * columns);
+  // State for infinite scroll
+  const [books, setBooks] = useState<BookWithDetails[]>(initialBooks);
+  const [page, setPage] = useState(2);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadMoreRef = useRef(null);
 
+  const columns = useResponsiveColumns();
+
+  // Reset list when filters change
+  useEffect(() => {
+    // This effect should only run for client-side filtering after initial load.
+    // The initial data is already provided.
+    // For a full implementation, filtering would also be a server action.
+    setBooks(initialBooks);
+    setPage(2);
+    setHasMore(initialHasMore);
+  }, [searchTerm, sortOrder, initialBooks, initialHasMore]);
+
+
   const filteredAndSortedBooks = useMemo(() => {
+    // Note: This filtering is client-side. For large datasets, this should be moved to the server action.
     let filtered = books.filter(
       (book) =>
-        book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (book.author?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+        book.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        (book.author?.name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     );
 
     return filtered.sort((a, b) => {
@@ -60,45 +76,48 @@ export default function BookList({ books }: BookListProps) {
           return 0;
       }
     });
-  }, [books, searchTerm, sortOrder]);
+  }, [books, debouncedSearchTerm, sortOrder]);
+
+
+  const loadMoreItems = useCallback(async () => {
+    if (isLoadingMore || !hasMore || debouncedSearchTerm) return; // Don't load more if searching client-side
+
+    setIsLoadingMore(true);
+    const { books: newBooks, hasMore: newHasMore } = await fetchMoreBooks(page);
+    setBooks((prevBooks) => [...prevBooks, ...newBooks]);
+    setHasMore(newHasMore);
+    setPage((prevPage) => prevPage + 1);
+    setIsLoadingMore(false);
+  }, [isLoadingMore, hasMore, page, debouncedSearchTerm]);
+
 
   useEffect(() => {
-    setVisibleCount(INITIAL_ROWS * columns);
-  }, [columns, searchTerm, sortOrder]);
-
-  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
-    const [target] = entries;
-    if (target.isIntersecting) {
-      setVisibleCount((prev) => Math.min(prev + ROWS_TO_LOAD * columns, filteredAndSortedBooks.length));
-    }
-  }, [columns, filteredAndSortedBooks.length]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(handleObserver, {
-      rootMargin: '400px', 
+    const observer = new IntersectionObserver((entries) => {
+        const [target] = entries;
+        if (target.isIntersecting) {
+            loadMoreItems();
+        }
+    }, {
+        rootMargin: '400px',
     });
+
     const currentRef = loadMoreRef.current;
     if (currentRef) {
-      observer.observe(currentRef);
+        observer.observe(currentRef);
     }
+
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
+        if (currentRef) {
+            observer.unobserve(currentRef);
+        }
     };
-  }, [handleObserver, filteredAndSortedBooks, visibleCount]); 
-  
+  }, [loadMoreItems]);
+
   useEffect(() => {
     if (debouncedSearchTerm) {
       addSearchTerm(debouncedSearchTerm);
     }
   }, [debouncedSearchTerm, addSearchTerm]);
-
-  const booksToShow = useMemo(() => {
-    return filteredAndSortedBooks.slice(0, visibleCount);
-  }, [filteredAndSortedBooks, visibleCount]);
-  
-  const hasMore = visibleCount < filteredAndSortedBooks.length;
 
   return (
     <div className="mt-8 space-y-8">
@@ -132,14 +151,14 @@ export default function BookList({ books }: BookListProps) {
         </CardContent>
       </Card>
 
-      {booksToShow.length > 0 ? (
+      {filteredAndSortedBooks.length > 0 ? (
         <>
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {booksToShow.map((book) => (
+          {filteredAndSortedBooks.map((book) => (
             <BookCard key={`${book.id}-${sortOrder}`} book={book} />
           ))}
         </div>
-         {hasMore && (
+         {(hasMore || isLoadingMore) && !debouncedSearchTerm && (
             <div ref={loadMoreRef} className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 h-20">
               {Array.from({ length: columns }).map((_, i) => (
                 <div key={i} className="space-y-2">
