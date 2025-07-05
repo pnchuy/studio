@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Upload } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,7 @@ import { EditBookForm } from './EditBookForm';
 import { AuthorManagement } from './AuthorManagement';
 import { GenreManagement } from './GenreManagement';
 import { SeriesManagement } from './SeriesManagement';
+import { ImportBooksDialog } from './ImportBooksDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -72,6 +73,7 @@ export function BookManagement() {
   
   const [isAddBookOpen, setIsAddBookOpen] = useState(false);
   const [isEditBookOpen, setIsEditBookOpen] = useState(false);
+  const [isImportBookOpen, setIsImportBookOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
 
@@ -143,6 +145,35 @@ export function BookManagement() {
     toast({
         title: "Thêm sách thành công",
         description: `Sách "${newBook.title}" đã được thêm.`,
+    });
+  };
+
+  const handleBooksImported = (importedBooks: Book[]) => {
+    const existingTitles = new Set(books.map(b => b.title.toLowerCase()));
+    const newBooks = importedBooks.filter(book => !existingTitles.has(book.title.toLowerCase()));
+
+    if (newBooks.length === 0) {
+      toast({
+        title: "Không có sách mới",
+        description: "Tất cả sách trong tệp đã tồn tại trong bộ sưu tập của bạn."
+      });
+      return;
+    }
+
+    const updatedBooks = [...newBooks, ...books];
+    localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
+    setBooks(updatedBooks);
+
+    const newSeries = [...new Set(newBooks.map(b => b.series).filter((s): s is string => !!s && !series.includes(s)))];
+    if (newSeries.length > 0) {
+        const updatedSeriesList = [...series, ...newSeries].sort();
+        localStorage.setItem(SERIES_STORAGE_KEY, JSON.stringify(updatedSeriesList));
+        setSeries(updatedSeriesList);
+    }
+
+    toast({
+        title: "Import thành công",
+        description: `${newBooks.length} sách mới đã được thêm vào bộ sưu tập của bạn.`,
     });
   };
 
@@ -309,27 +340,46 @@ export function BookManagement() {
                 Thêm, sửa, xóa sách, tác giả, thể loại và series.
             </CardDescription>
         </div>
-        <Dialog open={isAddBookOpen} onOpenChange={setIsAddBookOpen}>
-            <DialogTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2" />
-                    Thêm sách
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                    <DialogTitle>Thêm sách mới</DialogTitle>
-                </DialogHeader>
-                <AddBookForm 
-                  books={books}
-                  onBookAdded={handleBookAdded} 
-                  onFinished={() => setIsAddBookOpen(false)}
-                  authors={authors}
-                  genres={genres}
-                  seriesList={series}
-                />
-            </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2">
+            <Dialog open={isImportBookOpen} onOpenChange={setIsImportBookOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline">
+                        <Upload className="mr-2" />
+                        Import sách
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>Import sách từ file JSON</DialogTitle>
+                    </DialogHeader>
+                    <ImportBooksDialog
+                      onBooksImported={handleBooksImported}
+                      onFinished={() => setIsImportBookOpen(false)}
+                    />
+                </DialogContent>
+            </Dialog>
+            <Dialog open={isAddBookOpen} onOpenChange={setIsAddBookOpen}>
+                <DialogTrigger asChild>
+                    <Button>
+                        <PlusCircle className="mr-2" />
+                        Thêm sách
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle>Thêm sách mới</DialogTitle>
+                    </DialogHeader>
+                    <AddBookForm 
+                      books={books}
+                      onBookAdded={handleBookAdded} 
+                      onFinished={() => setIsAddBookOpen(false)}
+                      authors={authors}
+                      genres={genres}
+                      seriesList={series}
+                    />
+                </DialogContent>
+            </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
          <Tabs defaultValue="books">
