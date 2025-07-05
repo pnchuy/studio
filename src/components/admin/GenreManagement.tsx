@@ -120,7 +120,11 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDelete
                 <DialogHeader>
                     <DialogTitle>Thêm thể loại mới</DialogTitle>
                 </DialogHeader>
-                <AddGenreForm onGenreAdded={handleGenreAdded} onFinished={() => setIsAddGenreOpen(false)}/>
+                <AddGenreForm 
+                    genres={genres}
+                    onGenreAdded={handleGenreAdded} 
+                    onFinished={() => setIsAddGenreOpen(false)}
+                />
             </DialogContent>
         </Dialog>
       </div>

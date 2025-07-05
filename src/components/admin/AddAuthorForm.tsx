@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -15,17 +16,20 @@ import {
 import { Input } from "@/components/ui/input";
 import type { Author } from "@/types";
 import { generateId } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Tên tác giả phải có ít nhất 2 ký tự." }),
 });
 
 interface AddAuthorFormProps {
+    authors: Author[];
     onAuthorAdded: (author: Author) => void;
     onFinished: () => void;
 }
 
-export function AddAuthorForm({ onAuthorAdded, onFinished }: AddAuthorFormProps) {
+export function AddAuthorForm({ authors, onAuthorAdded, onFinished }: AddAuthorFormProps) {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,6 +38,19 @@ export function AddAuthorForm({ onAuthorAdded, onFinished }: AddAuthorFormProps)
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const isDuplicate = authors.some(
+      (author) => author.name.toLowerCase() === values.name.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      toast({
+        variant: "destructive",
+        title: "Tác giả đã tồn tại",
+        description: `Một tác giả với tên "${values.name}" đã có trong danh sách.`,
+      });
+      return; 
+    }
+    
     const newAuthor: Author = {
         id: `author-${generateId()}`, 
         ...values,

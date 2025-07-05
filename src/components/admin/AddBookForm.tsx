@@ -25,6 +25,7 @@ import type { Book, Author, Genre } from "@/types";
 import { convertYoutubeUrlToEmbed } from "@/lib/utils";
 import { PlusCircle, Trash2, X } from "lucide-react";
 import { Badge } from "../ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Tiêu đề phải có ít nhất 2 ký tự." }),
@@ -39,6 +40,7 @@ const formSchema = z.object({
 });
 
 interface AddBookFormProps {
+    books: Book[];
     onBookAdded: (book: Book) => void;
     onFinished: () => void;
     authors: Author[];
@@ -72,13 +74,14 @@ const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
 };
 
 
-export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesList }: AddBookFormProps) {
+export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, seriesList }: AddBookFormProps) {
   const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
   const [imagePreview, setImagePreview] = useState<string | null>("https://placehold.co/400x600.png");
   
   const [genreInputValue, setGenreInputValue] = useState("");
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const genreInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -128,6 +131,19 @@ export function AddBookForm({ onBookAdded, onFinished, authors, genres, seriesLi
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const isDuplicate = books.some(
+      (book) => book.title.toLowerCase() === values.title.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      toast({
+        variant: "destructive",
+        title: "Sách đã tồn tại",
+        description: `Một cuốn sách với tiêu đề "${values.title}" đã có trong bộ sưu tập.`,
+      });
+      return; 
+    }
+    
     const newBook: Book = {
         id: `book-${Date.now()}`, 
         ...values,

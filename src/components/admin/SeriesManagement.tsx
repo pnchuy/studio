@@ -123,7 +123,11 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
                   <DialogHeader>
                       <DialogTitle>Thêm Series Mới</DialogTitle>
                   </DialogHeader>
-                  <AddSeriesForm onSeriesAdded={handleSeriesAdded} onFinished={() => setIsAddSeriesOpen(false)}/>
+                  <AddSeriesForm 
+                    series={series}
+                    onSeriesAdded={handleSeriesAdded} 
+                    onFinished={() => setIsAddSeriesOpen(false)}
+                   />
               </DialogContent>
           </Dialog>
         </div>

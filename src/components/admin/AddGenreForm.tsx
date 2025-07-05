@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -15,17 +16,20 @@ import {
 import { Input } from "@/components/ui/input";
 import type { Genre } from "@/types";
 import { generateId } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Tên thể loại phải có ít nhất 2 ký tự." }),
 });
 
 interface AddGenreFormProps {
+    genres: Genre[];
     onGenreAdded: (genre: Genre) => void;
     onFinished: () => void;
 }
 
-export function AddGenreForm({ onGenreAdded, onFinished }: AddGenreFormProps) {
+export function AddGenreForm({ genres, onGenreAdded, onFinished }: AddGenreFormProps) {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,6 +38,19 @@ export function AddGenreForm({ onGenreAdded, onFinished }: AddGenreFormProps) {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const isDuplicate = genres.some(
+      (genre) => genre.name.toLowerCase() === values.name.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      toast({
+        variant: "destructive",
+        title: "Thể loại đã tồn tại",
+        description: `Một thể loại với tên "${values.name}" đã có trong danh sách.`,
+      });
+      return; 
+    }
+
     const newGenre: Genre = {
         id: `genre-${generateId()}`, 
         ...values,

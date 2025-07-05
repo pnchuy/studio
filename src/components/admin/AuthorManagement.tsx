@@ -121,7 +121,11 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
                 <DialogHeader>
                     <DialogTitle>Thêm tác giả mới</DialogTitle>
                 </DialogHeader>
-                <AddAuthorForm onAuthorAdded={handleAuthorAdded} onFinished={() => setIsAddAuthorOpen(false)}/>
+                <AddAuthorForm 
+                    authors={authors}
+                    onAuthorAdded={handleAuthorAdded} 
+                    onFinished={() => setIsAddAuthorOpen(false)}
+                />
             </DialogContent>
         </Dialog>
       </div>

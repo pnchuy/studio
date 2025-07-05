@@ -14,17 +14,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Tên series phải có ít nhất 2 ký tự." }),
 });
 
 interface AddSeriesFormProps {
+    series: string[];
     onSeriesAdded: (seriesName: string) => void;
     onFinished: () => void;
 }
 
-export function AddSeriesForm({ onSeriesAdded, onFinished }: AddSeriesFormProps) {
+export function AddSeriesForm({ series, onSeriesAdded, onFinished }: AddSeriesFormProps) {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -33,6 +36,19 @@ export function AddSeriesForm({ onSeriesAdded, onFinished }: AddSeriesFormProps)
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const isDuplicate = series.some(
+      (seriesName) => seriesName.toLowerCase() === values.name.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      toast({
+        variant: "destructive",
+        title: "Series đã tồn tại",
+        description: `Một series với tên "${values.name}" đã có trong danh sách.`,
+      });
+      return;
+    }
+
     onSeriesAdded(values.name);
     onFinished();
   }
@@ -61,5 +77,3 @@ export function AddSeriesForm({ onSeriesAdded, onFinished }: AddSeriesFormProps)
     </Form>
   );
 }
-
-    

@@ -202,12 +202,14 @@ export function BookManagement() {
   }
 
   const handleSeriesAdded = (newSeries: string, showToast = true) => {
-    if (series.includes(newSeries)) {
-      toast({
-        variant: "destructive",
-        title: "Series đã tồn tại",
-        description: `Series "${newSeries}" đã có trong danh sách.`,
-      });
+    if (series.map(s => s.toLowerCase()).includes(newSeries.toLowerCase())) {
+      if (showToast) {
+        toast({
+          variant: "destructive",
+          title: "Series đã tồn tại",
+          description: `Series "${newSeries}" đã có trong danh sách.`,
+        });
+      }
       return;
     }
     const updatedSeries = [...series, newSeries].sort();
@@ -319,6 +321,7 @@ export function BookManagement() {
                     <DialogTitle>Thêm sách mới</DialogTitle>
                 </DialogHeader>
                 <AddBookForm 
+                  books={books}
                   onBookAdded={handleBookAdded} 
                   onFinished={() => setIsAddBookOpen(false)}
                   authors={authors}
