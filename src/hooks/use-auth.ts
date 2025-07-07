@@ -1,5 +1,4 @@
-
-"use client";
+'use client';
 
 import React, { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
@@ -129,9 +128,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return { success: false, message: "An account with this email already exists.", field: 'email' };
         }
         if (error.code === 'auth/weak-password') {
-            return { success: false, message: "Password is too weak. Please use at least 6 characters.", field: 'password' };
+            return { success: false, message: "Password must be at least 6 characters.", field: 'password' };
         }
-        return { success: false, message: "An unknown error occurred during sign up." };
+        if (error.code === 'auth/operation-not-allowed') {
+            return { success: false, message: "Sign-up method is not enabled in Firebase. Please enable Email/Password provider.", field: 'email' };
+        }
+        return { success: false, message: `An unknown error occurred: ${error.message}` };
     }
   }, [toast]);
 
