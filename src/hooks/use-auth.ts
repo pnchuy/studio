@@ -30,25 +30,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isFirebaseConfigured || !auth) {
+    if (!isFirebaseConfigured || !auth || !db) {
         setIsLoading(false);
         return;
     }
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
         setFirebaseUser(fbUser);
-        // User is logged in, fetch their profile from Firestore
         const userDocRef = doc(db, 'users', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
+        
         if (userDoc.exists()) {
           const userData = userDoc.data() as User;
           setUser(userData);
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
         } else {
-          // Profile doesn't exist, might be an issue. Log out for safety.
-          console.error("User exists in Auth but not in Firestore. Logging out.");
-          await signOut(auth);
-          setUser(null);
+          // Profile doesn't exist, might be a race condition on signup.
+          // Let's check if this is a very new user.
+          const creationTimestamp = new Date(fbUser.metadata.creationTime || 0).getTime();
+          const now = new Date().getTime();
+
+          if ((now - creationTimestamp) < 5000) { // If created in the last 5 seconds
+            // It's likely a new user, let's wait a moment for the Firestore doc to be created.
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            const userDocAfterWait = await getDoc(userDocRef);
+
+            if (userDocAfterWait.exists()) {
+              const userData = userDocAfterWait.data() as User;
+              setUser(userData);
+              localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+            } else {
+              // Still no document, something is wrong.
+              console.error("User document not found even after delay. Logging out.");
+              await signOut(auth);
+              setUser(null);
+            }
+          } else {
+            // It's an old user whose document is missing, which is a problem.
+            console.error("User exists in Auth but not in Firestore. Logging out.");
+            await signOut(auth);
+            setUser(null);
+          }
         }
       } else {
         // User is signed out
@@ -61,10 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, []);
+  }, [toast]);
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
-    if (!isFirebaseConfigured || !auth) {
+    if (!isFirebaseConfigured || !auth || !db) {
         toast({ variant: "destructive", title: "Firebase Not Configured", description: "Please provide Firebase credentials in the .env file." });
         return false;
     }
@@ -120,22 +142,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await setDoc(doc(db, "users", fbUser.uid), newUser);
       
       // onAuthStateChanged will handle setting the user state and redirecting
+      router.push('/');
       return { success: true };
 
     } catch (error: any) {
         console.error("Signup error:", error);
+        if (error.code === 'auth/operation-not-allowed') {
+            return { success: false, message: "Sign-up method is not enabled in Firebase. Please enable Email/Password provider.", field: 'email' };
+        }
         if (error.code === 'auth/email-already-in-use') {
             return { success: false, message: "An account with this email already exists.", field: 'email' };
         }
         if (error.code === 'auth/weak-password') {
             return { success: false, message: "Password must be at least 6 characters.", field: 'password' };
         }
-        if (error.code === 'auth/operation-not-allowed') {
-            return { success: false, message: "Sign-up method is not enabled in Firebase. Please enable Email/Password provider.", field: 'email' };
-        }
         return { success: false, message: `An unknown error occurred: ${error.message}` };
     }
-  }, [toast]);
+  }, [toast, router]);
 
   const logout = useCallback(async () => {
     if (!isFirebaseConfigured || !auth) {
