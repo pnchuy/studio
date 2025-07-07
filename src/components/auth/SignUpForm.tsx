@@ -41,17 +41,15 @@ export function SignUpForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const result = await signup(values.name, values.email, values.username);
+    const result = await signup(values.name, values.email, values.username, values.password);
     if (!result.success) {
       toast({
         variant: "destructive",
         title: "Sign Up Failed",
         description: result.message,
       });
-      if (result.field === 'email') {
-        form.setError("email", { message: result.message });
-      } else if (result.field === 'username') {
-        form.setError("username", { message: result.message });
+      if (result.field) {
+        form.setError(result.field, { message: result.message });
       }
     }
   }
