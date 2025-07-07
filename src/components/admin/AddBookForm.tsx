@@ -165,7 +165,8 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
   const selectedGenres = genres.filter(g => selectedGenreIds.includes(g.id));
 
   const handleGenreRemove = (genreId: string) => {
-    const newGenreIds = selectedGenreIds.filter((id: string) => id !== genreId);
+    const currentIds = form.getValues('genreIds') || [];
+    const newGenreIds = currentIds.filter((id: string) => id !== genreId);
     form.setValue('genreIds', newGenreIds, { shouldValidate: true });
   };
 
@@ -173,16 +174,17 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
     const newGenreNames = input.split(',').map(name => name.trim()).filter(Boolean);
     if (newGenreNames.length === 0) return;
 
+    const currentIds = form.getValues('genreIds') || [];
     const newGenreIds = newGenreNames.reduce((acc, name) => {
         const foundGenre = genres.find(g => g.name.toLowerCase() === name.toLowerCase());
-        if (foundGenre && !selectedGenreIds.includes(foundGenre.id)) {
-        acc.push(foundGenre.id);
+        if (foundGenre && !currentIds.includes(foundGenre.id)) {
+          acc.push(foundGenre.id);
         }
         return acc;
     }, [] as string[]);
     
     if (newGenreIds.length > 0) {
-        form.setValue('genreIds', [...selectedGenreIds, ...newGenreIds], { shouldValidate: true });
+        form.setValue('genreIds', [...currentIds, ...newGenreIds], { shouldValidate: true });
     }
     setGenreInputValue("");
   };
@@ -193,13 +195,15 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
         processGenreInput(genreInputValue);
         setIsSuggestionsOpen(false);
     } else if (e.key === 'Backspace' && genreInputValue === '' && selectedGenreIds.length > 0) {
-        const lastGenreId = selectedGenreIds[selectedGenreIds.length - 1];
+        const currentIds = form.getValues('genreIds') || [];
+        const lastGenreId = currentIds[currentIds.length - 1];
         handleGenreRemove(lastGenreId);
     }
   };
 
   const handleSuggestionClick = (genreId: string) => {
-    form.setValue('genreIds', [...selectedGenreIds, genreId], { shouldValidate: true });
+    const currentIds = form.getValues('genreIds') || [];
+    form.setValue('genreIds', [...currentIds, genreId], { shouldValidate: true });
     setGenreInputValue("");
     setIsSuggestionsOpen(false);
     genreInputRef.current?.focus();

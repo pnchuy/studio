@@ -156,52 +156,56 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
   const selectedGenreIds = form.watch('genreIds') || [];
   const selectedGenres = genres.filter(g => selectedGenreIds.includes(g.id));
 
-    const handleGenreRemove = (genreId: string) => {
-        const newGenreIds = selectedGenreIds.filter((id: string) => id !== genreId);
-        form.setValue('genreIds', newGenreIds, { shouldValidate: true });
-    };
+  const handleGenreRemove = (genreId: string) => {
+    const currentIds = form.getValues('genreIds') || [];
+    const newGenreIds = currentIds.filter((id: string) => id !== genreId);
+    form.setValue('genreIds', newGenreIds, { shouldValidate: true });
+  };
 
-    const processGenreInput = (input: string) => {
-        const newGenreNames = input.split(',').map(name => name.trim()).filter(Boolean);
-        if (newGenreNames.length === 0) return;
+  const processGenreInput = (input: string) => {
+    const newGenreNames = input.split(',').map(name => name.trim()).filter(Boolean);
+    if (newGenreNames.length === 0) return;
 
-        const newGenreIds = newGenreNames.reduce((acc, name) => {
-            const foundGenre = genres.find(g => g.name.toLowerCase() === name.toLowerCase());
-            if (foundGenre && !selectedGenreIds.includes(foundGenre.id)) {
-            acc.push(foundGenre.id);
-            }
-            return acc;
-        }, [] as string[]);
-        
-        if (newGenreIds.length > 0) {
-            form.setValue('genreIds', [...selectedGenreIds, ...newGenreIds], { shouldValidate: true });
+    const currentIds = form.getValues('genreIds') || [];
+    const newGenreIds = newGenreNames.reduce((acc, name) => {
+        const foundGenre = genres.find(g => g.name.toLowerCase() === name.toLowerCase());
+        if (foundGenre && !currentIds.includes(foundGenre.id)) {
+          acc.push(foundGenre.id);
         }
-        setGenreInputValue("");
-    };
+        return acc;
+    }, [] as string[]);
+    
+    if (newGenreIds.length > 0) {
+        form.setValue('genreIds', [...currentIds, ...newGenreIds], { shouldValidate: true });
+    }
+    setGenreInputValue("");
+  };
 
-    const handleGenreInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === ',' || e.key === 'Enter') {
-            e.preventDefault();
-            processGenreInput(genreInputValue);
-            setIsSuggestionsOpen(false);
-        } else if (e.key === 'Backspace' && genreInputValue === '' && selectedGenreIds.length > 0) {
-            const lastGenreId = selectedGenreIds[selectedGenreIds.length - 1];
-            handleGenreRemove(lastGenreId);
-        }
-    };
-
-    const handleSuggestionClick = (genreId: string) => {
-        form.setValue('genreIds', [...selectedGenreIds, genreId], { shouldValidate: true });
-        setGenreInputValue("");
+  const handleGenreInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === ',' || e.key === 'Enter') {
+        e.preventDefault();
+        processGenreInput(genreInputValue);
         setIsSuggestionsOpen(false);
-        genreInputRef.current?.focus();
-    };
+    } else if (e.key === 'Backspace' && genreInputValue === '' && selectedGenreIds.length > 0) {
+        const currentIds = form.getValues('genreIds') || [];
+        const lastGenreId = currentIds[currentIds.length - 1];
+        handleGenreRemove(lastGenreId);
+    }
+  };
 
-    const filteredSuggestions = genres.filter(genre => 
-        !selectedGenreIds.includes(genre.id) &&
-        genre.name.toLowerCase().includes(genreInputValue.toLowerCase()) &&
-        genreInputValue.length > 0
-    );
+  const handleSuggestionClick = (genreId: string) => {
+    const currentIds = form.getValues('genreIds') || [];
+    form.setValue('genreIds', [...currentIds, genreId], { shouldValidate: true });
+    setGenreInputValue("");
+    setIsSuggestionsOpen(false);
+    genreInputRef.current?.focus();
+  };
+
+  const filteredSuggestions = genres.filter(genre => 
+      !selectedGenreIds.includes(genre.id) &&
+      genre.name.toLowerCase().includes(genreInputValue.toLowerCase()) &&
+      genreInputValue.length > 0
+  );
 
 
   return (
