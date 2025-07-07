@@ -33,6 +33,7 @@ const formSchema = z.object({
   coverImage: z.string().optional().or(z.literal('')),
   summary: z.string().optional(),
   series: z.string().optional().nullable(),
+  seriesOrder: z.coerce.number().nonnegative({ message: "Thứ tự phải là số không âm."}).optional().nullable(),
   genreIds: z.array(z.string()).optional().default([]),
   youtubeLink: z.array(z.string().url({ message: "Link YouTube không hợp lệ." }).or(z.literal(''))).optional(),
   amazonLink: z.string().url({ message: "Link Amazon không hợp lệ." }).optional().or(z.literal('')),
@@ -89,6 +90,7 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
       coverImage: bookToEdit.coverImage || "",
       summary: bookToEdit.summary,
       series: bookToEdit.series || "",
+      seriesOrder: bookToEdit.seriesOrder ?? null,
       genreIds: bookToEdit.genreIds,
       youtubeLink: bookToEdit.youtubeLink && bookToEdit.youtubeLink.length > 0 ? bookToEdit.youtubeLink : [""],
       amazonLink: bookToEdit.amazonLink || "",
@@ -99,8 +101,10 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
     control: form.control,
     name: "youtubeLink",
   });
-
+  
+  const seriesValue = form.watch("series");
   const coverImageValue = form.watch('coverImage');
+
   useEffect(() => {
     if (coverImageValue && (coverImageValue.startsWith('http') || coverImageValue.startsWith('data:'))) {
       setImagePreview(coverImageValue);
@@ -140,7 +144,8 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
         id: bookToEdit.id,
         ...values,
         coverImage: values.coverImage || "https://placehold.co/400x600.png",
-        series: values.series === 'none' ? null : (values.series || null),
+        series: values.series === 'none' || !values.series ? null : values.series,
+        seriesOrder: values.series && values.series !== 'none' ? values.seriesOrder : null,
         youtubeLink: values.youtubeLink?.map(link => convertYoutubeUrlToEmbed(link)).filter(Boolean) as string[] ?? [],
         amazonLink: values.amazonLink || "",
     };
@@ -415,6 +420,31 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
             </FormItem>
           )}
         />
+
+        {seriesValue && seriesValue !== 'none' && (
+            <FormField
+                control={form.control}
+                name="seriesOrder"
+                render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Thứ tự trong Series</FormLabel>
+                    <FormControl>
+                    <Input
+                        type="number"
+                        placeholder="1"
+                        {...field}
+                        onChange={e => field.onChange(e.target.value)}
+                        value={field.value ?? ""}
+                        step="0.1"
+                        min="0"
+                    />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+                )}
+            />
+        )}
+
         <div className="space-y-2">
             <FormLabel>Link YouTube (Trailer/Review)</FormLabel>
             {fields.map((item, index) => (

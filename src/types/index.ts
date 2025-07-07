@@ -16,6 +16,7 @@ export type Book = {
   coverImage: string;
   summary: string;
   series: string | null;
+  seriesOrder: number | null;
   genreIds: string[];
   youtubeLink: string[];
   amazonLink: string;

@@ -8,6 +8,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "In a world of stone and storms, an unlikely hero discovers the lost magic of the Knights Radiant and fights to unite a fractured kingdom against a coming desolation.",
     "series": "The Stormlight Archive",
+    "seriesOrder": 1,
     "genreIds": ["genre-1"],
     "youtubeLink": ["https://www.youtube.com/embed/s_4d2i3H5M8"],
     "amazonLink": ""
@@ -20,6 +21,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "The story of a young nobleman's rise to power on a desert planet that is the only source of a priceless spice, exploring themes of politics, religion, and ecology.",
     "series": "Dune Saga",
+    "seriesOrder": 1,
     "genreIds": ["genre-2"],
     "youtubeLink": ["https://youtu.be/gRMytDZAH4w","https://youtu.be/uM6-BnAsUwM"],
     "amazonLink": "https://amzn.to/3Rq24Cg"
@@ -32,6 +34,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "An amnesiac astronaut wakes up on a solo mission in deep space, tasked with saving humanity from an extinction-level event with the help of an unexpected alien ally.",
     "series": null,
+    "seriesOrder": null,
     "genreIds": ["genre-3"],
     "youtubeLink": ["https://www.youtube.com/embed/cno-j2fT4gQ"],
     "amazonLink": ""
@@ -44,6 +47,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "The tale of Kvothe, a gifted young man who grows to be the most notorious magician his world has ever seen. From a childhood in a troupe of traveling players, to years spent as an orphan in a crime-ridden city, to his daring bid to enter a legendary school of magic.",
     "series": "The Kingkiller Chronicle",
+    "seriesOrder": 1,
     "genreIds": ["genre-4"],
     "youtubeLink": ["https://www.youtube.com/embed/J7XmF1A65e4"],
     "amazonLink": ""
@@ -56,6 +60,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "In a world where ash falls from the sky and mists rule the night, a young street urchin discovers she has a mysterious power and joins a crew of thieves to overthrow a god-like emperor.",
     "series": "Mistborn",
+    "seriesOrder": 1,
     "genreIds": ["genre-4"],
     "youtubeLink": ["https://www.youtube.com/embed/ST5oGPG1-e0"],
     "amazonLink": ""
@@ -68,6 +73,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "A washed-up computer hacker is hired by a mysterious employer to pull off the ultimate hack. This novel is a cornerstone of the cyberpunk genre.",
     "series": "Sprawl trilogy",
+    "seriesOrder": 1,
     "genreIds": ["genre-5"],
     "youtubeLink": ["https://www.youtube.com/embed/kxi3n42kIqI"],
     "amazonLink": ""
@@ -80,6 +86,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "A young boy named Ged, the greatest sorcerer in all of Earthsea, who was called Sparrowhawk in his reckless youth, comes to the island of Gont, a single mountain that rises from the sea.",
     "series": "Earthsea Cycle",
+    "seriesOrder": 1,
     "genreIds": ["genre-4"],
     "youtubeLink": ["https://www.youtube.com/embed/zpcY_s_v8kI"],
     "amazonLink": ""
@@ -92,6 +99,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "A hobbit, Bilbo Baggins, is swept into an epic quest to reclaim the lost Dwarf Kingdom of Erebor from the fearsome dragon Smaug.",
     "series": "The Lord of the Rings",
+    "seriesOrder": 0,
     "genreIds": ["genre-6"],
     "youtubeLink": ["https://www.youtube.com/embed/1_iU_Y5Lh20"],
     "amazonLink": ""
@@ -104,6 +112,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "As the world spirals into a new war, a scholar, a soldier, and a spy must navigate political intrigue and ancient secrets to prevent the return of the Voidbringers.",
     "series": "The Stormlight Archive",
+    "seriesOrder": 2,
     "genreIds": ["genre-1"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -116,6 +125,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "On the eve of Armageddon, seven pilgrims set forth on a final voyage to Hyperion seeking the answers to the unsolved riddles of their lives.",
     "series": "Hyperion Cantos",
+    "seriesOrder": 1,
     "genreIds": ["genre-2"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -128,6 +138,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "An astronaut is presumed dead after a fierce storm and left behind by his crew. But he's alive and must find a way to signal to Earth that he's stranded on Mars.",
     "series": null,
+    "seriesOrder": null,
     "genreIds": ["genre-3"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -140,6 +151,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "Kvothe's adventures continue as he travels to distant lands, learns powerful magic, and uncovers more about the mysterious Chandrian.",
     "series": "The Kingkiller Chronicle",
+    "seriesOrder": 2,
     "genreIds": ["genre-4"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -152,6 +164,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "After overthrowing the Lord Ruler, Vin and Elend struggle to keep their new kingdom from falling into chaos from threats both internal and external.",
     "series": "Mistborn",
+    "seriesOrder": 2,
     "genreIds": ["genre-4"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -164,6 +177,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "In a near-future America, a pizza delivery driver for the Mafia and a hacker named Hiro Protagonist investigates a new computer virus that is also a drug.",
     "series": null,
+    "seriesOrder": null,
     "genreIds": ["genre-5"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -176,6 +190,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "A young priestess in the service of the Nameless Ones has her world turned upside down by the arrival of the wizard Ged, who seeks a legendary treasure.",
     "series": "Earthsea Cycle",
+    "seriesOrder": 2,
     "genreIds": ["genre-4"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -188,6 +203,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "A young hobbit, Frodo Baggins, is entrusted with an immensely powerful Ring and must begin a perilous journey to destroy it in the fires of Mount Doom.",
     "series": "The Lord of the Rings",
+    "seriesOrder": 1,
     "genreIds": ["genre-6"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -200,6 +216,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "Humanity faces a new Desolation with the return of the Voidbringers, a foe with numbers as great as their thirst for vengeance.",
     "series": "The Stormlight Archive",
+    "seriesOrder": 3,
     "genreIds": ["genre-1"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -212,6 +229,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "The children of Paul Atreides, Leto and Ghanima, contend with the political machinations of their aunt Alia and the future of the empire.",
     "series": "Dune Saga",
+    "seriesOrder": 3,
     "genreIds": ["genre-2"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -224,6 +242,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "A soldier who was once a warship's AI seeks revenge for the destruction of her ship and crew.",
     "series": "Imperial Radch",
+    "seriesOrder": 1,
     "genreIds": ["genre-2"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -236,6 +255,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "In the island city of Camorr, a talented thief and his gang, the Gentleman Bastards, con their way through the nobility.",
     "series": "Gentleman Bastard",
+    "seriesOrder": 1,
     "genreIds": ["genre-4"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -248,6 +268,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "Vin and Elend fight to save their world from the encroaching mists and the dark god that controls them, leading to a cataclysmic final battle.",
     "series": "Mistborn",
+    "seriesOrder": 3,
     "genreIds": ["genre-4"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -260,6 +281,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "In a future where consciousness can be digitized, a former soldier is downloaded into a new body to solve a mind-bogglingly complex murder.",
     "series": "Takeshi Kovacs",
+    "seriesOrder": 1,
     "genreIds": ["genre-5"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -272,6 +294,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "Ged, now the Archmage, and a young prince must journey to the ends of the earth to discover why magic is fading from the world.",
     "series": "Earthsea Cycle",
+    "seriesOrder": 3,
     "genreIds": ["genre-4"],
     "youtubeLink": [],
     "amazonLink": ""
@@ -284,6 +307,7 @@
     "coverImage": "https://placehold.co/400x600.png",
     "summary": "The fellowship is broken. Frodo and Sam must continue their journey to Mordor alone, while their companions face the armies of Saruman.",
     "series": "The Lord of the Rings",
+    "seriesOrder": 2,
     "genreIds": ["genre-6"],
     "youtubeLink": [],
     "amazonLink": ""
