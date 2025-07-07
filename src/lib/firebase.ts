@@ -23,10 +23,14 @@ let db: Firestore | null = null;
 let storage: FirebaseStorage | null = null;
 
 if (isFirebaseConfigured) {
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
+  try {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+  } catch (e) {
+    console.error("Firebase initialization error", e);
+  }
 } else {
     if (typeof window !== 'undefined') {
         console.warn("Firebase is not configured. The app will run in offline mode. Please provide Firebase credentials in the .env file to enable online features.");
