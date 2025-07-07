@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, type User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, type User as FirebaseUser, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, getDoc, collection, query, limit, getDocs, where } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '@/lib/firebase';
 import type { User } from '@/types';
@@ -16,7 +16,7 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   isLoggedIn: boolean;
   isLoading: boolean;
-  login: (credential: string, password: string) => Promise<boolean>;
+  login: (credential: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   signup: (name: string, email: string, username: string, password: string) => Promise<{ success: boolean; message?: string; field?: 'email' | 'username' | 'password' }>;
   signInWithGoogle: () => Promise<boolean>;
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
     }
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      if (fbUser) {
+      if (fbUser && fbUser.emailVerified) {
         setFirebaseUser(fbUser);
         const userDocRef = doc(db, 'users', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
@@ -47,13 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(userData);
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
         } else {
-          // Profile doesn't exist, might be a race condition on signup.
-          // Let's check if this is a very new user.
           const creationTimestamp = new Date(fbUser.metadata.creationTime || 0).getTime();
           const now = new Date().getTime();
 
-          if ((now - creationTimestamp) < 5000) { // If created in the last 5 seconds
-            // It's likely a new user, let's wait a moment for the Firestore doc to be created.
+          if ((now - creationTimestamp) < 5000) { 
             await new Promise(resolve => setTimeout(resolve, 1500));
             const userDocAfterWait = await getDoc(userDocRef);
 
@@ -62,7 +59,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setUser(userData);
               localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
             } else {
-              // Still no document, something is wrong.
               console.warn("User document not found even after signup delay. Logging out.");
               toast({
                 variant: "destructive",
@@ -73,8 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               setUser(null);
             }
           } else {
-            // It's an old user whose document is missing, which is a problem.
-             console.warn("User exists in Auth but not in Firestore. Logging out.");
+            console.warn("User exists in Auth but not in Firestore. Logging out.");
             toast({
                 variant: 'destructive',
                 title: 'Profile Not Found',
@@ -85,7 +80,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       } else {
-        // User is signed out
+        if (fbUser && !fbUser.emailVerified) {
+          // If a user object exists but email is not verified, ensure they are logged out.
+          await signOut(auth);
+        }
         setUser(null);
         setFirebaseUser(null);
         localStorage.removeItem(USER_STORAGE_KEY);
@@ -93,33 +91,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [toast]);
 
-  const login = useCallback(async (credential: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (credential: string, password: string): Promise<{ success: boolean; message?: string }> => {
     if (!isFirebaseConfigured || !auth || !db) {
-        toast({ variant: "destructive", title: "Firebase Not Configured", description: "Please provide Firebase credentials in your .env.local file." });
-        return false;
+        const msg = "Firebase is not configured. Please provide Firebase credentials in your .env.local file.";
+        toast({ variant: "destructive", title: "Firebase Not Configured", description: msg });
+        return { success: false, message: msg };
     }
 
     let emailToLogin = '';
-
-    // Step 1: Determine if the credential is an email or a username
     const isEmail = z.string().email().safeParse(credential).success;
 
     if (isEmail) {
       emailToLogin = credential;
     } else {
-      // It's a username, so we need to find the corresponding email
       try {
         const usersRef = collection(db, 'users');
         const q = query(usersRef, where("username", "==", credential), limit(1));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-          // No user found with that username
-          return false;
+          return { success: false, message: "Thông tin không hợp lệ. Vui lòng kiểm tra lại email/username và mật khẩu." };
         }
         
         const userData = querySnapshot.docs[0].data() as User;
@@ -127,18 +121,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       } catch (error) {
         console.error("Error fetching user by username:", error);
-        return false;
+        return { success: false, message: "Đã xảy ra lỗi khi tìm kiếm người dùng." };
       }
     }
     
     if (!emailToLogin) {
-      return false; // Should not happen if logic is correct, but a good safeguard.
+      return { success: false, message: "Không thể xác định email để đăng nhập." };
     }
     
-    // Step 2: Attempt to sign in with the resolved email and password
     try {
       const userCredential = await signInWithEmailAndPassword(auth, emailToLogin, password);
-      // onAuthStateChanged will handle setting the user state
+      
+      if (!userCredential.user.emailVerified) {
+        await signOut(auth); // Sign out immediately
+        return { success: false, message: "Email chưa được xác minh. Vui lòng kiểm tra hộp thư của bạn." };
+      }
+
       const loggedInUser = userCredential.user;
        const userDocRef = doc(db, 'users', loggedInUser.uid);
        const userDoc = await getDoc(userDocRef);
@@ -152,32 +150,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
        } else {
          router.push('/');
        }
-      return true;
+      return { success: true };
     } catch (error: any) {
-      // Login failure is expected, no need to log
-      return false;
+      return { success: false, message: "Thông tin không hợp lệ. Vui lòng kiểm tra lại email/username và mật khẩu." };
     }
   }, [router, toast]);
 
   const signup = useCallback(async (name: string, email: string, username: string, password: string): Promise<{ success: boolean; message?: string; field?: 'email' | 'username' | 'password' }> => {
     if (!isFirebaseConfigured || !auth || !db) {
-        toast({ variant: "destructive", title: "Firebase Not Configured", description: "Please provide Firebase credentials in your .env.local file." });
-        return { success: false, message: 'Firebase not configured.'};
+        const msg = "Firebase is not configured. Please provide Firebase credentials in your .env.local file.";
+        toast({ variant: "destructive", title: "Firebase Not Configured", description: msg });
+        return { success: false, message: msg};
     }
     try {
-      // Step 1: Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const fbUser = userCredential.user;
       
-      // Step 2: Determine user role. First user is ADMIN.
+      await sendEmailVerification(fbUser);
+      
       const usersCollectionRef = collection(db, 'users');
       const firstUserQuery = query(usersCollectionRef, limit(1));
       const querySnapshot = await getDocs(firstUserQuery);
       const isFirstUser = querySnapshot.empty;
 
-      // Step 3: Create user profile in Firestore
       const newUser: User = {
-        id: fbUser.uid, // Use Firebase UID as the document ID
+        id: fbUser.uid,
         username,
         name,
         email,
@@ -187,14 +184,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       await setDoc(doc(db, "users", fbUser.uid), newUser);
       
-      // onAuthStateChanged will handle setting the user state and redirecting
-      router.push('/');
+      // Sign out immediately after registration to force email verification
+      await signOut(auth);
+      
       return { success: true };
 
     } catch (error: any) {
         if (error.code === 'auth/operation-not-allowed') {
-            toast({ variant: 'destructive', title: 'Đăng ký thất bại', description: "Phương thức đăng ký chưa được kích hoạt trên Firebase." });
-            return { success: false, message: "Phương thức đăng ký chưa được kích hoạt trên Firebase.", field: 'email' };
+            const msg = "Phương thức đăng ký chưa được kích hoạt trên Firebase.";
+            toast({ variant: 'destructive', title: 'Đăng ký thất bại', description: msg });
+            return { success: false, message: msg, field: 'email' };
         }
         if (error.code === 'auth/email-already-in-use') {
             return { success: false, message: "An account with this email already exists.", field: 'email' };
@@ -205,7 +204,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Signup error:", error);
         return { success: false, message: `An unknown error occurred: ${error.message}` };
     }
-  }, [toast, router]);
+  }, [toast]);
 
   const signInWithGoogle = useCallback(async (): Promise<boolean> => {
     if (!isFirebaseConfigured || !auth || !db) {
@@ -223,13 +222,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let userProfile: User;
 
       if (!userDoc.exists()) {
-        // New user logic
         const usersCollectionRef = collection(db, 'users');
         const q = query(usersCollectionRef, limit(1));
         const snapshot = await getDocs(q);
         const isFirstUser = snapshot.empty;
 
-        // Basic username generation, check for collision
         let username = fbUser.email?.split('@')[0] || `user${Date.now()}`;
         const usernameQuery = query(collection(db, "users"), where("username", "==", username));
         const usernameSnapshot = await getDocs(usernameQuery);
@@ -247,18 +244,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         await setDoc(userDocRef, userProfile);
       } else {
-        // Existing user
         userProfile = userDoc.data() as User;
       }
 
-      // Navigate based on role
       const destination = (userProfile.role === 'ADMIN' || userProfile.role === 'MANAGER') ? '/admin' : '/';
       router.push(destination);
       return true;
 
     } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-        // Don't show an error toast if user closes the popup
         return false;
       }
       console.error("Google sign-in error:", error);
@@ -281,7 +275,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     try {
       await signOut(auth);
-      // onAuthStateChanged will clear user state
       router.push('/');
     } catch (error) {
       console.error("Logout error:", error);

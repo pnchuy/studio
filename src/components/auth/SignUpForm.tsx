@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -29,6 +30,7 @@ const formSchema = z.object({
 export function SignUpForm() {
   const { signup } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -42,7 +44,15 @@ export function SignUpForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const result = await signup(values.name, values.email, values.username, values.password);
-    if (!result.success) {
+    
+    if (result.success) {
+        toast({
+            title: "Tài khoản đã được tạo!",
+            description: "Một liên kết xác minh đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư đến.",
+            duration: 8000,
+        });
+        router.push('/login');
+    } else {
       toast({
         variant: "destructive",
         title: "Sign Up Failed",

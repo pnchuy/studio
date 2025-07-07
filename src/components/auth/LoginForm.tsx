@@ -34,12 +34,12 @@ export function LoginForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const success = await login(values.credential, values.password);
-    if (!success) {
+    const result = await login(values.credential, values.password);
+    if (!result.success) {
       toast({
         variant: "destructive",
         title: "Đăng nhập thất bại",
-        description: "Thông tin không hợp lệ. Vui lòng kiểm tra lại email/username và mật khẩu.",
+        description: result.message || "Thông tin không hợp lệ. Vui lòng kiểm tra lại email/username và mật khẩu.",
       });
       form.setError("credential", { message: " " });
       form.setError("password", { message: " " });
