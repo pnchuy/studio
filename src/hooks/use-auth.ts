@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, type User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, type User as FirebaseUser } from 'firebase/auth';
 import { doc, setDoc, getDoc, collection, query, limit, getDocs, where } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '@/lib/firebase';
 import type { User } from '@/types';
@@ -19,6 +19,7 @@ interface AuthContextType {
   login: (credential: string, password: string) => Promise<boolean>;
   logout: () => void;
   signup: (name: string, email: string, username: string, password: string) => Promise<{ success: boolean; message?: string; field?: 'email' | 'username' | 'password' }>;
+  signInWithGoogle: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           } else {
             // It's an old user whose document is missing, which is a problem.
-            console.warn("User profile not found in database. Logging out for safety.");
+            console.warn("User exists in Auth but not in Firestore. Logging out.");
             toast({
                 variant: 'destructive',
                 title: 'Profile Not Found',
@@ -206,6 +207,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [toast, router]);
 
+  const signInWithGoogle = useCallback(async (): Promise<boolean> => {
+    if (!isFirebaseConfigured || !auth || !db) {
+      toast({ variant: 'destructive', title: 'Firebase Not Configured' });
+      return false;
+    }
+
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const fbUser = result.user;
+      const userDocRef = doc(db, 'users', fbUser.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      let userProfile: User;
+
+      if (!userDoc.exists()) {
+        // New user logic
+        const usersCollectionRef = collection(db, 'users');
+        const q = query(usersCollectionRef, limit(1));
+        const snapshot = await getDocs(q);
+        const isFirstUser = snapshot.empty;
+
+        // Basic username generation, check for collision
+        let username = fbUser.email?.split('@')[0] || `user${Date.now()}`;
+        const usernameQuery = query(collection(db, "users"), where("username", "==", username));
+        const usernameSnapshot = await getDocs(usernameQuery);
+        if (!usernameSnapshot.empty) {
+          username = `${username}${Math.floor(Math.random() * 1000)}`;
+        }
+
+        userProfile = {
+          id: fbUser.uid,
+          username,
+          name: fbUser.displayName || 'Google User',
+          email: fbUser.email!,
+          joinDate: new Date().toISOString().split('T')[0],
+          role: isFirstUser ? 'ADMIN' : 'MEMBER',
+        };
+        await setDoc(userDocRef, userProfile);
+      } else {
+        // Existing user
+        userProfile = userDoc.data() as User;
+      }
+
+      // Navigate based on role
+      const destination = (userProfile.role === 'ADMIN' || userProfile.role === 'MANAGER') ? '/admin' : '/';
+      router.push(destination);
+      return true;
+
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+        // Don't show an error toast if user closes the popup
+        return false;
+      }
+      console.error("Google sign-in error:", error);
+      toast({
+        variant: "destructive",
+        title: "Google Sign-In Failed",
+        description: "An unexpected error occurred. Please try again.",
+      });
+      return false;
+    }
+  }, [router, toast]);
+
   const logout = useCallback(async () => {
     if (!isFirebaseConfigured || !auth) {
         setUser(null);
@@ -235,7 +300,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       login,
       logout,
-      signup
+      signup,
+      signInWithGoogle,
   };
 
   return React.createElement(AuthContext.Provider, { value }, children);
