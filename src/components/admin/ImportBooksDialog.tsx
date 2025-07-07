@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Code, FileJson, FileUp, ListChecks, Loader2 } from "lucide-react";
-import { generateId } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -21,6 +20,10 @@ const importBookSchema = z.object({
   }),
   youtubeLink: z.array(z.string().url()).optional().default([]),
   amazonLink: z.string().url().or(z.literal("")).optional().default(""),
+  summary: z.string().optional().default("Sách được import từ file JSON."),
+  coverImage: z.string().url().optional().default("https://placehold.co/400x600.png"),
+  series: z.string().nullable().optional().default(null),
+  genreIds: z.array(z.string()).optional().default([]),
 });
 
 // The file itself must be an array of these book objects
@@ -31,7 +34,7 @@ type ImportBook = z.infer<typeof importBookSchema>;
 interface ImportBooksDialogProps {
   existingBooks: Book[];
   existingAuthors: Author[];
-  onBooksImported: (books: Book[]) => void;
+  onBooksImported: (books: (Omit<Book, 'id'>)[]) => void;
   onFinished: () => void;
 }
 
@@ -111,18 +114,9 @@ export function ImportBooksDialog({ existingBooks, existingAuthors, onBooksImpor
   };
   
   const handleConfirmImport = () => {
-    const newBooks: Book[] = previewBooks.map(p => ({
-        id: `book-${generateId()}`,
-        title: p.title,
-        authorId: p.authorId,
-        publicationDate: p.publicationDate,
-        youtubeLink: p.youtubeLink,
-        amazonLink: p.amazonLink,
-        // Add defaults for missing fields
-        coverImage: "https://placehold.co/400x600.png",
-        summary: "Sách được import từ file JSON.",
-        series: null,
-        genreIds: [],
+    const newBooks: (Omit<Book, 'id'>)[] = previewBooks.map(p => ({
+        ...p,
+        seriesOrder: p.series ? 1 : null, // Basic series order
     }));
 
     onBooksImported(newBooks);

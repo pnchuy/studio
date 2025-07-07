@@ -3,7 +3,7 @@
 // thay vì đọc từ tệp JSON.
 
 import { NextResponse } from 'next/server';
-import booksData from '@/data/books.json';
+import { getAllBooks } from '@/lib/books';
 import type { Book } from '@/types';
 
 /**
@@ -23,8 +23,6 @@ import type { Book } from '@/types';
  *                 $ref: '#/components/schemas/Book'
  */
 export async function GET() {
-  // Tạm thời, chúng ta vẫn trả về dữ liệu từ tệp JSON.
-  // Trong tương lai, bạn sẽ thay thế phần này bằng mã để truy vấn từ Firestore.
-  const books: Book[] = booksData;
+  const books: Book[] = await getAllBooks();
   return NextResponse.json(books);
 }

@@ -3,10 +3,12 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
+import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import type { Book, Author, Genre } from '@/types';
 import { getAllBooks as fetchAllBooks } from '@/lib/books';
 import { getAllAuthors as fetchAllAuthors } from '@/lib/authors';
 import { getAllGenres as fetchAllGenres } from '@/lib/genres';
+import { db, isFirebaseConfigured } from '@/lib/firebase';
 import {
   Table,
   TableHeader,
@@ -57,11 +59,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const BOOKS_STORAGE_KEY = 'bibliophile-books';
-const AUTHORS_STORAGE_KEY = 'bibliophile-authors';
-const GENRES_STORAGE_KEY = 'bibliophile-genres';
-const SERIES_STORAGE_KEY = 'bibliophile-series';
+import { generateId } from '@/lib/utils';
 
 export function BookManagement() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -83,72 +81,60 @@ export function BookManagement() {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!isFirebaseConfigured) {
+          setIsLoading(false);
+          return;
+      }
       setIsLoading(true);
       try {
-        let initialBooks: Book[] = [];
-        const storedBooks = localStorage.getItem(BOOKS_STORAGE_KEY);
-        if (storedBooks) {
-          initialBooks = JSON.parse(storedBooks);
-        } else {
-          initialBooks = await fetchAllBooks();
-          localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(initialBooks));
-        }
+        const [initialBooks, initialAuthors, initialGenres] = await Promise.all([
+            fetchAllBooks(),
+            fetchAllAuthors(),
+            fetchAllGenres()
+        ]);
         setBooks(initialBooks);
-
-        const storedAuthors = localStorage.getItem(AUTHORS_STORAGE_KEY);
-        if (storedAuthors) {
-          setAuthors(JSON.parse(storedAuthors));
-        } else {
-          const initialAuthors = await fetchAllAuthors();
-          setAuthors(initialAuthors);
-          localStorage.setItem(AUTHORS_STORAGE_KEY, JSON.stringify(initialAuthors));
-        }
-
-        const storedGenres = localStorage.getItem(GENRES_STORAGE_KEY);
-        if (storedGenres) {
-          setGenres(JSON.parse(storedGenres));
-        } else {
-          const initialGenres = await fetchAllGenres();
-          setGenres(initialGenres);
-          localStorage.setItem(GENRES_STORAGE_KEY, JSON.stringify(initialGenres));
-        }
+        setAuthors(initialAuthors);
+        setGenres(initialGenres);
         
-        const storedSeries = localStorage.getItem(SERIES_STORAGE_KEY);
-        if (storedSeries) {
-          setSeries(JSON.parse(storedSeries));
-        } else {
-          const initialSeries = [...new Set(initialBooks.map(b => b.series).filter((s): s is string => !!s))].sort();
-          setSeries(initialSeries);
-          localStorage.setItem(SERIES_STORAGE_KEY, JSON.stringify(initialSeries));
-        }
+        const initialSeries = [...new Set(initialBooks.map(b => b.series).filter((s): s is string => !!s))].sort();
+        setSeries(initialSeries);
 
       } catch (error) {
-        console.error("Failed to load data from storage, falling back to defaults", error);
-        setBooks(await fetchAllBooks());
-        setAuthors(await fetchAllAuthors());
-        setGenres(await fetchAllGenres());
-        setSeries([]);
+        console.error("Failed to load data from Firebase", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not load data from the database."});
       } finally {
         setIsLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [toast]);
   
-  const handleBookAdded = (newBook: Book) => {
-    const updatedBooks = [newBook, ...books];
-    localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
-    setBooks(updatedBooks);
-    if (newBook.series && !series.includes(newBook.series)) {
-        handleSeriesAdded(newBook.series, false);
+  const handleBookAdded = async (newBookData: Omit<Book, 'id'>) => {
+    if (!db) return;
+    try {
+        const docRef = await addDoc(collection(db, "books"), {
+            ...newBookData,
+            id: `book-${generateId()}` // Add a temporary ID for client-side use if needed
+        });
+        const newBook = { ...newBookData, id: docRef.id };
+        const updatedBooks = [newBook, ...books];
+        setBooks(updatedBooks);
+
+        if (newBook.series && !series.includes(newBook.series)) {
+            handleSeriesAdded(newBook.series, false);
+        }
+        toast({
+            title: "Thêm sách thành công",
+            description: `Sách "${newBook.title}" đã được thêm.`,
+        });
+    } catch (e) {
+        console.error("Error adding document: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not add book."});
     }
-    toast({
-        title: "Thêm sách thành công",
-        description: `Sách "${newBook.title}" đã được thêm.`,
-    });
   };
 
-  const handleBooksImported = (newBooks: Book[]) => {
+  const handleBooksImported = async (newBooks: (Omit<Book, 'id'>)[]) => {
+     if (!db) return;
     if (newBooks.length === 0) {
       toast({
         title: "Không có sách mới nào được thêm",
@@ -157,76 +143,139 @@ export function BookManagement() {
       return;
     }
 
-    const updatedBooks = [...newBooks, ...books];
-    localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
-    setBooks(updatedBooks);
+    try {
+        await Promise.all(newBooks.map(book => addDoc(collection(db, "books"), book)));
+        
+        const freshBooks = await fetchAllBooks();
+        setBooks(freshBooks);
 
-    const newSeries = [...new Set(newBooks.map(b => b.series).filter((s): s is string => !!s && !series.includes(s)))];
-    if (newSeries.length > 0) {
-        const updatedSeriesList = [...series, ...newSeries].sort();
-        localStorage.setItem(SERIES_STORAGE_KEY, JSON.stringify(updatedSeriesList));
-        setSeries(updatedSeriesList);
+        const newSeries = [...new Set(newBooks.map(b => b.series).filter((s): s is string => !!s && !series.includes(s)))];
+        if (newSeries.length > 0) {
+            const updatedSeriesList = [...series, ...newSeries].sort();
+            setSeries(updatedSeriesList);
+        }
+
+        toast({
+            title: "Import thành công",
+            description: `${newBooks.length} sách mới đã được thêm vào bộ sưu tập của bạn.`,
+        });
+    } catch(e) {
+         console.error("Error importing books: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not import books."});
     }
-
-    toast({
-        title: "Import thành công",
-        description: `${newBooks.length} sách mới đã được thêm vào bộ sưu tập của bạn.`,
-    });
   };
 
-  const handleBookUpdated = (updatedBook: Book) => {
-    const updatedBooks = books.map(book => book.id === updatedBook.id ? updatedBook : book);
-    localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
-    setBooks(updatedBooks);
-     if (updatedBook.series && !series.includes(updatedBook.series)) {
-        handleSeriesAdded(updatedBook.series, false);
+  const handleBookUpdated = async (updatedBook: Book) => {
+    if (!db) return;
+    try {
+        const bookRef = doc(db, "books", updatedBook.id);
+        const { id, ...bookData } = updatedBook;
+        await updateDoc(bookRef, bookData);
+
+        const updatedBooks = books.map(book => book.id === updatedBook.id ? updatedBook : book);
+        setBooks(updatedBooks);
+        if (updatedBook.series && !series.includes(updatedBook.series)) {
+            handleSeriesAdded(updatedBook.series, false);
+        }
+        toast({
+            title: "Cập nhật sách thành công",
+            description: `Sách "${updatedBook.title}" đã được cập nhật.`,
+        });
+    } catch (e) {
+        console.error("Error updating document: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not update book."});
     }
-    toast({
-        title: "Cập nhật sách thành công",
-        description: `Sách "${updatedBook.title}" đã được cập nhật.`,
-    });
   };
 
-  const handleBookDeleted = (bookId: string) => {
+  const handleBookDeleted = async (bookId: string) => {
+    if (!db) return;
     const bookToDelete = books.find(b => b.id === bookId);
     if (bookToDelete) {
-      const updatedBooks = books.filter(book => book.id !== bookId);
-      localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
-      setBooks(updatedBooks);
-      toast({
-          variant: "destructive",
-          title: "Đã xóa sách",
-          description: `Sách "${bookToDelete.title}" đã được xóa.`,
-      });
+        try {
+            await deleteDoc(doc(db, "books", bookId));
+            const updatedBooks = books.filter(book => book.id !== bookId);
+            setBooks(updatedBooks);
+            toast({
+                variant: "destructive",
+                title: "Đã xóa sách",
+                description: `Sách "${bookToDelete.title}" đã được xóa.`,
+            });
+        } catch(e) {
+            console.error("Error deleting document: ", e);
+            toast({ variant: "destructive", title: "Error", description: "Could not delete book."});
+        }
     }
   }
 
-  const handleAuthorAdded = (newAuthor: Author) => {
-    const updatedAuthors = [newAuthor, ...authors];
-    localStorage.setItem(AUTHORS_STORAGE_KEY, JSON.stringify(updatedAuthors));
-    setAuthors(updatedAuthors);
+  const handleAuthorAdded = async (newAuthorData: Omit<Author, 'id'>) => {
+    if (!db) return;
+    try {
+        const docRef = await addDoc(collection(db, "authors"), newAuthorData);
+        const updatedAuthors = [{ ...newAuthorData, id: docRef.id }, ...authors];
+        setAuthors(updatedAuthors);
+        toast({
+            title: "Thêm tác giả thành công",
+            description: `Tác giả "${newAuthorData.name}" đã được thêm.`,
+        });
+    } catch(e) {
+        console.error("Error adding author: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not add author."});
+    }
   };
 
-  const handleAuthorDeleted = (authorId: string) => {
-    const updatedAuthors = authors.filter(author => author.id !== authorId);
-    localStorage.setItem(AUTHORS_STORAGE_KEY, JSON.stringify(updatedAuthors));
-    setAuthors(updatedAuthors);
+  const handleAuthorDeleted = async (authorId: string) => {
+    if (!db) return;
+    const authorToDelete = authors.find(b => b.id === authorId);
+    if (!authorToDelete) return;
+    try {
+        await deleteDoc(doc(db, "authors", authorId));
+        const updatedAuthors = authors.filter(author => author.id !== authorId);
+        setAuthors(updatedAuthors);
+        toast({
+            variant: "destructive",
+            title: "Đã xóa tác giả",
+            description: `Tác giả "${authorToDelete.name}" đã được xóa.`,
+        });
+    } catch(e) {
+        console.error("Error deleting author: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not delete author."});
+    }
   }
   
-  const handleGenreAdded = (newGenre: Genre) => {
-    const updatedGenres = [newGenre, ...genres];
-    localStorage.setItem(GENRES_STORAGE_KEY, JSON.stringify(updatedGenres));
-    setGenres(updatedGenres);
-    toast({
-      title: "Thêm thể loại thành công",
-      description: `Thể loại "${newGenre.name}" đã được thêm.`,
-    });
+  const handleGenreAdded = async (newGenreData: Omit<Genre, 'id'>) => {
+    if (!db) return;
+    try {
+        const docRef = await addDoc(collection(db, "genres"), newGenreData);
+        const updatedGenres = [{ ...newGenreData, id: docRef.id }, ...genres];
+        setGenres(updatedGenres);
+        toast({
+          title: "Thêm thể loại thành công",
+          description: `Thể loại "${newGenreData.name}" đã được thêm.`,
+        });
+    } catch(e) {
+        console.error("Error adding genre: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not add genre."});
+    }
   };
 
-  const handleGenreDeleted = (genreId: string) => {
-    const updatedGenres = genres.filter(genre => genre.id !== genreId);
-    localStorage.setItem(GENRES_STORAGE_KEY, JSON.stringify(updatedGenres));
-    setGenres(updatedGenres);
+  const handleGenreDeleted = async (genreId: string) => {
+    if (!db) return;
+    const genreToDelete = genres.find(g => g.id === genreId);
+    if (!genreToDelete) return;
+
+    try {
+        await deleteDoc(doc(db, "genres", genreId));
+        const updatedGenres = genres.filter(genre => genre.id !== genreId);
+        setGenres(updatedGenres);
+        toast({
+            variant: "destructive",
+            title: "Đã xóa thể loại",
+            description: `Thể loại "${genreToDelete.name}" đã được xóa.`,
+        });
+    } catch(e) {
+        console.error("Error deleting genre: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not delete genre."});
+    }
   }
 
   const handleSeriesAdded = (newSeries: string, showToast = true) => {
@@ -241,7 +290,6 @@ export function BookManagement() {
       return;
     }
     const updatedSeries = [...series, newSeries].sort();
-    localStorage.setItem(SERIES_STORAGE_KEY, JSON.stringify(updatedSeries));
     setSeries(updatedSeries);
     if (showToast) {
        toast({
@@ -262,7 +310,6 @@ export function BookManagement() {
         return;
     }
     const updatedSeries = series.filter(s => s !== seriesName);
-    localStorage.setItem(SERIES_STORAGE_KEY, JSON.stringify(updatedSeries));
     setSeries(updatedSeries);
     toast({
         variant: "destructive",
@@ -271,7 +318,7 @@ export function BookManagement() {
     });
   };
 
-  const handleSeriesUpdated = (oldName: string, newName: string) => {
+  const handleSeriesUpdated = async (oldName: string, newName: string) => {
     if (series.some(s => s.toLowerCase() === newName.toLowerCase() && s.toLowerCase() !== oldName.toLowerCase())) {
         toast({
             variant: "destructive",
@@ -280,19 +327,35 @@ export function BookManagement() {
         });
         return;
     }
+    if (!db) return;
 
-    const updatedSeries = series.map(s => s === oldName ? newName : s).sort();
-    localStorage.setItem(SERIES_STORAGE_KEY, JSON.stringify(updatedSeries));
-    setSeries(updatedSeries);
+    try {
+        const booksToUpdate = books.filter(book => book.series === oldName);
+        const updatePromises = booksToUpdate.map(book => {
+            const bookRef = doc(db, "books", book.id);
+            return updateDoc(bookRef, { series: newName });
+        });
 
-    const updatedBooks = books.map(book => {
-        if (book.series === oldName) {
-            return { ...book, series: newName };
-        }
-        return book;
-    });
-    localStorage.setItem(BOOKS_STORAGE_KEY, JSON.stringify(updatedBooks));
-    setBooks(updatedBooks);
+        await Promise.all(updatePromises);
+
+        const updatedSeries = series.map(s => s === oldName ? newName : s).sort();
+        setSeries(updatedSeries);
+
+        const updatedBooks = books.map(book => {
+            if (book.series === oldName) {
+                return { ...book, series: newName };
+            }
+            return book;
+        });
+        setBooks(updatedBooks);
+        toast({
+            title: "Cập nhật Series thành công",
+            description: `Series "${oldName}" đã được đổi tên thành "${newName}".`,
+        });
+    } catch(e) {
+        console.error("Error updating series in books: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not update series for all books."});
+    }
   };
 
   const handleEditClick = (book: Book) => {
@@ -304,7 +367,8 @@ export function BookManagement() {
     return authors.find(a => a.id === authorId)?.name || 'N/A';
   }
 
-  const getGenreNames = (genreIds: string[]) => {
+  const getGenreNames = (genreIds: string[] | undefined) => {
+    if (!genreIds) return '';
     return genreIds.map(id => genres.find(g => g.id === id)?.name).filter(Boolean).join(', ');
   }
 
@@ -370,7 +434,7 @@ export function BookManagement() {
                     </DialogHeader>
                     <AddBookForm 
                       books={books}
-                      onBookAdded={handleBookAdded} 
+                      onBookAdded={(book) => handleBookAdded(book)}
                       onFinished={() => setIsAddBookOpen(false)}
                       authors={authors}
                       genres={genres}
@@ -508,7 +572,7 @@ export function BookManagement() {
                   authors={authors}
                   books={books}
                   isLoading={isLoading}
-                  onAuthorAdded={handleAuthorAdded}
+                  onAuthorAdded={(author) => handleAuthorAdded(author)}
                   onAuthorDeleted={handleAuthorDeleted}
                 />
             </TabsContent>
@@ -516,7 +580,7 @@ export function BookManagement() {
                 <GenreManagement 
                   genres={genres}
                   isLoading={isLoading}
-                  onGenreAdded={handleGenreAdded}
+                  onGenreAdded={(genre) => handleGenreAdded(genre)}
                   onGenreDeleted={handleGenreDeleted}
                 />
             </TabsContent>
