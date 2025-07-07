@@ -17,8 +17,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(1, { message: "Password is required." }),
+  credential: z.string().min(3, { message: "Vui lòng nhập email hoặc username hợp lệ." }),
+  password: z.string().min(1, { message: "Mật khẩu là bắt buộc." }),
 });
 
 export function LoginForm() {
@@ -28,20 +28,20 @@ export function LoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      credential: "",
       password: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const success = await login(values.email, values.password);
+    const success = await login(values.credential, values.password);
     if (!success) {
       toast({
         variant: "destructive",
-        title: "Login Failed",
-        description: "Invalid credentials. Please check your email and password.",
+        title: "Đăng nhập thất bại",
+        description: "Thông tin không hợp lệ. Vui lòng kiểm tra lại email/username và mật khẩu.",
       });
-      form.setError("email", { message: " " });
+      form.setError("credential", { message: " " });
       form.setError("password", { message: " " });
     }
   }
@@ -51,12 +51,12 @@ export function LoginForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="email"
+          name="credential"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Email hoặc Username</FormLabel>
               <FormControl>
-                <Input placeholder="you@example.com" {...field} />
+                <Input placeholder="your_username hoặc you@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -67,7 +67,7 @@ export function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>Mật khẩu</FormLabel>
               <FormControl>
                 <Input type="password" placeholder="••••••••" {...field} />
               </FormControl>
@@ -76,7 +76,7 @@ export function LoginForm() {
           )}
         />
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? "Logging in..." : "Login"}
+          {form.formState.isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"}
         </Button>
       </form>
     </Form>

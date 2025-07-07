@@ -3,10 +3,11 @@
 import React, { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, type User as FirebaseUser } from 'firebase/auth';
-import { doc, setDoc, getDoc, collection, query, limit, getDocs } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, limit, getDocs, where } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '@/lib/firebase';
 import type { User } from '@/types';
 import { useToast } from './use-toast';
+import { z } from 'zod';
 
 const USER_STORAGE_KEY = 'bibliophile-user-auth-state';
 
@@ -15,7 +16,7 @@ interface AuthContextType {
   firebaseUser: FirebaseUser | null;
   isLoggedIn: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (credential: string, password: string) => Promise<boolean>;
   logout: () => void;
   signup: (name: string, email: string, username: string, password: string) => Promise<{ success: boolean; message?: string; field?: 'email' | 'username' | 'password' }>;
 }
@@ -95,13 +96,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [toast]);
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (credential: string, password: string): Promise<boolean> => {
     if (!isFirebaseConfigured || !auth || !db) {
         toast({ variant: "destructive", title: "Firebase Not Configured", description: "Please provide Firebase credentials in the .env file." });
         return false;
     }
+
+    let emailToLogin = '';
+
+    // Step 1: Determine if the credential is an email or a username
+    const isEmail = z.string().email().safeParse(credential).success;
+
+    if (isEmail) {
+      emailToLogin = credential;
+    } else {
+      // It's a username, so we need to find the corresponding email
+      try {
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where("username", "==", credential), limit(1));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          // No user found with that username
+          return false;
+        }
+        
+        const userData = querySnapshot.docs[0].data() as User;
+        emailToLogin = userData.email;
+
+      } catch (error) {
+        console.error("Error fetching user by username:", error);
+        return false;
+      }
+    }
+    
+    if (!emailToLogin) {
+      return false; // Should not happen if logic is correct, but a good safeguard.
+    }
+    
+    // Step 2: Attempt to sign in with the resolved email and password
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, emailToLogin, password);
       // onAuthStateChanged will handle setting the user state
       const loggedInUser = userCredential.user;
        const userDocRef = doc(db, 'users', loggedInUser.uid);
@@ -118,9 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
        }
       return true;
     } catch (error: any) {
-      // A failed login attempt is an expected behavior, not an application error.
-      // The UI will show a toast notification to the user.
-      // We don't need to log this to the console.
+      // Login failure is expected, no need to log
       return false;
     }
   }, [router, toast]);
