@@ -108,7 +108,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
        }
       return true;
     } catch (error: any) {
-      console.error("Login error:", error);
+      // A failed login attempt is an expected behavior, not an application error.
+      // The UI will show a toast notification to the user.
+      // We don't need to log this to the console.
       return false;
     }
   }, [router, toast]);
@@ -146,9 +148,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: true };
 
     } catch (error: any) {
-        console.error("Signup error:", error);
         if (error.code === 'auth/operation-not-allowed') {
-            return { success: false, message: "Sign-up method is not enabled in Firebase. Please enable Email/Password provider.", field: 'email' };
+            toast({ variant: 'destructive', title: 'Đăng ký thất bại', description: "Phương thức đăng ký chưa được kích hoạt trên Firebase." });
+            return { success: false, message: "Phương thức đăng ký chưa được kích hoạt trên Firebase.", field: 'email' };
         }
         if (error.code === 'auth/email-already-in-use') {
             return { success: false, message: "An account with this email already exists.", field: 'email' };
@@ -156,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error.code === 'auth/weak-password') {
             return { success: false, message: "Password must be at least 6 characters.", field: 'password' };
         }
+        console.error("Signup error:", error);
         return { success: false, message: `An unknown error occurred: ${error.message}` };
     }
   }, [toast, router]);
