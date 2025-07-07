@@ -34,7 +34,7 @@ const formSchema = z.object({
   coverImage: z.string().optional().or(z.literal('')),
   summary: z.string().optional(),
   series: z.string().optional().nullable(),
-  seriesOrder: z.coerce.number().nonnegative({ message: "Thứ tự phải là số không âm."}).optional().nullable(),
+  seriesOrder: z.number().nonnegative({ message: "Thứ tự phải là số không âm."}).optional().nullable(),
   genreIds: z.array(z.string()).optional().default([]),
   youtubeLink: z.array(z.string().url({ message: "Link YouTube không hợp lệ." }).or(z.literal(''))).optional(),
   amazonLink: z.string().url({ message: "Link Amazon không hợp lệ." }).optional().or(z.literal('')),
@@ -440,7 +440,7 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
                         type="number"
                         placeholder="1"
                         {...field}
-                        onChange={e => field.onChange(e.target.value)}
+                        onChange={e => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}
                         value={field.value ?? ""}
                         step="0.1"
                         min="0"
