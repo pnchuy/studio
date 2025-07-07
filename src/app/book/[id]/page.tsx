@@ -14,8 +14,8 @@ type BookPageProps = {
   };
 };
 
-export async function generateMetadata({ params }: BookPageProps) {
-    const bookId = params.id.split('-')[0];
+export async function generateMetadata({ params: { id } }: BookPageProps) {
+    const bookId = id.split('-')[0];
     const book = await getBookById(bookId);
     
     if (!book) {
@@ -30,8 +30,8 @@ export async function generateMetadata({ params }: BookPageProps) {
     }
 }
 
-export default async function BookPage({ params }: BookPageProps) {
-  const bookId = params.id.split('-')[0];
+export default async function BookPage({ params: { id } }: BookPageProps) {
+  const bookId = id.split('-')[0];
   const book = await getBookById(bookId);
 
   if (!book) {
