@@ -1,8 +1,13 @@
+
 import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
 import type { User } from '@/types';
-import { db } from './firebase'; // Make sure db is exported from firebase.ts
+import { db, isFirebaseConfigured } from './firebase';
 
 export async function getAllUsers(): Promise<User[]> {
+  if (!isFirebaseConfigured || !db) {
+    console.error("Firebase not configured. Returning empty user list.");
+    return [];
+  }
   try {
     const usersCol = collection(db, 'users');
     const userSnapshot = await getDocs(usersCol);
@@ -15,6 +20,10 @@ export async function getAllUsers(): Promise<User[]> {
 }
 
 export async function getUserById(uid: string): Promise<User | null> {
+    if (!isFirebaseConfigured || !db) {
+        console.error("Firebase not configured. Cannot fetch user by ID.");
+        return null;
+    }
     try {
         const userDocRef = doc(db, 'users', uid);
         const userDoc = await getDoc(userDocRef);
@@ -29,6 +38,10 @@ export async function getUserById(uid: string): Promise<User | null> {
 }
 
 export async function createUserProfile(uid: string, data: Omit<User, 'id'>): Promise<void> {
+    if (!isFirebaseConfigured || !db) {
+        console.error("Firebase not configured. Cannot create user profile.");
+        return;
+    }
     try {
         const userDocRef = doc(db, 'users', uid);
         await setDoc(userDocRef, { ...data, id: uid });

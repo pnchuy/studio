@@ -1,12 +1,12 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, type User as FirebaseUser } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { auth, db, isFirebaseConfigured } from '@/lib/firebase';
 import type { User } from '@/types';
-import { generateId } from '@/lib/utils';
 import { useToast } from './use-toast';
 
 const USER_STORAGE_KEY = 'bibliophile-user-auth-state';
@@ -31,6 +31,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    if (!isFirebaseConfigured || !auth) {
+        setIsLoading(false);
+        return;
+    }
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
         setFirebaseUser(fbUser);
@@ -61,6 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    if (!isFirebaseConfigured || !auth) {
+        toast({ variant: "destructive", title: "Firebase Not Configured", description: "Please provide Firebase credentials in the .env file." });
+        return false;
+    }
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       // onAuthStateChanged will handle setting the user state
@@ -82,9 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Login error:", error);
       return false;
     }
-  }, [router]);
+  }, [router, toast]);
 
   const signup = useCallback(async (name: string, email: string, username: string, password: string): Promise<{ success: boolean; message?: string; field?: 'email' | 'username' | 'password' }> => {
+    if (!isFirebaseConfigured || !auth || !db) {
+        toast({ variant: "destructive", title: "Firebase Not Configured", description: "Please provide Firebase credentials in the .env file." });
+        return { success: false, message: 'Firebase not configured.'};
+    }
     try {
       // Step 1: Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -115,9 +127,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return { success: false, message: "An unknown error occurred during sign up." };
     }
-  }, []);
+  }, [toast]);
 
   const logout = useCallback(async () => {
+    if (!isFirebaseConfigured || !auth) {
+        setUser(null);
+        setFirebaseUser(null);
+        localStorage.removeItem(USER_STORAGE_KEY);
+        router.push('/');
+        return;
+    }
     try {
       await signOut(auth);
       // onAuthStateChanged will clear user state
