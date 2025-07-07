@@ -28,7 +28,7 @@ if (isFirebaseConfigured) {
   storage = getStorage(app);
 } else {
     if (typeof window !== 'undefined') {
-        console.error("Firebase configuration is missing or incomplete. Please check your .env file and ensure all NEXT_PUBLIC_FIREBASE_... variables are set correctly.");
+        console.warn("Firebase is not configured. The app will run in offline mode. Please provide Firebase credentials in the .env file to enable online features.");
     }
 }
 
