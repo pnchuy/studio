@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           } else {
             // It's an old user whose document is missing, which is a problem.
-            console.warn("User exists in Auth but not in Firestore. Logging out.");
+             console.warn("User exists in Auth but not in Firestore. Logging out.");
             toast({
                 variant: 'destructive',
                 title: 'Profile Not Found',
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (credential: string, password: string): Promise<boolean> => {
     if (!isFirebaseConfigured || !auth || !db) {
-        toast({ variant: "destructive", title: "Firebase Not Configured", description: "Please provide Firebase credentials in the .env file." });
+        toast({ variant: "destructive", title: "Firebase Not Configured", description: "Please provide Firebase credentials in your .env.local file." });
         return false;
     }
 
@@ -161,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = useCallback(async (name: string, email: string, username: string, password: string): Promise<{ success: boolean; message?: string; field?: 'email' | 'username' | 'password' }> => {
     if (!isFirebaseConfigured || !auth || !db) {
-        toast({ variant: "destructive", title: "Firebase Not Configured", description: "Please provide Firebase credentials in the .env file." });
+        toast({ variant: "destructive", title: "Firebase Not Configured", description: "Please provide Firebase credentials in your .env.local file." });
         return { success: false, message: 'Firebase not configured.'};
     }
     try {
@@ -209,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = useCallback(async (): Promise<boolean> => {
     if (!isFirebaseConfigured || !auth || !db) {
-      toast({ variant: 'destructive', title: 'Firebase Not Configured' });
+      toast({ variant: 'destructive', title: 'Firebase Not Configured', description: 'Please provide Firebase credentials in your .env.local file.' });
       return false;
     }
 
