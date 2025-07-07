@@ -61,13 +61,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
             } else {
               // Still no document, something is wrong.
-              console.error("User document not found even after delay. Logging out.");
+              console.warn("User document not found even after signup delay. Logging out.");
+              toast({
+                variant: "destructive",
+                title: "Registration Incomplete",
+                description: "Your user profile could not be saved. You have been logged out. Please try signing up again.",
+              });
               await signOut(auth);
               setUser(null);
             }
           } else {
             // It's an old user whose document is missing, which is a problem.
-            console.error("User exists in Auth but not in Firestore. Logging out.");
+            console.warn("User profile not found in database. Logging out for safety.");
+            toast({
+                variant: 'destructive',
+                title: 'Profile Not Found',
+                description: 'Your user profile is missing from the database. You have been logged out.',
+            });
             await signOut(auth);
             setUser(null);
           }
