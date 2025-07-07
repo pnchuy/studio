@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, type User as FirebaseUser } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, limit, getDocs } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '@/lib/firebase';
 import type { User } from '@/types';
 import { useToast } from './use-toast';
@@ -101,15 +101,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Step 1: Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const fbUser = userCredential.user;
+      
+      // Step 2: Determine user role. First user is ADMIN.
+      const usersCollectionRef = collection(db, 'users');
+      const firstUserQuery = query(usersCollectionRef, limit(1));
+      const querySnapshot = await getDocs(firstUserQuery);
+      const isFirstUser = querySnapshot.empty;
 
-      // Step 2: Create user profile in Firestore
+      // Step 3: Create user profile in Firestore
       const newUser: User = {
         id: fbUser.uid, // Use Firebase UID as the document ID
         username,
         name,
         email,
         joinDate: new Date().toISOString().split('T')[0],
-        role: 'MEMBER',
+        role: isFirstUser ? 'ADMIN' : 'MEMBER',
       };
       
       await setDoc(doc(db, "users", fbUser.uid), newUser);
