@@ -161,60 +161,6 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
     onFinished();
   }
 
-  const selectedGenreIds = form.watch('genreIds') || [];
-  const selectedGenres = genres.filter(g => selectedGenreIds.includes(g.id));
-
-  const handleGenreRemove = (genreId: string) => {
-    const currentIds = form.getValues('genreIds') || [];
-    const newGenreIds = currentIds.filter((id: string) => id !== genreId);
-    form.setValue('genreIds', newGenreIds, { shouldValidate: true });
-  };
-
-  const processGenreInput = (input: string) => {
-    const newGenreNames = input.split(',').map(name => name.trim()).filter(Boolean);
-    if (newGenreNames.length === 0) return;
-
-    const currentIds = form.getValues('genreIds') || [];
-    const newGenreIds = newGenreNames.reduce((acc, name) => {
-        const foundGenre = genres.find(g => g.name.toLowerCase() === name.toLowerCase());
-        if (foundGenre && !currentIds.includes(foundGenre.id)) {
-          acc.push(foundGenre.id);
-        }
-        return acc;
-    }, [] as string[]);
-    
-    if (newGenreIds.length > 0) {
-        form.setValue('genreIds', [...currentIds, ...newGenreIds], { shouldValidate: true });
-    }
-    setGenreInputValue("");
-  };
-
-  const handleGenreInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === ',' || e.key === 'Enter') {
-        e.preventDefault();
-        processGenreInput(genreInputValue);
-        setIsSuggestionsOpen(false);
-    } else if (e.key === 'Backspace' && genreInputValue === '' && selectedGenreIds.length > 0) {
-        const currentIds = form.getValues('genreIds') || [];
-        const lastGenreId = currentIds[currentIds.length - 1];
-        handleGenreRemove(lastGenreId);
-    }
-  };
-
-  const handleSuggestionClick = (genreId: string) => {
-    const currentIds = form.getValues('genreIds') || [];
-    form.setValue('genreIds', [...currentIds, genreId], { shouldValidate: true });
-    setGenreInputValue("");
-    setIsSuggestionsOpen(false);
-    genreInputRef.current?.focus();
-  };
-
-  const filteredSuggestions = genres.filter(genre => 
-      !selectedGenreIds.includes(genre.id) &&
-      genre.name.toLowerCase().includes(genreInputValue.toLowerCase()) &&
-      genreInputValue.length > 0
-  );
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1">
@@ -258,64 +204,118 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
         <FormField
           control={form.control}
           name="genreIds"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Thể loại</FormLabel>
-              <Popover open={isSuggestionsOpen && filteredSuggestions.length > 0} onOpenChange={setIsSuggestionsOpen}>
-                <PopoverTrigger asChild>
-                    <div className="flex flex-wrap gap-2 rounded-md border border-input min-h-10 p-1.5 items-center" onClick={() => genreInputRef.current?.focus()}>
-                    {selectedGenres.map(genre => (
-                        <Badge key={genre.id} variant="secondary" className="flex items-center gap-1">
-                        {genre.name}
-                        <button
-                            type="button"
-                            className="rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                            onClick={() => handleGenreRemove(genre.id)}
-                        >
-                            <X className="h-3 w-3" />
-                        </button>
-                        </Badge>
-                    ))}
-                    <input
-                        ref={genreInputRef}
-                        type="text"
-                        value={genreInputValue}
-                        onChange={(e) => {
-                            setGenreInputValue(e.target.value);
-                            if (!isSuggestionsOpen) setIsSuggestionsOpen(true);
-                        }}
-                        onKeyDown={handleGenreInputKeyDown}
-                        onBlur={() => {
-                            processGenreInput(genreInputValue);
-                            setIsSuggestionsOpen(false);
-                        }}
-                        className="inline-flex flex-grow bg-transparent outline-none placeholder:text-muted-foreground text-sm px-1"
-                        placeholder={selectedGenres.length > 0 ? "" : "Nhập thể loại, cách nhau bởi dấu phẩy"}
-                    />
-                    </div>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
-                    <div className="max-h-60 overflow-y-auto">
-                    {filteredSuggestions.map((genre) => (
-                        <Button
-                        key={genre.id}
-                        type="button"
-                        variant="ghost"
-                        className="w-full justify-start rounded-md"
-                        onMouseDown={(e) => {
-                            e.preventDefault();
-                            handleSuggestionClick(genre.id);
-                        }}
-                        >
-                        {genre.name}
-                        </Button>
-                    ))}
-                    </div>
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const selectedGenres = genres.filter(g => (field.value || []).includes(g.id));
+
+            const handleGenreRemove = (genreId: string) => {
+              const newGenreIds = (field.value || []).filter((id: string) => id !== genreId);
+              field.onChange(newGenreIds);
+            };
+
+            const processGenreInput = (input: string) => {
+              const newGenreNames = input.split(',').map(name => name.trim()).filter(Boolean);
+              if (newGenreNames.length === 0) return;
+
+              const currentIds = field.value || [];
+              const newGenreIds = newGenreNames.reduce((acc, name) => {
+                  const foundGenre = genres.find(g => g.name.toLowerCase() === name.toLowerCase());
+                  if (foundGenre && !currentIds.includes(foundGenre.id)) {
+                    acc.push(foundGenre.id);
+                  }
+                  return acc;
+              }, [] as string[]);
+              
+              if (newGenreIds.length > 0) {
+                  field.onChange([...currentIds, ...newGenreIds]);
+              }
+              setGenreInputValue("");
+            };
+
+            const handleGenreInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === ',' || e.key === 'Enter') {
+                  e.preventDefault();
+                  processGenreInput(genreInputValue);
+                  setIsSuggestionsOpen(false);
+              } else if (e.key === 'Backspace' && genreInputValue === '' && (field.value || []).length > 0) {
+                  const currentIds = field.value || [];
+                  const lastGenreId = currentIds[currentIds.length - 1];
+                  handleGenreRemove(lastGenreId);
+              }
+            };
+
+            const handleSuggestionClick = (genreId: string) => {
+              const currentIds = field.value || [];
+              field.onChange([...currentIds, genreId]);
+              setGenreInputValue("");
+              setIsSuggestionsOpen(false);
+              genreInputRef.current?.focus();
+            };
+
+            const filteredSuggestions = genres.filter(genre => 
+                !(field.value || []).includes(genre.id) &&
+                genre.name.toLowerCase().includes(genreInputValue.toLowerCase()) &&
+                genreInputValue.length > 0
+            );
+
+            return (
+              <FormItem>
+                <FormLabel>Thể loại</FormLabel>
+                <Popover open={isSuggestionsOpen && filteredSuggestions.length > 0} onOpenChange={setIsSuggestionsOpen}>
+                  <PopoverTrigger asChild>
+                      <div className="flex flex-wrap gap-2 rounded-md border border-input min-h-10 p-1.5 items-center" onClick={() => genreInputRef.current?.focus()}>
+                      {selectedGenres.map(genre => (
+                          <Badge key={genre.id} variant="secondary" className="flex items-center gap-1">
+                          {genre.name}
+                          <button
+                              type="button"
+                              className="rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                              onClick={() => handleGenreRemove(genre.id)}
+                          >
+                              <X className="h-3 w-3" />
+                          </button>
+                          </Badge>
+                      ))}
+                      <input
+                          ref={genreInputRef}
+                          type="text"
+                          value={genreInputValue}
+                          onChange={(e) => {
+                              setGenreInputValue(e.target.value);
+                              if (!isSuggestionsOpen) setIsSuggestionsOpen(true);
+                          }}
+                          onKeyDown={handleGenreInputKeyDown}
+                          onBlur={() => {
+                              processGenreInput(genreInputValue);
+                              setIsSuggestionsOpen(false);
+                          }}
+                          className="inline-flex flex-grow bg-transparent outline-none placeholder:text-muted-foreground text-sm px-1"
+                          placeholder={selectedGenres.length > 0 ? "" : "Nhập thể loại, cách nhau bởi dấu phẩy"}
+                      />
+                      </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+                      <div className="max-h-60 overflow-y-auto">
+                      {filteredSuggestions.map((genre) => (
+                          <Button
+                          key={genre.id}
+                          type="button"
+                          variant="ghost"
+                          className="w-full justify-start rounded-md"
+                          onMouseDown={(e) => {
+                              e.preventDefault();
+                              handleSuggestionClick(genre.id);
+                          }}
+                          >
+                          {genre.name}
+                          </Button>
+                      ))}
+                      </div>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
          <FormField
           control={form.control}
@@ -374,7 +374,7 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
                           <Input
                               key="cover-image-url"
                               placeholder="https://..."
-                              value={field.value.startsWith('data:') ? '' : field.value}
+                              value={field.value?.startsWith('data:') ? '' : field.value}
                               onChange={field.onChange}
                           />
                       ) : (
