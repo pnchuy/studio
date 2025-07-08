@@ -50,7 +50,7 @@ import { EditBookForm } from './EditBookForm';
 import { AuthorManagement } from './AuthorManagement';
 import { GenreManagement } from './GenreManagement';
 import { SeriesManagement } from './SeriesManagement';
-import { ImportBooksDialog } from './ImportBooksDialog';
+import { ImportBooksDialog, type ImportBook } from './ImportBooksDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -109,12 +109,16 @@ export function BookManagement() {
     fetchData();
   }, [toast]);
   
-  const handleBookAdded = async (newBookData: Omit<Book, 'id'>) => {
+  const handleBookAdded = async (newBookData: Omit<Book, 'id' | 'docId'>) => {
     if (!db) return;
     try {
-        const docRef = await addDoc(collection(db, "books"), newBookData);
-        const newBook: Book = { ...newBookData, id: docRef.id };
-        const updatedBooks = [newBook, ...books];
+        const newId = generateId(6);
+        const bookToSave: Omit<Book, 'docId'> = { ...newBookData, id: newId };
+        
+        const docRef = await addDoc(collection(db, "books"), bookToSave);
+        const newBook: Book = { ...bookToSave, docId: docRef.id };
+        const updatedBooks = [newBook, ...books].sort((a, b) => a.title.localeCompare(b.title));
+
         setBooks(updatedBooks);
 
         if (newBook.series && !series.some(s => s.name === newBook.series)) {
@@ -130,7 +134,7 @@ export function BookManagement() {
     }
   };
 
-  const handleBooksImported = async (newBooks: (Omit<Book, 'id'>)[]) => {
+  const handleBooksImported = async (newBooks: ImportBook[]) => {
      if (!db) return;
     if (newBooks.length === 0) {
       toast({
@@ -224,13 +228,13 @@ export function BookManagement() {
   };
 
   const handleBookUpdated = async (updatedBook: Book) => {
-    if (!db) return;
+    if (!db || !updatedBook.docId) return;
     try {
-        const bookRef = doc(db, "books", updatedBook.id);
-        const { id, ...bookData } = updatedBook;
+        const bookRef = doc(db, "books", updatedBook.docId);
+        const { docId, ...bookData } = updatedBook;
         await updateDoc(bookRef, bookData);
 
-        const updatedBooks = books.map(book => book.id === updatedBook.id ? updatedBook : book);
+        const updatedBooks = books.map(book => book.docId === updatedBook.docId ? updatedBook : book);
         setBooks(updatedBooks);
         if (updatedBook.series && !series.some(s => s.name === updatedBook.series)) {
             handleSeriesAdded({ name: updatedBook.series }, false);
@@ -245,23 +249,21 @@ export function BookManagement() {
     }
   };
 
-  const handleBookDeleted = async (bookId: string) => {
-    if (!db) return;
-    const bookToDelete = books.find(b => b.id === bookId);
-    if (bookToDelete) {
-        try {
-            await deleteDoc(doc(db, "books", bookId));
-            const updatedBooks = books.filter(book => book.id !== bookId);
-            setBooks(updatedBooks);
-            toast({
-                variant: "destructive",
-                title: "Đã xóa sách",
-                description: `Sách "${bookToDelete.title}" đã được xóa.`,
-            });
-        } catch(e) {
-            console.error("Error deleting document: ", e);
-            toast({ variant: "destructive", title: "Error", description: "Could not delete book."});
-        }
+  const handleBookDeleted = async (bookToDelete: Book) => {
+    if (!db || !bookToDelete.docId) return;
+    
+    try {
+        await deleteDoc(doc(db, "books", bookToDelete.docId));
+        const updatedBooks = books.filter(book => book.docId !== bookToDelete.docId);
+        setBooks(updatedBooks);
+        toast({
+            variant: "destructive",
+            title: "Đã xóa sách",
+            description: `Sách "${bookToDelete.title}" đã được xóa.`,
+        });
+    } catch(e) {
+        console.error("Error deleting document: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not delete book."});
     }
   }
 
@@ -449,7 +451,8 @@ export function BookManagement() {
         
         const booksToUpdate = books.filter(book => book.series === oldName);
         const updatePromises = booksToUpdate.map(book => {
-            const bookRef = doc(db, "books", book.id);
+            if (!book.docId) return Promise.resolve();
+            const bookRef = doc(db, "books", book.docId);
             return updateDoc(bookRef, { series: newName });
         });
 
@@ -598,7 +601,7 @@ export function BookManagement() {
                         </TableHeader>
                         <TableBody>
                             {paginatedBooks.map((book) => (
-                            <TableRow key={book.id}>
+                            <TableRow key={book.docId || book.id}>
                                 <TableCell>
                                     <Image
                                         src={book.coverImage}
@@ -756,7 +759,7 @@ export function BookManagement() {
                 <AlertDialogAction 
                     onClick={() => {
                         if (bookToDelete) {
-                            handleBookDeleted(bookToDelete.id);
+                            handleBookDeleted(bookToDelete);
                             setBookToDelete(null);
                         }
                     }} 

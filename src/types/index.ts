@@ -15,6 +15,7 @@ export type Series = {
 
 export type Book = {
   id: string;
+  docId?: string; // Firestore document ID
   title: string;
   authorId: string;
   publicationDate: string;

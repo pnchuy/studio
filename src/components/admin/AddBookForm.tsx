@@ -42,7 +42,7 @@ const formSchema = z.object({
 
 interface AddBookFormProps {
     books: Book[];
-    onBookAdded: (book: Omit<Book, 'id'>) => void;
+    onBookAdded: (book: Omit<Book, 'id' | 'docId'>) => void;
     onFinished: () => void;
     authors: Author[];
     genres: Genre[];
@@ -148,7 +148,7 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
       return; 
     }
     
-    const newBookData: Omit<Book, 'id'> = {
+    const newBookData: Omit<Book, 'id' | 'docId'> = {
         title: values.title,
         authorId: values.authorId,
         publicationDate: values.publicationDate,

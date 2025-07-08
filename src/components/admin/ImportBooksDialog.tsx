@@ -18,6 +18,7 @@ type ImportType = 'books' | 'authors' | 'genres' | 'series';
 
 // Schema for the books in the JSON file
 const importBookSchema = z.object({
+  id: z.string().min(1, "ID sách là bắt buộc."),
   title: z.string().min(2, "Tiêu đề phải có ít nhất 2 ký tự."),
   authorId: z.string().min(1, "ID tác giả là bắt buộc."),
   publicationDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
@@ -28,18 +29,19 @@ const importBookSchema = z.object({
   summary: z.string().optional().default("Sách được import từ file JSON."),
   coverImage: z.string().url().optional().default("https://placehold.co/400x600.png"),
   series: z.string().nullable().optional().default(null),
+  seriesOrder: z.number().nullable().optional().default(null),
   genreIds: z.array(z.string()).optional().default([]),
 });
 
 const importFileSchema = z.array(importBookSchema);
-type ImportBook = z.infer<typeof importBookSchema>;
+export type ImportBook = z.infer<typeof importBookSchema>;
 
 interface ImportBooksDialogProps {
   existingBooks: Book[];
   existingAuthors: Author[];
   existingGenres: Genre[];
   existingSeries: Series[];
-  onBooksImported: (books: (Omit<Book, 'id'>)[]) => void;
+  onBooksImported: (books: ImportBook[]) => void;
   onAuthorsImported: (names: string[]) => void;
   onGenresImported: (names: string[]) => void;
   onSeriesImported: (names: string[]) => void;
@@ -128,14 +130,16 @@ export function ImportBooksDialog({
         }
 
         const existingTitles = new Set(existingBooks.map(b => b.title.toLowerCase()));
+        const existingIds = new Set(existingBooks.map(b => b.id));
         const existingAuthorIds = new Set(existingAuthors.map(a => a.id));
         const booksToImport: ImportBook[] = [];
 
         for (const book of validationResult.data) {
           const isTitleDuplicate = existingTitles.has(book.title.toLowerCase());
+          const isIdDuplicate = existingIds.has(book.id);
           const isAuthorValid = existingAuthorIds.has(book.authorId);
           
-          if (!isTitleDuplicate && isAuthorValid) {
+          if (!isTitleDuplicate && !isIdDuplicate && isAuthorValid) {
             booksToImport.push(book);
           }
         }
@@ -193,11 +197,7 @@ export function ImportBooksDialog({
   const handleConfirmImport = () => {
     switch(importType) {
         case 'books':
-            const newBooks: (Omit<Book, 'id'>)[] = previewBooks.map(p => ({
-                ...p,
-                seriesOrder: p.series ? 1 : null,
-            }));
-            onBooksImported(newBooks);
+            onBooksImported(previewBooks);
             break;
         case 'authors':
             onAuthorsImported(previewItems);
@@ -220,7 +220,7 @@ export function ImportBooksDialog({
         <Code className="h-4 w-4" />
         <AlertTitle>Định dạng yêu cầu</AlertTitle>
         <AlertDescription>
-          Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `title`, `authorId`, `publicationDate`.
+          Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `id`, `title`, `authorId`, `publicationDate`.
         </AlertDescription>
       </Alert>
 
