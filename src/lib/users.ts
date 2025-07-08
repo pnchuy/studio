@@ -1,5 +1,5 @@
 
-import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import type { User } from '@/types';
 import { db, isFirebaseConfigured } from './firebase';
 
@@ -47,5 +47,20 @@ export async function createUserProfile(uid: string, data: Omit<User, 'id'>): Pr
         await setDoc(userDocRef, { ...data, id: uid });
     } catch (error) {
         console.error("Error creating user profile:", error);
+    }
+}
+
+export async function updateUserRole(uid: string, role: User['role']): Promise<boolean> {
+    if (!isFirebaseConfigured || !db) {
+        console.error("Firebase not configured. Cannot update user role.");
+        return false;
+    }
+    try {
+        const userDocRef = doc(db, 'users', uid);
+        await updateDoc(userDocRef, { role: role });
+        return true;
+    } catch (error) {
+        console.error("Error updating user role:", error);
+        return false;
     }
 }

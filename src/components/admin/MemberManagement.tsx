@@ -3,7 +3,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import type { User } from '@/types';
-import { getAllUsers } from '@/lib/users';
+import { getAllUsers, updateUserRole } from '@/lib/users';
 import {
   Table,
   TableHeader,
@@ -31,7 +31,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
-import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, Trash2 } from 'lucide-react';
 import { Button, buttonVariants } from '../ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -85,6 +84,26 @@ export function MemberManagement() {
   useEffect(() => {
     setCurrentPage(1);
   }, [itemsPerPage]);
+  
+  const handleRoleChange = async (userId: string, newRole: User['role']) => {
+    const success = await updateUserRole(userId, newRole);
+
+    if (success) {
+      setUsers(prevUsers =>
+        prevUsers.map(u => (u.id === userId ? { ...u, role: newRole } : u))
+      );
+      toast({
+        title: "Vai trò đã được cập nhật",
+        description: `Vai trò của thành viên đã được thay đổi thành ${newRole}.`,
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Cập nhật thất bại",
+        description: "Không thể thay đổi vai trò của thành viên.",
+      });
+    }
+  };
 
   const handleUserDeleted = (userId: string) => {
     const userToDelete = users.find(u => u.id === userId);
@@ -104,7 +123,7 @@ export function MemberManagement() {
     <Card>
       <CardHeader>
         <CardTitle>Quản lý thành viên</CardTitle>
-        <CardDescription>Xem và quản lý danh sách thành viên.</CardDescription>
+        <CardDescription>Xem và quản lý vai trò, trạng thái của thành viên.</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -134,14 +153,30 @@ export function MemberManagement() {
                                 (currentUser.role === 'MANAGER' && user.role === 'MEMBER')
                             ) && currentUser.id !== user.id;
 
+                            const canEditRole = currentUser && currentUser.id !== user.id && (
+                                currentUser.role === 'ADMIN' ||
+                                (currentUser.role === 'MANAGER' && user.role === 'MEMBER')
+                            );
+
                         return (
                             <TableRow key={user.id}>
                                 <TableCell className="font-medium">{user.name}</TableCell>
                                 <TableCell>{user.email}</TableCell>
                                 <TableCell>
-                                    <Badge variant={user.role === 'ADMIN' ? 'default' : user.role === 'MANAGER' ? 'secondary' : 'outline'}>
-                                        {user.role}
-                                    </Badge>
+                                  <Select
+                                    value={user.role}
+                                    onValueChange={(newRole) => handleRoleChange(user.id, newRole as User['role'])}
+                                    disabled={!canEditRole}
+                                  >
+                                    <SelectTrigger className="w-[120px] h-9">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {currentUser?.role === 'ADMIN' && <SelectItem value="ADMIN">ADMIN</SelectItem>}
+                                      <SelectItem value="MANAGER">MANAGER</SelectItem>
+                                      <SelectItem value="MEMBER">MEMBER</SelectItem>
+                                    </SelectContent>
+                                  </Select>
                                 </TableCell>
                                 <TableCell>{new Date(user.joinDate).toLocaleDateString()}</TableCell>
                                 <TableCell className="text-right">
