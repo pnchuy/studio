@@ -74,7 +74,7 @@ export default function LoginPage() {
 
               <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
                 <GoogleIcon className="mr-2 h-4 w-4" />
-                Google
+                Tiếp tục với Google
               </Button>
             </div>
             <p className="mt-6 text-center text-sm text-muted-foreground">
