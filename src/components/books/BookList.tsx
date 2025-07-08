@@ -24,7 +24,7 @@ interface BookListProps {
   initialHasMore: boolean;
 }
 
-export default function BookList({ initialBooks, initialHasMore }: BookListProps) {
+export function BookList({ initialBooks, initialHasMore }: BookListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('title_asc');
   const { addSearchTerm } = useSearchHistory();

@@ -1,5 +1,5 @@
 import { getPaginatedBooksWithDetails } from '@/lib/books';
-import BookList from '@/components/books/BookList';
+import { BookList } from '@/components/books/BookList';
 
 export default async function Home() {
   const { books: initialBooks, hasMore: initialHasMore } = await getPaginatedBooksWithDetails({ page: 1 });
