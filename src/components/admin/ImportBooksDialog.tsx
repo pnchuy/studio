@@ -3,11 +3,12 @@
 
 import { useState } from "react";
 import { z } from "zod";
-import type { Book, Author } from "@/types";
+import type { Book, Author, Genre } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Code, FileJson, FileUp, ListChecks, Loader2, Info } from "lucide-react";
+import { Code, FileJson, FileUp, ListChecks, Loader2, Info, Pilcrow } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,26 +31,59 @@ const importBookSchema = z.object({
   genreIds: z.array(z.string()).optional().default([]),
 });
 
-// The file itself must be an array of these book objects
 const importFileSchema = z.array(importBookSchema);
-
 type ImportBook = z.infer<typeof importBookSchema>;
 
 interface ImportBooksDialogProps {
   existingBooks: Book[];
   existingAuthors: Author[];
+  existingGenres: Genre[];
+  existingSeries: string[];
   onBooksImported: (books: (Omit<Book, 'id'>)[]) => void;
+  onAuthorsImported: (names: string[]) => void;
+  onGenresImported: (names: string[]) => void;
+  onSeriesImported: (names: string[]) => void;
   onFinished: () => void;
 }
 
-export function ImportBooksDialog({ existingBooks, existingAuthors, onBooksImported, onFinished }: ImportBooksDialogProps) {
+export function ImportBooksDialog({ 
+    existingBooks, 
+    existingAuthors, 
+    existingGenres,
+    existingSeries,
+    onBooksImported, 
+    onAuthorsImported,
+    onGenresImported,
+    onSeriesImported,
+    onFinished 
+}: ImportBooksDialogProps) {
   const [importType, setImportType] = useState<ImportType>('books');
   const [step, setStep] = useState<'select' | 'preview'>('select');
+  
+  // For file import
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [previewBooks, setPreviewBooks] = useState<ImportBook[]>([]);
-  const [skippedCount, setSkippedCount] = useState(0);
+  const [skippedBookCount, setSkippedBookCount] = useState(0);
+  
+  // For bulk text import
+  const [bulkText, setBulkText] = useState("");
+  const [previewItems, setPreviewItems] = useState<string[]>([]);
+  const [skippedItemCount, setSkippedItemCount] = useState(0);
+
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const resetState = () => {
+    setStep('select');
+    setSelectedFile(null);
+    setBulkText("");
+    setError(null);
+    setPreviewBooks([]);
+    setPreviewItems([]);
+    setSkippedBookCount(0);
+    setSkippedItemCount(0);
+    setIsLoading(false);
+  }
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -65,6 +99,14 @@ export function ImportBooksDialog({ existingBooks, existingAuthors, onBooksImpor
   };
 
   const handleParseAndValidate = () => {
+    if (importType === 'books') {
+        handleBookFileValidation();
+    } else {
+        handleBulkTextValidation();
+    }
+  }
+
+  const handleBookFileValidation = () => {
     if (!selectedFile) {
       setError("Vui lòng chọn một tệp để import.");
       return;
@@ -77,7 +119,6 @@ export function ImportBooksDialog({ existingBooks, existingAuthors, onBooksImpor
         const content = e.target?.result as string;
         const jsonData = JSON.parse(content);
         
-        // 1. Validate file structure with Zod
         const validationResult = importFileSchema.safeParse(jsonData);
         if (!validationResult.success) {
           const firstError = validationResult.error.issues[0];
@@ -86,7 +127,6 @@ export function ImportBooksDialog({ existingBooks, existingAuthors, onBooksImpor
           return;
         }
 
-        // 2. Perform custom per-book validation
         const existingTitles = new Set(existingBooks.map(b => b.title.toLowerCase()));
         const existingAuthorIds = new Set(existingAuthors.map(a => a.id));
         const booksToImport: ImportBook[] = [];
@@ -100,7 +140,7 @@ export function ImportBooksDialog({ existingBooks, existingAuthors, onBooksImpor
           }
         }
         
-        setSkippedCount(validationResult.data.length - booksToImport.length);
+        setSkippedBookCount(validationResult.data.length - booksToImport.length);
         setPreviewBooks(booksToImport);
         setStep('preview');
         setError(null);
@@ -114,95 +154,147 @@ export function ImportBooksDialog({ existingBooks, existingAuthors, onBooksImpor
        setError("Đã xảy ra lỗi khi đọc tệp.");
        setIsLoading(false);
     }
-
     reader.readAsText(selectedFile);
   };
   
-  const handleConfirmImport = () => {
-    const newBooks: (Omit<Book, 'id'>)[] = previewBooks.map(p => ({
-        ...p,
-        seriesOrder: p.series ? 1 : null, // Basic series order
-    }));
+  const handleBulkTextValidation = () => {
+    if (!bulkText.trim()) {
+      setError("Vui lòng nhập danh sách.");
+      return;
+    }
+    setIsLoading(true);
+    
+    const items = bulkText.split('\n').map(item => item.trim()).filter(Boolean);
+    let existingItemsSet: Set<string>;
 
-    onBooksImported(newBooks);
+    switch(importType) {
+        case 'authors':
+            existingItemsSet = new Set(existingAuthors.map(a => a.name.toLowerCase()));
+            break;
+        case 'genres':
+            existingItemsSet = new Set(existingGenres.map(g => g.name.toLowerCase()));
+            break;
+        case 'series':
+             existingItemsSet = new Set(existingSeries.map(s => s.toLowerCase()));
+            break;
+        default:
+            existingItemsSet = new Set();
+    }
+    
+    const newItems = items.filter(item => !existingItemsSet.has(item.toLowerCase()));
+    
+    setSkippedItemCount(items.length - newItems.length);
+    setPreviewItems(newItems);
+    setStep('preview');
+    setError(null);
+    setIsLoading(false);
+  }
+
+  const handleConfirmImport = () => {
+    switch(importType) {
+        case 'books':
+            const newBooks: (Omit<Book, 'id'>)[] = previewBooks.map(p => ({
+                ...p,
+                seriesOrder: p.series ? 1 : null,
+            }));
+            onBooksImported(newBooks);
+            break;
+        case 'authors':
+            onAuthorsImported(previewItems);
+            break;
+        case 'genres':
+            onGenresImported(previewItems);
+            break;
+        case 'series':
+            onSeriesImported(previewItems);
+            break;
+    }
     onFinished();
   };
 
   const getAuthorName = (authorId: string) => existingAuthors.find(a => a.id === authorId)?.name || <span className="text-destructive">Không tìm thấy</span>;
+  
+  const renderBookImport = () => (
+    <>
+      <Alert>
+        <Code className="h-4 w-4" />
+        <AlertTitle>Định dạng yêu cầu</AlertTitle>
+        <AlertDescription>
+          Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `title`, `authorId`, `publicationDate`.
+        </AlertDescription>
+      </Alert>
+
+      <div className="space-y-2">
+        <label htmlFor="json-upload" className="text-sm font-medium">Chọn tệp JSON</label>
+        <Input
+          id="json-upload"
+          type="file"
+          accept=".json,application/json"
+          onChange={handleFileChange}
+          className="pt-2 h-11"
+        />
+      </div>
+    </>
+  );
+
+  const renderBulkAdd = () => (
+    <>
+      <Alert>
+        <Pilcrow className="h-4 w-4" />
+        <AlertTitle>Hướng dẫn</AlertTitle>
+        <AlertDescription>
+          Dán danh sách của bạn vào ô bên dưới. Đảm bảo mỗi mục nằm trên một dòng riêng biệt. Hệ thống sẽ tự động bỏ qua các mục đã tồn tại.
+        </AlertDescription>
+      </Alert>
+      <div className="space-y-2">
+        <Label htmlFor="bulk-add">Danh sách {importType}</Label>
+        <Textarea 
+            id="bulk-add"
+            value={bulkText}
+            onChange={(e) => setBulkText(e.target.value)}
+            rows={8}
+            placeholder={`Tên tác giả 1\nTên tác giả 2\nTên tác giả 3...`}
+        />
+      </div>
+    </>
+  )
 
   const renderSelectStep = () => (
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="import-type">Chọn loại dữ liệu để import</Label>
-        <Select value={importType} onValueChange={(value) => setImportType(value as ImportType)}>
+        <Select value={importType} onValueChange={(value) => { setImportType(value as ImportType); resetState(); }}>
             <SelectTrigger id="import-type">
                 <SelectValue placeholder="Chọn loại dữ liệu..." />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value="books">Sách</SelectItem>
-                <SelectItem value="authors">Tác giả</SelectItem>
-                <SelectItem value="genres">Thể loại</SelectItem>
-                <SelectItem value="series">Series</SelectItem>
+                <SelectItem value="books">Sách (từ file JSON)</SelectItem>
+                <SelectItem value="authors">Tác giả (hàng loạt)</SelectItem>
+                <SelectItem value="genres">Thể loại (hàng loạt)</SelectItem>
+                <SelectItem value="series">Series (hàng loạt)</SelectItem>
             </SelectContent>
         </Select>
       </div>
       
-      {importType === 'books' ? (
-        <>
-          <Alert>
-            <Code className="h-4 w-4" />
-            <AlertTitle>Định dạng yêu cầu</AlertTitle>
-            <AlertDescription>
-              Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `title`, `authorId`, `publicationDate`.
-            </AlertDescription>
-          </Alert>
-
-          <div className="space-y-2">
-            <label htmlFor="json-upload" className="text-sm font-medium">Chọn tệp JSON</label>
-            <Input
-              id="json-upload"
-              type="file"
-              accept=".json,application/json"
-              onChange={handleFileChange}
-              className="pt-2 h-11"
-            />
-            {error && <p className="text-sm text-destructive mt-2">{error}</p>}
-          </div>
-        </>
-      ) : (
-        <Alert>
-            <Info className="h-4 w-4" />
-            <AlertTitle>Chức năng đang được phát triển</AlertTitle>
-            <AlertDescription>
-                Chức năng import cho loại dữ liệu này sẽ sớm được cập nhật. Vui lòng quay lại sau.
-            </AlertDescription>
-        </Alert>
-      )}
+      {importType === 'books' ? renderBookImport() : renderBulkAdd()}
+      
+      {error && <p className="text-sm text-destructive mt-2">{error}</p>}
       
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onFinished}>
           Hủy
         </Button>
-        <Button type="button" onClick={handleParseAndValidate} disabled={!selectedFile || isLoading || importType !== 'books'}>
+        <Button type="button" onClick={handleParseAndValidate} disabled={isLoading || (importType === 'books' && !selectedFile) || (importType !== 'books' && !bulkText)}>
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
-          Kiểm tra file
+          Kiểm tra dữ liệu
         </Button>
       </div>
     </div>
   );
 
-  const renderPreviewStep = () => (
-     <div className="space-y-4">
-      <Alert variant={previewBooks.length > 0 ? "default" : "destructive"}>
-        <ListChecks className="h-4 w-4" />
-        <AlertTitle>Xem trước kết quả Import</AlertTitle>
-        <AlertDescription>
-          {previewBooks.length > 0 ? `Tìm thấy ${previewBooks.length} sách hợp lệ để thêm.` : `Không có sách nào hợp lệ để thêm.`}
-          {skippedCount > 0 && ` Đã bỏ qua ${skippedCount} sách do bị trùng lặp hoặc tác giả không tồn tại.`}
-        </AlertDescription>
-      </Alert>
-      
-      {previewBooks.length > 0 && (
+  const renderBookPreview = () => (
+    <>
+     {previewBooks.length > 0 && (
          <ScrollArea className="h-72 w-full rounded-md border">
             <Table>
                 <TableHeader className="sticky top-0 bg-secondary">
@@ -224,18 +316,63 @@ export function ImportBooksDialog({ existingBooks, existingAuthors, onBooksImpor
             </Table>
         </ScrollArea>
       )}
+    </>
+  );
+  
+  const renderItemPreview = () => (
+    <>
+     {previewItems.length > 0 && (
+         <ScrollArea className="h-72 w-full rounded-md border">
+            <Table>
+                <TableHeader className="sticky top-0 bg-secondary">
+                    <TableRow>
+                        <TableHead>Tên sẽ được thêm</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {previewItems.map((item, index) => (
+                        <TableRow key={index}>
+                            <TableCell className="font-medium">{item}</TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </ScrollArea>
+      )}
+    </>
+  );
+
+  const renderPreviewStep = () => {
+    const isBookImport = importType === 'books';
+    const hasItemsToImport = isBookImport ? previewBooks.length > 0 : previewItems.length > 0;
+    const skippedCount = isBookImport ? skippedBookCount : skippedItemCount;
+    const itemsFound = isBookImport ? previewBooks.length : previewItems.length;
+
+    return (
+     <div className="space-y-4">
+      <Alert variant={hasItemsToImport ? "default" : "destructive"}>
+        <ListChecks className="h-4 w-4" />
+        <AlertTitle>Xem trước kết quả Import</AlertTitle>
+        <AlertDescription>
+          {hasItemsToImport ? `Tìm thấy ${itemsFound} mục hợp lệ để thêm.` : `Không có mục nào hợp lệ để thêm.`}
+          {skippedCount > 0 && ` Đã bỏ qua ${skippedCount} mục do bị trùng lặp.`}
+        </AlertDescription>
+      </Alert>
+      
+      {isBookImport ? renderBookPreview() : renderItemPreview()}
 
       <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={() => setStep('select')}>
+        <Button type="button" variant="outline" onClick={resetState}>
           Quay lại
         </Button>
-        <Button type="button" onClick={handleConfirmImport} disabled={previewBooks.length === 0}>
+        <Button type="button" onClick={handleConfirmImport} disabled={!hasItemsToImport}>
           <FileJson className="mr-2 h-4 w-4" />
           Xác nhận Import
         </Button>
       </div>
     </div>
-  );
+    )
+  };
 
   return step === 'select' ? renderSelectStep() : renderPreviewStep();
 }

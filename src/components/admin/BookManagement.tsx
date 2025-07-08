@@ -165,6 +165,53 @@ export function BookManagement() {
     }
   };
 
+  const handleAuthorsImported = async (newNames: string[]) => {
+    if (!db) return;
+    try {
+        const newAuthorDocs = newNames.map(name => ({ name }));
+        await Promise.all(newAuthorDocs.map(author => addDoc(collection(db, "authors"), author)));
+        
+        const freshAuthors = await fetchAllAuthors();
+        setAuthors(freshAuthors);
+
+        toast({
+            title: "Import tác giả thành công",
+            description: `${newNames.length} tác giả mới đã được thêm.`,
+        });
+    } catch(e) {
+         console.error("Error importing authors: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not import authors."});
+    }
+  };
+
+  const handleGenresImported = async (newNames: string[]) => {
+    if (!db) return;
+    try {
+        const newGenreDocs = newNames.map(name => ({ name }));
+        await Promise.all(newGenreDocs.map(genre => addDoc(collection(db, "genres"), genre)));
+        
+        const freshGenres = await fetchAllGenres();
+        setGenres(freshGenres);
+
+        toast({
+            title: "Import thể loại thành công",
+            description: `${newNames.length} thể loại mới đã được thêm.`,
+        });
+    } catch(e) {
+         console.error("Error importing genres: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not import genres."});
+    }
+  };
+
+  const handleSeriesImported = (newNames: string[]) => {
+    const updatedSeries = [...series, ...newNames].sort();
+    setSeries(updatedSeries);
+    toast({
+        title: "Import series thành công",
+        description: `${newNames.length} series mới đã được thêm vào danh sách.`,
+    });
+  };
+
   const handleBookUpdated = async (updatedBook: Book) => {
     if (!db) return;
     try {
@@ -411,12 +458,17 @@ export function BookManagement() {
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Import dữ liệu từ file JSON</DialogTitle>
+                        <DialogTitle>Import dữ liệu</DialogTitle>
                     </DialogHeader>
                     <ImportBooksDialog
                       existingBooks={books}
                       existingAuthors={authors}
+                      existingGenres={genres}
+                      existingSeries={series}
                       onBooksImported={handleBooksImported}
+                      onAuthorsImported={handleAuthorsImported}
+                      onGenresImported={handleGenresImported}
+                      onSeriesImported={handleSeriesImported}
                       onFinished={() => setIsImportBookOpen(false)}
                     />
                 </DialogContent>
