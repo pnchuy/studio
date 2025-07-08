@@ -9,7 +9,7 @@ export async function getAllBooks(): Promise<Book[]> {
   try {
     const booksCol = collection(db, 'books');
     const bookSnapshot = await getDocs(booksCol);
-    return bookSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Book));
+    return bookSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Book));
   } catch (error) {
     console.error("Error fetching all books:", error);
     return [];
@@ -22,7 +22,7 @@ export async function getBookById(id: string): Promise<Book | null> {
     const bookDocRef = doc(db, 'books', id);
     const bookDoc = await getDoc(bookDocRef);
     if (bookDoc.exists()) {
-      return { id: bookDoc.id, ...bookDoc.data() } as Book;
+      return { ...bookDoc.data(), id: bookDoc.id } as Book;
     }
     return null;
   } catch (error) {

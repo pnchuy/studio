@@ -7,7 +7,7 @@ export async function getAllGenres(): Promise<Genre[]> {
   try {
     const genresCol = collection(db, 'genres');
     const genreSnapshot = await getDocs(genresCol);
-    return genreSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Genre));
+    return genreSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Genre));
   } catch (error) {
     console.error("Error fetching all genres:", error);
     return [];

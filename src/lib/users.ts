@@ -12,9 +12,8 @@ export async function getAllUsers(): Promise<User[]> {
     const usersCol = collection(db, 'users');
     const userSnapshot = await getDocs(usersCol);
     const userList = userSnapshot.docs.map(doc => {
-      const data = doc.data();
       // Ensure the document ID from Firestore is the source of truth.
-      return { ...data, id: doc.id } as User;
+      return { ...doc.data(), id: doc.id } as User;
     });
     return userList;
   } catch (error) {
@@ -32,8 +31,7 @@ export async function getUserById(uid: string): Promise<User | null> {
         const userDocRef = doc(db, 'users', uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
-            const data = userDoc.data();
-            return { ...data, id: userDoc.id } as User;
+            return { ...userDoc.data(), id: userDoc.id } as User;
         }
         return null;
     } catch(error) {

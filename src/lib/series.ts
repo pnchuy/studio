@@ -7,7 +7,7 @@ export async function getAllSeries(): Promise<Series[]> {
   try {
     const seriesCol = collection(db, 'series');
     const seriesSnapshot = await getDocs(seriesCol);
-    return seriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Series));
+    return seriesSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Series));
   } catch (error) {
     console.error("Error fetching all series:", error);
     return [];
