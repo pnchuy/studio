@@ -94,14 +94,6 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
   const handleEditClick = (seriesName: string) => {
     setEditingSeries(seriesName);
     setIsEditSeriesOpen(true);
-  }
-
-  const handleSeriesUpdated = (oldName: string, newName: string) => {
-    onSeriesUpdated(oldName, newName);
-    toast({
-        title: "Cập nhật Series thành công",
-        description: `Series "${oldName}" đã được đổi tên thành "${newName}".`,
-    });
   };
 
   return (
@@ -248,7 +240,7 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
               {editingSeries && (
                 <EditSeriesForm 
                   seriesToEdit={editingSeries} 
-                  onSeriesUpdated={handleSeriesUpdated} 
+                  onSeriesUpdated={onSeriesUpdated} 
                   onFinished={() => {
                     setIsEditSeriesOpen(false);
                     setEditingSeries(null);

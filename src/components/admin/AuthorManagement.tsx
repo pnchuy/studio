@@ -12,7 +12,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, Trash2 } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Trash2, Pencil } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AddAuthorForm } from './AddAuthorForm';
+import { EditAuthorForm } from './EditAuthorForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -52,11 +53,14 @@ interface AuthorManagementProps {
     books: Book[];
     isLoading: boolean;
     onAuthorAdded: (newAuthor: Author) => void;
+    onAuthorUpdated: (author: Author) => void;
     onAuthorDeleted: (authorId: string) => void;
 }
 
-export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onAuthorDeleted }: AuthorManagementProps) {
+export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onAuthorUpdated, onAuthorDeleted }: AuthorManagementProps) {
   const [isAddAuthorOpen, setIsAddAuthorOpen] = useState(false);
+  const [isEditAuthorOpen, setIsEditAuthorOpen] = useState(false);
+  const [editingAuthor, setEditingAuthor] = useState<Author | null>(null);
   const { toast } = useToast();
   const [authorToDelete, setAuthorToDelete] = useState<Author | null>(null);
   
@@ -88,6 +92,11 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
         title: "Thêm tác giả thành công",
         description: `Tác giả "${newAuthor.name}" đã được thêm.`,
     });
+  };
+
+  const handleEditClick = (author: Author) => {
+    setEditingAuthor(author);
+    setIsEditAuthorOpen(true);
   };
 
   const handleAuthorDeleted = (authorId: string) => {
@@ -161,6 +170,10 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={() => handleEditClick(author)}>
+                                        <Pencil className="mr-2 h-4 w-4"/>
+                                        Sửa
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => setAuthorToDelete(author)} className="text-destructive focus:text-destructive">
                                         <Trash2 className="mr-2 h-4 w-4"/>
                                         Xóa
@@ -223,6 +236,23 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
         )}
       </div>
     </div>
+    <Dialog open={isEditAuthorOpen} onOpenChange={setIsEditAuthorOpen}>
+        <DialogContent className="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Sửa thông tin tác giả</DialogTitle>
+            </DialogHeader>
+            {editingAuthor && (
+                <EditAuthorForm 
+                    authorToEdit={editingAuthor}
+                    onAuthorUpdated={onAuthorUpdated} 
+                    onFinished={() => {
+                        setIsEditAuthorOpen(false);
+                        setEditingAuthor(null);
+                    }}
+                />
+            )}
+        </DialogContent>
+    </Dialog>
      <AlertDialog open={!!authorToDelete} onOpenChange={(isOpen) => !isOpen && setAuthorToDelete(null)}>
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -250,5 +280,3 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
     </>
   );
 }
-
-    

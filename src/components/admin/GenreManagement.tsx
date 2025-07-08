@@ -12,7 +12,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, Trash2 } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Trash2, Pencil } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AddGenreForm } from './AddGenreForm';
+import { EditGenreForm } from './EditGenreForm';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -51,11 +52,14 @@ interface GenreManagementProps {
     genres: Genre[];
     isLoading: boolean;
     onGenreAdded: (newGenre: Genre) => void;
+    onGenreUpdated: (genre: Genre) => void;
     onGenreDeleted: (genreId: string) => void;
 }
 
-export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDeleted }: GenreManagementProps) {
+export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreUpdated, onGenreDeleted }: GenreManagementProps) {
   const [isAddGenreOpen, setIsAddGenreOpen] = useState(false);
+  const [isEditGenreOpen, setIsEditGenreOpen] = useState(false);
+  const [editingGenre, setEditingGenre] = useState<Genre | null>(null);
   const [genreToDelete, setGenreToDelete] = useState<Genre | null>(null);
   const { toast } = useToast();
 
@@ -87,6 +91,11 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDelete
         title: "Thêm thể loại thành công",
         description: `Thể loại "${newGenre.name}" đã được thêm.`,
     });
+  };
+  
+  const handleEditClick = (genre: Genre) => {
+    setEditingGenre(genre);
+    setIsEditGenreOpen(true);
   };
 
   const handleGenreDeleted = (genreId: string) => {
@@ -158,6 +167,10 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDelete
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
+                                    <DropdownMenuItem onClick={() => handleEditClick(genre)}>
+                                        <Pencil className="mr-2 h-4 w-4"/>
+                                        Sửa
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => setGenreToDelete(genre)} className="text-destructive focus:text-destructive">
                                         <Trash2 className="mr-2 h-4 w-4"/>
                                         Xóa
@@ -220,6 +233,23 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreDelete
         )}
       </div>
     </div>
+    <Dialog open={isEditGenreOpen} onOpenChange={setIsEditGenreOpen}>
+        <DialogContent className="max-w-md">
+            <DialogHeader>
+                <DialogTitle>Sửa tên thể loại</DialogTitle>
+            </DialogHeader>
+            {editingGenre && (
+                <EditGenreForm 
+                    genreToEdit={editingGenre}
+                    onGenreUpdated={onGenreUpdated} 
+                    onFinished={() => {
+                        setIsEditGenreOpen(false);
+                        setEditingGenre(null);
+                    }}
+                />
+            )}
+        </DialogContent>
+    </Dialog>
     <AlertDialog open={!!genreToDelete} onOpenChange={(isOpen) => !isOpen && setGenreToDelete(null)}>
         <AlertDialogContent>
             <AlertDialogHeader>

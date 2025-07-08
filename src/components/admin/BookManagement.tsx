@@ -269,6 +269,23 @@ export function BookManagement() {
         toast({ variant: "destructive", title: "Error", description: "Could not add author."});
     }
   };
+  
+  const handleAuthorUpdated = async (updatedAuthor: Author) => {
+    if (!db) return;
+    try {
+        const { id, ...authorData } = updatedAuthor;
+        await updateDoc(doc(db, "authors", id), authorData);
+        
+        setAuthors(prev => prev.map(a => a.id === id ? updatedAuthor : a).sort((a,b) => a.name.localeCompare(b.name)));
+        toast({
+            title: "Cập nhật tác giả thành công",
+            description: `Tác giả "${updatedAuthor.name}" đã được cập nhật.`,
+        });
+    } catch(e) {
+        console.error("Error updating author: ", e);
+        toast({ variant: "destructive", title: "Lỗi", description: "Không thể cập nhật tác giả."});
+    }
+  };
 
   const handleAuthorDeleted = async (authorId: string) => {
     if (!db) return;
@@ -302,6 +319,23 @@ export function BookManagement() {
     } catch(e) {
         console.error("Error adding genre: ", e);
         toast({ variant: "destructive", title: "Error", description: "Could not add genre."});
+    }
+  };
+
+  const handleGenreUpdated = async (updatedGenre: Genre) => {
+    if (!db) return;
+    try {
+        const { id, ...genreData } = updatedGenre;
+        await updateDoc(doc(db, "genres", id), genreData);
+
+        setGenres(prev => prev.map(g => g.id === id ? updatedGenre : g).sort((a,b) => a.name.localeCompare(b.name)));
+        toast({
+            title: "Cập nhật thể loại thành công",
+            description: `Thể loại "${updatedGenre.name}" đã được cập nhật.`,
+        });
+    } catch(e) {
+        console.error("Error updating genre: ", e);
+        toast({ variant: "destructive", title: "Lỗi", description: "Không thể cập nhật thể loại."});
     }
   };
 
@@ -625,6 +659,7 @@ export function BookManagement() {
                   books={books}
                   isLoading={isLoading}
                   onAuthorAdded={(author) => handleAuthorAdded(author)}
+                  onAuthorUpdated={handleAuthorUpdated}
                   onAuthorDeleted={handleAuthorDeleted}
                 />
             </TabsContent>
@@ -633,6 +668,7 @@ export function BookManagement() {
                   genres={genres}
                   isLoading={isLoading}
                   onGenreAdded={(genre) => handleGenreAdded(genre)}
+                  onGenreUpdated={handleGenreUpdated}
                   onGenreDeleted={handleGenreDeleted}
                 />
             </TabsContent>
