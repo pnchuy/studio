@@ -140,8 +140,9 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const updatedBook: Book = {
+    const updatedBookData: Book = {
         id: bookToEdit.id,
+        docId: bookToEdit.docId,
         title: values.title,
         authorId: values.authorId,
         publicationDate: values.publicationDate,
@@ -153,7 +154,7 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
         youtubeLink: values.youtubeLink?.map(link => convertYoutubeUrlToEmbed(link)).filter(Boolean) as string[] ?? [],
         amazonLink: values.amazonLink || "",
     };
-    onBookUpdated(updatedBook);
+    onBookUpdated(updatedBookData);
     onFinished();
   }
 
