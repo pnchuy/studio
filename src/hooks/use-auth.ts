@@ -89,7 +89,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (fbUser && !fbUser.emailVerified) {
           // Keep unverified user in a separate state, but ensure they are logged out.
           setUnverifiedUser(fbUser);
-          await signOut(auth);
+          if(auth.currentUser){
+            await signOut(auth);
+          }
         } else {
           // This block runs when fbUser is null (logged out).
           // We don't clear unverifiedUser here to allow the "Resend" dialog to persist.
@@ -273,6 +275,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
         return false;
       }
+      if (error.code === 'auth/account-exists-with-different-credential') {
+        toast({
+            variant: "destructive",
+            title: "Tài khoản đã tồn tại",
+            description: "Email này đã được đăng ký bằng một phương thức khác (ví dụ: mật khẩu). Vui lòng đăng nhập bằng phương thức ban đầu của bạn.",
+            duration: 8000
+        });
+        return false;
+      }
       console.error("Google sign-in error:", error);
       toast({
         variant: "destructive",
@@ -344,3 +355,5 @@ export function useAuth() {
   }
   return context;
 }
+
+    
