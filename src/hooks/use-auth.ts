@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from 'react';
@@ -40,8 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
     }
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      setUnverifiedUser(null);
       if (fbUser && fbUser.emailVerified) {
+        setUnverifiedUser(null);
         setFirebaseUser(fbUser);
         const userDocRef = doc(db, 'users', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
@@ -89,6 +90,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Keep unverified user in a separate state, but ensure they are logged out.
           setUnverifiedUser(fbUser);
           await signOut(auth);
+        } else {
+          // This block runs when fbUser is null (logged out).
+          // We don't clear unverifiedUser here to allow the "Resend" dialog to persist.
         }
         setUser(null);
         setFirebaseUser(null);
@@ -189,7 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const newUser: User = {
         id: fbUser.uid,
-        username: username.toLowerCase(),
+        username: username,
         name,
         email,
         joinDate: new Date().toISOString().split('T')[0],
