@@ -7,9 +7,13 @@ import type { Book, Author } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Code, FileJson, FileUp, ListChecks, Loader2 } from "lucide-react";
+import { Code, FileJson, FileUp, ListChecks, Loader2, Info } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+
+type ImportType = 'books' | 'authors' | 'genres' | 'series';
 
 // Schema for the books in the JSON file
 const importBookSchema = z.object({
@@ -39,6 +43,7 @@ interface ImportBooksDialogProps {
 }
 
 export function ImportBooksDialog({ existingBooks, existingAuthors, onBooksImported, onFinished }: ImportBooksDialogProps) {
+  const [importType, setImportType] = useState<ImportType>('books');
   const [step, setStep] = useState<'select' | 'preview'>('select');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -127,31 +132,58 @@ export function ImportBooksDialog({ existingBooks, existingAuthors, onBooksImpor
 
   const renderSelectStep = () => (
     <div className="space-y-4">
-      <Alert>
-        <Code className="h-4 w-4" />
-        <AlertTitle>Định dạng yêu cầu</AlertTitle>
-        <AlertDescription>
-          Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `title`, `authorId`, `publicationDate`.
-        </AlertDescription>
-      </Alert>
-
       <div className="space-y-2">
-        <label htmlFor="json-upload" className="text-sm font-medium">Chọn tệp JSON</label>
-        <Input
-          id="json-upload"
-          type="file"
-          accept=".json,application/json"
-          onChange={handleFileChange}
-          className="pt-2 h-11"
-        />
-        {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+        <Label htmlFor="import-type">Chọn loại dữ liệu để import</Label>
+        <Select value={importType} onValueChange={(value) => setImportType(value as ImportType)}>
+            <SelectTrigger id="import-type">
+                <SelectValue placeholder="Chọn loại dữ liệu..." />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="books">Sách</SelectItem>
+                <SelectItem value="authors">Tác giả</SelectItem>
+                <SelectItem value="genres">Thể loại</SelectItem>
+                <SelectItem value="series">Series</SelectItem>
+            </SelectContent>
+        </Select>
       </div>
+      
+      {importType === 'books' ? (
+        <>
+          <Alert>
+            <Code className="h-4 w-4" />
+            <AlertTitle>Định dạng yêu cầu</AlertTitle>
+            <AlertDescription>
+              Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `title`, `authorId`, `publicationDate`.
+            </AlertDescription>
+          </Alert>
+
+          <div className="space-y-2">
+            <label htmlFor="json-upload" className="text-sm font-medium">Chọn tệp JSON</label>
+            <Input
+              id="json-upload"
+              type="file"
+              accept=".json,application/json"
+              onChange={handleFileChange}
+              className="pt-2 h-11"
+            />
+            {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+          </div>
+        </>
+      ) : (
+        <Alert>
+            <Info className="h-4 w-4" />
+            <AlertTitle>Chức năng đang được phát triển</AlertTitle>
+            <AlertDescription>
+                Chức năng import cho loại dữ liệu này sẽ sớm được cập nhật. Vui lòng quay lại sau.
+            </AlertDescription>
+        </Alert>
+      )}
       
       <div className="flex justify-end gap-2 pt-4">
         <Button type="button" variant="outline" onClick={onFinished}>
           Hủy
         </Button>
-        <Button type="button" onClick={handleParseAndValidate} disabled={!selectedFile || isLoading}>
+        <Button type="button" onClick={handleParseAndValidate} disabled={!selectedFile || isLoading || importType !== 'books'}>
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileUp className="mr-2 h-4 w-4" />}
           Kiểm tra file
         </Button>

@@ -406,12 +406,12 @@ export function BookManagement() {
                 <DialogTrigger asChild>
                     <Button variant="outline">
                         <Upload className="mr-2" />
-                        Import sách
+                        Import from Json file
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>Import sách từ file JSON</DialogTitle>
+                        <DialogTitle>Import dữ liệu từ file JSON</DialogTitle>
                     </DialogHeader>
                     <ImportBooksDialog
                       existingBooks={books}
