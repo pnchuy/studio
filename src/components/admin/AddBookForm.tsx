@@ -42,7 +42,7 @@ const formSchema = z.object({
 
 interface AddBookFormProps {
     books: Book[];
-    onBookAdded: (book: Book) => void;
+    onBookAdded: (book: Omit<Book, 'id'>) => void;
     onFinished: () => void;
     authors: Author[];
     genres: Genre[];
@@ -148,8 +148,7 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
       return; 
     }
     
-    const newBook: Book = {
-        id: `book-${Date.now()}`, 
+    const newBookData: Omit<Book, 'id'> = {
         ...values,
         coverImage: values.coverImage || "https://placehold.co/400x600.png",
         series: values.series === 'none' || !values.series ? null : values.series,
@@ -157,7 +156,7 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
         youtubeLink: values.youtubeLink?.map(link => convertYoutubeUrlToEmbed(link)).filter(Boolean) as string[] ?? [],
         amazonLink: values.amazonLink || "",
     };
-    onBookAdded(newBook);
+    onBookAdded(newBookData);
     onFinished();
   }
 

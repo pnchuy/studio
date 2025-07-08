@@ -112,11 +112,8 @@ export function BookManagement() {
   const handleBookAdded = async (newBookData: Omit<Book, 'id'>) => {
     if (!db) return;
     try {
-        const docRef = await addDoc(collection(db, "books"), {
-            ...newBookData,
-            id: `book-${generateId()}` // Add a temporary ID for client-side use if needed
-        });
-        const newBook = { ...newBookData, id: docRef.id };
+        const docRef = await addDoc(collection(db, "books"), newBookData);
+        const newBook: Book = { ...newBookData, id: docRef.id };
         const updatedBooks = [newBook, ...books];
         setBooks(updatedBooks);
 
@@ -559,7 +556,7 @@ export function BookManagement() {
                     </DialogHeader>
                     <AddBookForm 
                       books={books}
-                      onBookAdded={(book) => handleBookAdded(book)}
+                      onBookAdded={(bookData) => handleBookAdded(bookData)}
                       onFinished={() => setIsAddBookOpen(false)}
                       authors={authors}
                       genres={genres}
