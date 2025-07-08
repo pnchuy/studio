@@ -190,8 +190,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       await sendEmailVerification(fbUser);
       
-      const allUsersSnapshot = await getDocs(collection(db, 'users'));
-      const isFirstUser = allUsersSnapshot.empty;
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, limit(1));
+      const firstUserCheckSnapshot = await getDocs(q);
+      const isFirstUser = firstUserCheckSnapshot.empty;
 
       const newUser: User = {
         id: fbUser.uid,
@@ -355,5 +357,7 @@ export function useAuth() {
   }
   return context;
 }
+
+    
 
     
