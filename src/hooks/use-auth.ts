@@ -14,12 +14,14 @@ const USER_STORAGE_KEY = 'bibliophile-user-auth-state';
 interface AuthContextType {
   user: User | null;
   firebaseUser: FirebaseUser | null;
+  unverifiedUser: FirebaseUser | null;
   isLoggedIn: boolean;
   isLoading: boolean;
-  login: (credential: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  login: (credential: string, password: string) => Promise<{ success: boolean; message?: string; errorCode?: 'unverified' | 'invalid-credentials' | 'unknown' }>;
   logout: () => void;
   signup: (name: string, email: string, username: string, password: string) => Promise<{ success: boolean; message?: string; field?: 'email' | 'username' | 'password' }>;
   signInWithGoogle: () => Promise<boolean>;
+  resendVerificationEmail: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,6 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [unverifiedUser, setUnverifiedUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const { toast } = useToast();
@@ -37,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
     }
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setUnverifiedUser(null);
       if (fbUser && fbUser.emailVerified) {
         setFirebaseUser(fbUser);
         const userDocRef = doc(db, 'users', fbUser.uid);
@@ -47,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(userData);
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
         } else {
+          // This handles the delay between creating a user in Auth and their doc appearing in Firestore.
           const creationTimestamp = new Date(fbUser.metadata.creationTime || 0).getTime();
           const now = new Date().getTime();
 
@@ -81,7 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         if (fbUser && !fbUser.emailVerified) {
-          // If a user object exists but email is not verified, ensure they are logged out.
+          // Keep unverified user in a separate state, but ensure they are logged out.
+          setUnverifiedUser(fbUser);
           await signOut(auth);
         }
         setUser(null);
@@ -94,13 +100,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [toast]);
 
-  const login = useCallback(async (credential: string, password: string): Promise<{ success: boolean; message?: string }> => {
+  const login = useCallback(async (credential: string, password: string): Promise<{ success: boolean; message?: string; errorCode?: 'unverified' | 'invalid-credentials' | 'unknown' }> => {
     if (!isFirebaseConfigured || !auth || !db) {
         const msg = "Firebase is not configured. Please provide Firebase credentials in your .env.local file.";
         toast({ variant: "destructive", title: "Firebase Not Configured", description: msg });
-        return { success: false, message: msg };
+        return { success: false, message: msg, errorCode: 'unknown' };
     }
-
+    
+    setUnverifiedUser(null); // Clear previous unverified state on new login attempt
     let emailToLogin = '';
     const isEmail = z.string().email().safeParse(credential).success;
 
@@ -109,11 +116,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       try {
         const usersRef = collection(db, 'users');
-        const q = query(usersRef, where("username", "==", credential), limit(1));
+        const q = query(usersRef, where("username", "==", credential.toLowerCase()), limit(1));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-          return { success: false, message: "Thông tin không hợp lệ. Vui lòng kiểm tra lại email/username và mật khẩu." };
+          return { success: false, message: "Thông tin không hợp lệ.", errorCode: 'invalid-credentials' };
         }
         
         const userData = querySnapshot.docs[0].data() as User;
@@ -121,20 +128,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       } catch (error) {
         console.error("Error fetching user by username:", error);
-        return { success: false, message: "Đã xảy ra lỗi khi tìm kiếm người dùng." };
+        return { success: false, message: "Đã xảy ra lỗi khi tìm kiếm người dùng.", errorCode: 'unknown' };
       }
     }
     
     if (!emailToLogin) {
-      return { success: false, message: "Không thể xác định email để đăng nhập." };
+      return { success: false, message: "Không thể xác định email để đăng nhập.", errorCode: 'unknown' };
     }
     
     try {
       const userCredential = await signInWithEmailAndPassword(auth, emailToLogin, password);
       
       if (!userCredential.user.emailVerified) {
+        setUnverifiedUser(userCredential.user);
         await signOut(auth); // Sign out immediately
-        return { success: false, message: "Email chưa được xác minh. Vui lòng kiểm tra hộp thư của bạn." };
+        return { success: false, message: "Email chưa được xác minh. Vui lòng kiểm tra hộp thư của bạn.", errorCode: 'unverified' };
       }
 
       const loggedInUser = userCredential.user;
@@ -152,7 +160,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
        }
       return { success: true };
     } catch (error: any) {
-      return { success: false, message: "Thông tin không hợp lệ. Vui lòng kiểm tra lại email/username và mật khẩu." };
+      setUnverifiedUser(null);
+      return { success: false, message: "Thông tin không hợp lệ. Vui lòng kiểm tra lại email/username và mật khẩu.", errorCode: 'invalid-credentials' };
     }
   }, [router, toast]);
 
@@ -163,7 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, message: msg};
     }
     
-    const usernameQuery = query(collection(db, "users"), where("username", "==", username), limit(1));
+    const usernameQuery = query(collection(db, "users"), where("username", "==", username.toLowerCase()), limit(1));
     const usernameSnapshot = await getDocs(usernameQuery);
     if (!usernameSnapshot.empty) {
         return { success: false, message: "This username is already taken.", field: 'username' };
@@ -180,7 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const newUser: User = {
         id: fbUser.uid,
-        username,
+        username: username.toLowerCase(),
         name,
         email,
         joinDate: new Date().toISOString().split('T')[0],
@@ -189,7 +198,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       await setDoc(doc(db, "users", fbUser.uid), newUser);
       
-      // Sign out immediately after registration to force email verification
       await signOut(auth);
       
       return { success: true };
@@ -270,11 +278,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false;
     }
   }, [router, toast]);
+  
+  const resendVerificationEmail = useCallback(async () => {
+    if (!unverifiedUser) {
+        toast({ variant: "destructive", title: "Lỗi", description: "Không tìm thấy người dùng để gửi lại email." });
+        return;
+    }
+    try {
+        await sendEmailVerification(unverifiedUser);
+        toast({ title: "Đã gửi!", description: "Một email xác minh mới đã được gửi. Vui lòng kiểm tra hộp thư của bạn." });
+        setUnverifiedUser(null);
+    } catch (error) {
+        console.error("Error resending verification email:", error);
+        toast({ variant: "destructive", title: "Gửi lại thất bại", description: "Đã xảy ra lỗi. Vui lòng thử lại." });
+    }
+  }, [unverifiedUser, toast]);
 
   const logout = useCallback(async () => {
     if (!isFirebaseConfigured || !auth) {
         setUser(null);
         setFirebaseUser(null);
+        setUnverifiedUser(null);
         localStorage.removeItem(USER_STORAGE_KEY);
         router.push('/');
         return;
@@ -295,12 +319,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
       user,
       firebaseUser,
+      unverifiedUser,
       isLoggedIn: !!user,
       isLoading,
       login,
       logout,
       signup,
       signInWithGoogle,
+      resendVerificationEmail,
   };
 
   return React.createElement(AuthContext.Provider, { value }, children);

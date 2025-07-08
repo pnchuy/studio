@@ -35,7 +35,8 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const result = await login(values.credential, values.password);
-    if (!result.success) {
+    
+    if (!result.success && result.errorCode !== 'unverified') {
       toast({
         variant: "destructive",
         title: "Đăng nhập thất bại",
