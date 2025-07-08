@@ -142,10 +142,14 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
   function onSubmit(values: z.infer<typeof formSchema>) {
     const updatedBook: Book = {
         id: bookToEdit.id,
-        ...values,
+        title: values.title,
+        authorId: values.authorId,
+        publicationDate: values.publicationDate,
         coverImage: values.coverImage || "https://placehold.co/400x600.png",
-        series: values.series === 'none' || !values.series ? null : values.series,
-        seriesOrder: values.series && values.series !== 'none' ? values.seriesOrder : null,
+        summary: values.summary || '',
+        series: (values.series === 'none' || !values.series) ? null : values.series,
+        seriesOrder: (values.series && values.series !== 'none') ? (values.seriesOrder ?? null) : null,
+        genreIds: values.genreIds || [],
         youtubeLink: values.youtubeLink?.map(link => convertYoutubeUrlToEmbed(link)).filter(Boolean) as string[] ?? [],
         amazonLink: values.amazonLink || "",
     };
