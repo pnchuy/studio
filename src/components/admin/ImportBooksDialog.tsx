@@ -164,7 +164,7 @@ export function ImportBooksDialog({
     }
     setIsLoading(true);
     
-    const items = bulkText.split('\n').map(item => item.trim()).filter(Boolean);
+    const items = bulkText.split('\n').map(item => item.trim().replace(/^"|"$/g, '').trim()).filter(Boolean);
     let existingItemsSet: Set<string>;
 
     switch(importType) {
