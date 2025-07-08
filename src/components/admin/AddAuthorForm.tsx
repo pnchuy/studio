@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -14,7 +15,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Author } from "@/types";
-import { generateId } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useEffect } from "react";
 
@@ -24,7 +24,7 @@ const formSchema = z.object({
 
 interface AddAuthorFormProps {
     authors: Author[];
-    onAuthorAdded: (author: Author) => void;
+    onAuthorAdded: (authorData: Omit<Author, 'id'>) => void;
     onFinished: () => void;
 }
 
@@ -69,11 +69,7 @@ export function AddAuthorForm({ authors, onAuthorAdded, onFinished }: AddAuthorF
         return; 
     }
     
-    const newAuthor: Author = {
-        id: `author-${generateId()}`, 
-        ...values,
-    };
-    onAuthorAdded(newAuthor);
+    onAuthorAdded(values);
     onFinished();
   }
   

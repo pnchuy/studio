@@ -22,11 +22,12 @@ const formSchema = z.object({
 
 interface EditGenreFormProps {
     genreToEdit: Genre;
+    genres: Genre[];
     onGenreUpdated: (genre: Genre) => void;
     onFinished: () => void;
 }
 
-export function EditGenreForm({ genreToEdit, onGenreUpdated, onFinished }: EditGenreFormProps) {
+export function EditGenreForm({ genreToEdit, genres, onGenreUpdated, onFinished }: EditGenreFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -35,6 +36,15 @@ export function EditGenreForm({ genreToEdit, onGenreUpdated, onFinished }: EditG
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const isDuplicate = genres.some(
+        (genre) => genre.name.toLowerCase() === values.name.toLowerCase() && genre.id !== genreToEdit.id
+    );
+
+    if (isDuplicate) {
+        form.setError("name", { type: "manual", message: "Tên thể loại này đã tồn tại." });
+        return;
+    }
+    
     const updatedGenre: Genre = {
         id: genreToEdit.id,
         ...values,

@@ -22,11 +22,12 @@ const formSchema = z.object({
 
 interface EditSeriesFormProps {
     seriesToEdit: Series;
+    series: Series[];
     onSeriesUpdated: (seriesId: string, newName: string) => void;
     onFinished: () => void;
 }
 
-export function EditSeriesForm({ seriesToEdit, onSeriesUpdated, onFinished }: EditSeriesFormProps) {
+export function EditSeriesForm({ seriesToEdit, series, onSeriesUpdated, onFinished }: EditSeriesFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -35,6 +36,15 @@ export function EditSeriesForm({ seriesToEdit, onSeriesUpdated, onFinished }: Ed
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const isDuplicate = series.some(
+        (s) => s.name.toLowerCase() === values.name.toLowerCase() && s.id !== seriesToEdit.id
+    );
+
+    if (isDuplicate) {
+        form.setError("name", { type: "manual", message: "Tên series này đã tồn tại." });
+        return;
+    }
+
     onSeriesUpdated(seriesToEdit.id, values.name);
     onFinished();
   }

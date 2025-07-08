@@ -238,6 +238,7 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
               {editingSeries && (
                 <EditSeriesForm 
                   seriesToEdit={editingSeries} 
+                  series={series}
                   onSeriesUpdated={onSeriesUpdated} 
                   onFinished={() => {
                     setIsEditSeriesOpen(false);

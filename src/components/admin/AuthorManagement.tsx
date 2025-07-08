@@ -52,7 +52,7 @@ interface AuthorManagementProps {
     authors: Author[];
     books: Book[];
     isLoading: boolean;
-    onAuthorAdded: (newAuthor: Author) => void;
+    onAuthorAdded: (newAuthorData: Omit<Author, 'id'>) => void;
     onAuthorUpdated: (author: Author) => void;
     onAuthorDeleted: (authorId: string) => void;
 }
@@ -86,11 +86,11 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
     setCurrentPage(1);
   }, [itemsPerPage]);
   
-  const handleAuthorAdded = (newAuthor: Author) => {
-    onAuthorAdded(newAuthor);
+  const handleAuthorAdded = (newAuthorData: Omit<Author, 'id'>) => {
+    onAuthorAdded(newAuthorData);
     toast({
         title: "Thêm tác giả thành công",
-        description: `Tác giả "${newAuthor.name}" đã được thêm.`,
+        description: `Tác giả "${newAuthorData.name}" đã được thêm.`,
     });
   };
 
@@ -244,6 +244,7 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
             {editingAuthor && (
                 <EditAuthorForm 
                     authorToEdit={editingAuthor}
+                    authors={authors}
                     onAuthorUpdated={onAuthorUpdated} 
                     onFinished={() => {
                         setIsEditAuthorOpen(false);

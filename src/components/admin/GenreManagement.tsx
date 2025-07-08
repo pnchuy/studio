@@ -51,7 +51,7 @@ import {
 interface GenreManagementProps {
     genres: Genre[];
     isLoading: boolean;
-    onGenreAdded: (newGenre: Genre) => void;
+    onGenreAdded: (newGenreData: Omit<Genre, 'id'>) => void;
     onGenreUpdated: (genre: Genre) => void;
     onGenreDeleted: (genreId: string) => void;
 }
@@ -85,11 +85,11 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreUpdate
     setCurrentPage(1);
   }, [itemsPerPage]);
 
-  const handleGenreAdded = (newGenre: Genre) => {
-    onGenreAdded(newGenre);
+  const handleGenreAdded = (newGenreData: Omit<Genre, 'id'>) => {
+    onGenreAdded(newGenreData);
     toast({
         title: "Thêm thể loại thành công",
-        description: `Thể loại "${newGenre.name}" đã được thêm.`,
+        description: `Thể loại "${newGenreData.name}" đã được thêm.`,
     });
   };
   
@@ -241,6 +241,7 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreUpdate
             {editingGenre && (
                 <EditGenreForm 
                     genreToEdit={editingGenre}
+                    genres={genres}
                     onGenreUpdated={onGenreUpdated} 
                     onFinished={() => {
                         setIsEditGenreOpen(false);

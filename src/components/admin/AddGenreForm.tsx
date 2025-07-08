@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -14,7 +15,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Genre } from "@/types";
-import { generateId } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useEffect } from "react";
 
@@ -24,7 +24,7 @@ const formSchema = z.object({
 
 interface AddGenreFormProps {
     genres: Genre[];
-    onGenreAdded: (genre: Genre) => void;
+    onGenreAdded: (genreData: Omit<Genre, 'id'>) => void;
     onFinished: () => void;
 }
 
@@ -69,11 +69,7 @@ export function AddGenreForm({ genres, onGenreAdded, onFinished }: AddGenreFormP
       return; 
     }
 
-    const newGenre: Genre = {
-        id: `genre-${generateId()}`, 
-        ...values,
-    };
-    onGenreAdded(newGenre);
+    onGenreAdded(values);
     onFinished();
   }
 

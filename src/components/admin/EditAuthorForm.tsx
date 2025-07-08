@@ -22,11 +22,12 @@ const formSchema = z.object({
 
 interface EditAuthorFormProps {
     authorToEdit: Author;
+    authors: Author[];
     onAuthorUpdated: (author: Author) => void;
     onFinished: () => void;
 }
 
-export function EditAuthorForm({ authorToEdit, onAuthorUpdated, onFinished }: EditAuthorFormProps) {
+export function EditAuthorForm({ authorToEdit, authors, onAuthorUpdated, onFinished }: EditAuthorFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -35,6 +36,15 @@ export function EditAuthorForm({ authorToEdit, onAuthorUpdated, onFinished }: Ed
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
+    const isDuplicate = authors.some(
+        (author) => author.name.toLowerCase() === values.name.toLowerCase() && author.id !== authorToEdit.id
+    );
+
+    if (isDuplicate) {
+        form.setError("name", { type: "manual", message: "Tên tác giả này đã tồn tại." });
+        return;
+    }
+
     const updatedAuthor: Author = {
         id: authorToEdit.id,
         ...values,
