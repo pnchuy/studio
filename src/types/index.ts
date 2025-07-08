@@ -30,7 +30,6 @@ export type BookWithDetails = Book & {
 export type User = {
     id: string;
     username: string;
-    username_lowercase: string;
     name: string;
     email: string;
     joinDate: string;

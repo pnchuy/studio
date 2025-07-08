@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       try {
         const usersRef = collection(db, 'users');
-        const q = query(usersRef, where("username_lowercase", "==", credential.toLowerCase()), limit(1));
+        const q = query(usersRef, where("username", "==", credential), limit(1));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
@@ -163,8 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, message: msg};
     }
     
-    const lowerCaseUsername = username.toLowerCase();
-    const usernameQuery = query(collection(db, "users"), where("username_lowercase", "==", lowerCaseUsername), limit(1));
+    const usernameQuery = query(collection(db, "users"), where("username", "==", username), limit(1));
     const usernameSnapshot = await getDocs(usernameQuery);
     if (!usernameSnapshot.empty) {
         return { success: false, message: "This username is already taken.", field: 'username' };
@@ -182,7 +181,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const newUser: User = {
         id: fbUser.uid,
         username,
-        username_lowercase: lowerCaseUsername,
         name,
         email,
         joinDate: new Date().toISOString().split('T')[0],
@@ -234,9 +232,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const snapshot = await getDocs(q);
         const isFirstUser = snapshot.empty;
 
-        let username = fbUser.email?.split('@')[0] || `user${Date.now()}`;
+        let username = (fbUser.email?.split('@')[0] || `user${Date.now()}`).toLowerCase().replace(/[^a-z0-9]/g, '');
         
-        const usernameQuery = query(collection(db, "users"), where("username_lowercase", "==", username.toLowerCase()));
+        const usernameQuery = query(collection(db, "users"), where("username", "==", username));
         const usernameSnapshot = await getDocs(usernameQuery);
         if (!usernameSnapshot.empty) {
           username = `${username}${Math.floor(Math.random() * 1000)}`;
@@ -245,7 +243,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userProfile = {
           id: fbUser.uid,
           username,
-          username_lowercase: username.toLowerCase(),
           name: fbUser.displayName || 'Google User',
           email: fbUser.email!,
           joinDate: new Date().toISOString().split('T')[0],
