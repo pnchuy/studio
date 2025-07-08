@@ -4,10 +4,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
 import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import type { Book, Author, Genre } from '@/types';
+import type { Book, Author, Genre, Series } from '@/types';
 import { getAllBooks as fetchAllBooks } from '@/lib/books';
 import { getAllAuthors as fetchAllAuthors } from '@/lib/authors';
 import { getAllGenres as fetchAllGenres } from '@/lib/genres';
+import { getAllSeries as fetchAllSeries } from '@/lib/series';
 import { db, isFirebaseConfigured } from '@/lib/firebase';
 import {
   Table,
@@ -65,7 +66,7 @@ export function BookManagement() {
   const [books, setBooks] = useState<Book[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
-  const [series, setSeries] = useState<string[]>([]);
+  const [series, setSeries] = useState<Series[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
   
@@ -87,18 +88,17 @@ export function BookManagement() {
       }
       setIsLoading(true);
       try {
-        const [initialBooks, initialAuthors, initialGenres] = await Promise.all([
+        const [initialBooks, initialAuthors, initialGenres, initialSeries] = await Promise.all([
             fetchAllBooks(),
             fetchAllAuthors(),
-            fetchAllGenres()
+            fetchAllGenres(),
+            fetchAllSeries()
         ]);
         setBooks(initialBooks);
         setAuthors(initialAuthors);
         setGenres(initialGenres);
-        
-        const initialSeries = [...new Set(initialBooks.map(b => b.series).filter((s): s is string => !!s))].sort();
         setSeries(initialSeries);
-
+        
       } catch (error) {
         console.error("Failed to load data from Firebase", error);
         toast({ variant: "destructive", title: "Error", description: "Could not load data from the database."});
@@ -120,8 +120,8 @@ export function BookManagement() {
         const updatedBooks = [newBook, ...books];
         setBooks(updatedBooks);
 
-        if (newBook.series && !series.includes(newBook.series)) {
-            handleSeriesAdded(newBook.series, false);
+        if (newBook.series && !series.some(s => s.name === newBook.series)) {
+            handleSeriesAdded({ name: newBook.series }, false);
         }
         toast({
             title: "Thêm sách thành công",
@@ -149,10 +149,14 @@ export function BookManagement() {
         const freshBooks = await fetchAllBooks();
         setBooks(freshBooks);
 
-        const newSeries = [...new Set(newBooks.map(b => b.series).filter((s): s is string => !!s && !series.includes(s)))];
-        if (newSeries.length > 0) {
-            const updatedSeriesList = [...series, ...newSeries].sort();
-            setSeries(updatedSeriesList);
+        const importedSeriesNames = new Set(newBooks.map(b => b.series).filter((s): s is string => !!s));
+        const existingSeriesNames = new Set(series.map(s => s.name));
+        const newSeriesToCreate = [...importedSeriesNames].filter(name => !existingSeriesNames.has(name));
+
+        if (newSeriesToCreate.length > 0) {
+           await Promise.all(newSeriesToCreate.map(name => addDoc(collection(db, "series"), { name })));
+           const freshSeries = await fetchAllSeries();
+           setSeries(freshSeries);
         }
 
         toast({
@@ -203,13 +207,23 @@ export function BookManagement() {
     }
   };
 
-  const handleSeriesImported = (newNames: string[]) => {
-    const updatedSeries = [...series, ...newNames].sort();
-    setSeries(updatedSeries);
-    toast({
-        title: "Import series thành công",
-        description: `${newNames.length} series mới đã được thêm vào danh sách.`,
-    });
+  const handleSeriesImported = async (newNames: string[]) => {
+    if (!db) return;
+    try {
+        const newSeriesDocs = newNames.map(name => ({ name }));
+        await Promise.all(newSeriesDocs.map(s => addDoc(collection(db, "series"), s)));
+
+        const freshSeries = await fetchAllSeries();
+        setSeries(freshSeries);
+
+        toast({
+            title: "Import series thành công",
+            description: `${newNames.length} series mới đã được thêm.`,
+        });
+    } catch (e) {
+        console.error("Error importing series: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not import series." });
+    }
   };
 
   const handleBookUpdated = async (updatedBook: Book) => {
@@ -221,8 +235,8 @@ export function BookManagement() {
 
         const updatedBooks = books.map(book => book.id === updatedBook.id ? updatedBook : book);
         setBooks(updatedBooks);
-        if (updatedBook.series && !series.includes(updatedBook.series)) {
-            handleSeriesAdded(updatedBook.series, false);
+        if (updatedBook.series && !series.some(s => s.name === updatedBook.series)) {
+            handleSeriesAdded({ name: updatedBook.series }, false);
         }
         toast({
             title: "Cập nhật sách thành công",
@@ -359,48 +373,71 @@ export function BookManagement() {
     }
   }
 
-  const handleSeriesAdded = (newSeries: string, showToast = true) => {
-    if (series.map(s => s.toLowerCase()).includes(newSeries.toLowerCase())) {
-      if (showToast) {
-        toast({
-          variant: "destructive",
-          title: "Series đã tồn tại",
-          description: `Series "${newSeries}" đã có trong danh sách.`,
-        });
-      }
-      return;
+  const handleSeriesAdded = async (newSeriesData: { name: string }, showToast = true) => {
+    if (!db) return;
+    if (series.some(s => s.name.toLowerCase() === newSeriesData.name.toLowerCase())) {
+        if (showToast) {
+            toast({
+                variant: "destructive",
+                title: "Series đã tồn tại",
+                description: `Series "${newSeriesData.name}" đã có trong danh sách.`,
+            });
+        }
+        return;
     }
-    const updatedSeries = [...series, newSeries].sort();
-    setSeries(updatedSeries);
-    if (showToast) {
-       toast({
-        title: "Thêm series thành công",
-        description: `Series "${newSeries}" đã được thêm.`,
-      });
+    try {
+        const docRef = await addDoc(collection(db, "series"), newSeriesData);
+        const newSeries = { ...newSeriesData, id: docRef.id };
+        setSeries(prev => [...prev, newSeries].sort((a, b) => a.name.localeCompare(b.name)));
+        if (showToast) {
+            toast({
+                title: "Thêm series thành công",
+                description: `Series "${newSeries.name}" đã được thêm.`,
+            });
+        }
+    } catch (e) {
+        console.error("Error adding series:", e);
+        if (showToast) {
+            toast({ variant: "destructive", title: "Lỗi", description: "Không thể thêm series." });
+        }
     }
   };
 
-  const handleSeriesDeleted = (seriesName: string) => {
-    const isSeriesInUse = books.some(book => book.series === seriesName);
+  const handleSeriesDeleted = async (seriesId: string) => {
+    if (!db) return;
+    const seriesToDelete = series.find(s => s.id === seriesId);
+    if (!seriesToDelete) return;
+    
+    const isSeriesInUse = books.some(book => book.series === seriesToDelete.name);
     if (isSeriesInUse) {
         toast({
             variant: "destructive",
             title: "Không thể xóa Series",
-            description: `Series "${seriesName}" đang được sử dụng bởi một hoặc nhiều sách.`,
+            description: `Series "${seriesToDelete.name}" đang được sử dụng bởi một hoặc nhiều sách.`,
         });
         return;
     }
-    const updatedSeries = series.filter(s => s !== seriesName);
-    setSeries(updatedSeries);
-    toast({
-        variant: "destructive",
-        title: "Đã xóa Series",
-        description: `Series "${seriesName}" đã được xóa.`,
-    });
+    try {
+        await deleteDoc(doc(db, "series", seriesId));
+        setSeries(prev => prev.filter(s => s.id !== seriesId));
+        toast({
+            variant: "destructive",
+            title: "Đã xóa Series",
+            description: `Series "${seriesToDelete.name}" đã được xóa.`,
+        });
+    } catch (e) {
+         console.error("Error deleting series:", e);
+        toast({ variant: "destructive", title: "Lỗi", description: "Không thể xóa series." });
+    }
   };
 
-  const handleSeriesUpdated = async (oldName: string, newName: string) => {
-    if (series.some(s => s.toLowerCase() === newName.toLowerCase() && s.toLowerCase() !== oldName.toLowerCase())) {
+  const handleSeriesUpdated = async (seriesId: string, newName: string) => {
+    if (!db) return;
+    const seriesToUpdate = series.find(s => s.id === seriesId);
+    if (!seriesToUpdate) return;
+    const oldName = seriesToUpdate.name;
+
+    if (series.some(s => s.name.toLowerCase() === newName.toLowerCase() && s.id !== seriesId)) {
         toast({
             variant: "destructive",
             title: "Series đã tồn tại",
@@ -408,9 +445,11 @@ export function BookManagement() {
         });
         return;
     }
-    if (!db) return;
 
     try {
+        const seriesRef = doc(db, "series", seriesId);
+        await updateDoc(seriesRef, { name: newName });
+        
         const booksToUpdate = books.filter(book => book.series === oldName);
         const updatePromises = booksToUpdate.map(book => {
             const bookRef = doc(db, "books", book.id);
@@ -418,9 +457,9 @@ export function BookManagement() {
         });
 
         await Promise.all(updatePromises);
-
-        const updatedSeries = series.map(s => s === oldName ? newName : s).sort();
-        setSeries(updatedSeries);
+        
+        const freshSeries = await fetchAllSeries();
+        setSeries(freshSeries);
 
         const updatedBooks = books.map(book => {
             if (book.series === oldName) {
@@ -434,8 +473,8 @@ export function BookManagement() {
             description: `Series "${oldName}" đã được đổi tên thành "${newName}".`,
         });
     } catch(e) {
-        console.error("Error updating series in books: ", e);
-        toast({ variant: "destructive", title: "Error", description: "Could not update series for all books."});
+        console.error("Error updating series: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not update series."});
     }
   };
 

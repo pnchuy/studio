@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { z } from "zod";
-import type { Book, Author, Genre } from "@/types";
+import type { Book, Author, Genre, Series } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,7 +38,7 @@ interface ImportBooksDialogProps {
   existingBooks: Book[];
   existingAuthors: Author[];
   existingGenres: Genre[];
-  existingSeries: string[];
+  existingSeries: Series[];
   onBooksImported: (books: (Omit<Book, 'id'>)[]) => void;
   onAuthorsImported: (names: string[]) => void;
   onGenresImported: (names: string[]) => void;
@@ -175,7 +175,7 @@ export function ImportBooksDialog({
             existingItemsSet = new Set(existingGenres.map(g => g.name.toLowerCase()));
             break;
         case 'series':
-             existingItemsSet = new Set(existingSeries.map(s => s.toLowerCase()));
+             existingItemsSet = new Set(existingSeries.map(s => s.name.toLowerCase()));
             break;
         default:
             existingItemsSet = new Set();

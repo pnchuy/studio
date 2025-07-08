@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
-import type { Book } from '@/types';
+import type { Book, Series } from '@/types';
 import {
   Table,
   TableHeader,
@@ -40,7 +40,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AddSeriesForm } from './AddSeriesForm';
 import { EditSeriesForm } from './EditSeriesForm';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import {
   Select,
   SelectContent,
@@ -50,49 +49,48 @@ import {
 } from "@/components/ui/select";
 
 interface SeriesManagementProps {
-  series: string[];
+  series: Series[];
   books: Book[];
   isLoading: boolean;
-  onSeriesAdded: (seriesName: string) => void;
-  onSeriesDeleted: (seriesName: string) => void;
-  onSeriesUpdated: (oldName: string, newName: string) => void;
+  onSeriesAdded: (seriesData: { name: string }) => void;
+  onSeriesDeleted: (seriesId: string) => void;
+  onSeriesUpdated: (seriesId: string, newName: string) => void;
 }
 
 export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSeriesDeleted, onSeriesUpdated }: SeriesManagementProps) {
   const [isAddSeriesOpen, setIsAddSeriesOpen] = useState(false);
   const [isEditSeriesOpen, setIsEditSeriesOpen] = useState(false);
-  const [editingSeries, setEditingSeries] = useState<string | null>(null);
-  const [seriesToDelete, setSeriesToDelete] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [editingSeries, setEditingSeries] = useState<Series | null>(null);
+  const [seriesToDelete, setSeriesToDelete] = useState<Series | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const totalPages = Math.ceil(series.length / itemsPerPage);
+  const sortedSeries = useMemo(() => {
+    return [...series].sort((a, b) => a.name.localeCompare(b.name));
+  }, [series]);
+
+  const totalPages = Math.ceil(sortedSeries.length / itemsPerPage);
   const paginatedSeries = useMemo(() => {
-    return series.slice(
+    return sortedSeries.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
-  }, [series, currentPage, itemsPerPage]);
+  }, [sortedSeries, currentPage, itemsPerPage]);
 
   useEffect(() => {
-    const newTotalPages = Math.ceil(series.length / itemsPerPage);
+    const newTotalPages = Math.ceil(sortedSeries.length / itemsPerPage);
     if (currentPage > newTotalPages) {
       setCurrentPage(Math.max(1, newTotalPages));
     }
-  }, [series.length, currentPage, itemsPerPage]);
+  }, [sortedSeries.length, currentPage, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [itemsPerPage]);
   
-  const handleSeriesAdded = (newSeries: string) => {
-    onSeriesAdded(newSeries);
-  };
-
-  const handleEditClick = (seriesName: string) => {
-    setEditingSeries(seriesName);
+  const handleEditClick = (seriesItem: Series) => {
+    setEditingSeries(seriesItem);
     setIsEditSeriesOpen(true);
   };
 
@@ -116,8 +114,8 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
                       <DialogTitle>Thêm Series Mới</DialogTitle>
                   </DialogHeader>
                   <AddSeriesForm 
-                    series={series}
-                    onSeriesAdded={handleSeriesAdded} 
+                    series={series.map(s => s.name)}
+                    onSeriesAdded={(name) => onSeriesAdded({ name })} 
                     onFinished={() => setIsAddSeriesOpen(false)}
                    />
               </DialogContent>
@@ -151,11 +149,11 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {paginatedSeries.map((seriesName) => (
-                      <TableRow key={seriesName}>
-                        <TableCell className="font-medium">{seriesName}</TableCell>
+                    {paginatedSeries.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell className="font-medium">{s.name}</TableCell>
                         <TableCell>
-                            {books.filter(b => b.series === seriesName).length}
+                            {books.filter(b => b.series === s.name).length}
                         </TableCell>
                         <TableCell className="text-right">
                             <DropdownMenu>
@@ -165,11 +163,11 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                    <DropdownMenuItem onClick={() => handleEditClick(seriesName)}>
+                                    <DropdownMenuItem onClick={() => handleEditClick(s)}>
                                         <Pencil className="mr-2 h-4 w-4"/>
                                         Sửa
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setSeriesToDelete(seriesName)} className="text-destructive focus:text-destructive">
+                                    <DropdownMenuItem onClick={() => setSeriesToDelete(s)} className="text-destructive focus:text-destructive">
                                         <Trash2 className="mr-2 h-4 w-4"/>
                                         Xóa
                                     </DropdownMenuItem>
@@ -254,7 +252,7 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
             <AlertDialogHeader>
                 <AlertDialogTitle>Bạn có chắc chắn không?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    Hành động này không thể hoàn tác. Thao tác này sẽ xóa vĩnh viễn series "{seriesToDelete}".
+                    Hành động này không thể hoàn tác. Thao tác này sẽ xóa vĩnh viễn series "{seriesToDelete?.name}".
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -262,7 +260,7 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
                 <AlertDialogAction 
                     onClick={() => {
                         if (seriesToDelete) {
-                            onSeriesDeleted(seriesToDelete);
+                            onSeriesDeleted(seriesToDelete.id);
                             setSeriesToDelete(null);
                         }
                     }} 

@@ -8,6 +8,11 @@ export type Genre = {
   name: string;
 };
 
+export type Series = {
+  id: string;
+  name: string;
+}
+
 export type Book = {
   id: string;
   title: string;

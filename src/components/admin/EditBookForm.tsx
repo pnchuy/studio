@@ -21,7 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import type { Book, Author, Genre } from "@/types";
+import type { Book, Author, Genre, Series } from "@/types";
 import { convertYoutubeUrlToEmbed } from "@/lib/utils";
 import { PlusCircle, Trash2, X } from "lucide-react";
 import { Badge } from "../ui/badge";
@@ -45,7 +45,7 @@ interface EditBookFormProps {
     onFinished: () => void;
     authors: Author[];
     genres: Genre[];
-    seriesList: string[];
+    seriesList: Series[];
 }
 
 const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
@@ -413,8 +413,8 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
                     <SelectContent>
                         <SelectItem value="none">Không có</SelectItem>
                         {seriesList.map(series => (
-                            <SelectItem key={series} value={series}>
-                                {series}
+                            <SelectItem key={series.id} value={series.name}>
+                                {series.name}
                             </SelectItem>
                         ))}
                     </SelectContent>

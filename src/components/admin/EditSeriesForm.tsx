@@ -14,14 +14,15 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import type { Series } from "@/types";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Tên series phải có ít nhất 2 ký tự." }),
 });
 
 interface EditSeriesFormProps {
-    seriesToEdit: string;
-    onSeriesUpdated: (oldName: string, newName: string) => void;
+    seriesToEdit: Series;
+    onSeriesUpdated: (seriesId: string, newName: string) => void;
     onFinished: () => void;
 }
 
@@ -29,12 +30,12 @@ export function EditSeriesForm({ seriesToEdit, onSeriesUpdated, onFinished }: Ed
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: seriesToEdit,
+      name: seriesToEdit.name,
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    onSeriesUpdated(seriesToEdit, values.name);
+    onSeriesUpdated(seriesToEdit.id, values.name);
     onFinished();
   }
 
