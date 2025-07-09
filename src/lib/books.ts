@@ -14,7 +14,12 @@ export async function getAllBooks(): Promise<Book[]> {
         return {
             ...data,
             id: data.id || doc.id, // Fallback to doc.id if custom id doesn't exist
-            docId: doc.id
+            docId: doc.id,
+            coverImages: data.coverImages || {
+                size250: "https://placehold.co/250x375.png",
+                size360: "https://placehold.co/360x540.png",
+                size480: "https://placehold.co/480x720.png",
+            },
         } as Book;
     }).filter(book => book.id);
   } catch (error) {
@@ -27,27 +32,36 @@ export async function getBookById(id: string): Promise<Book | null> {
   if (!isFirebaseConfigured || !db) return null;
   try {
     const booksRef = collection(db, 'books');
-    // First, try to find by custom ID
-    let q = query(booksRef, where("id", "==", id), limit(1));
-    let querySnapshot = await getDocs(q);
+    let docToProcess: any = null;
 
-    // If not found, try to find by Firestore document ID (for backward compatibility)
-    if (querySnapshot.empty) {
+    // First, try to find by custom ID
+    const q = query(booksRef, where("id", "==", id), limit(1));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      docToProcess = querySnapshot.docs[0];
+    } else {
+        // If not found, try to find by Firestore document ID (for backward compatibility)
         const bookDocRef = doc(db, 'books', id);
         const bookDoc = await getDoc(bookDocRef);
         if (bookDoc.exists()) {
-            const data = bookDoc.data();
-            return {
-                ...data,
-                id: data.id || bookDoc.id,
-                docId: bookDoc.id,
-            } as Book;
+            docToProcess = bookDoc;
+        } else {
+            return null;
         }
-        return null;
     }
     
-    const docSnapshot = querySnapshot.docs[0];
-    return { ...docSnapshot.data(), docId: docSnapshot.id } as Book;
+    const data = docToProcess.data();
+    return {
+        ...data,
+        id: data.id || docToProcess.id,
+        docId: docToProcess.id,
+        coverImages: data.coverImages || {
+          size250: "https://placehold.co/250x375.png",
+          size360: "https://placehold.co/360x540.png",
+          size480: "https://placehold.co/480x720.png",
+        },
+    } as Book;
 
   } catch (error) {
     console.error(`Error fetching book by id ${id}:`, error);
