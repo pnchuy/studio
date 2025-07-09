@@ -21,16 +21,21 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import type { Book, Author, Genre, Series } from "@/types";
+import type { Book, Author, Genre, Series, CoverImages } from "@/types";
 import { convertYoutubeUrlToEmbed } from "@/lib/utils";
 import { PlusCircle, Trash2, X } from "lucide-react";
 import { Badge } from "../ui/badge";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Tiêu đề phải có ít nhất 2 ký tự." }),
   authorId: z.string({ required_error: "Vui lòng chọn một tác giả." }),
   publicationDate: z.string().min(1, { message: "Ngày xuất bản là bắt buộc." }).refine((val) => !isNaN(Date.parse(val)), { message: "Ngày xuất bản không hợp lệ." }),
-  coverImage: z.string().optional().or(z.literal('')),
+  coverImages: z.object({
+    size250: z.string(),
+    size360: z.string(),
+    size480: z.string(),
+  }),
   summary: z.string().optional(),
   series: z.string().optional().nullable(),
   seriesOrder: z.number().nonnegative({ message: "Thứ tự phải là số không âm."}).optional().nullable(),
@@ -48,24 +53,32 @@ interface EditBookFormProps {
     seriesList: Series[];
 }
 
-const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
+const resizeAndEncodeImages = (file: File): Promise<CoverImages> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (event) => {
             const img = document.createElement('img');
             img.src = event.target?.result as string;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const scaleFactor = maxWidth / img.width;
-                canvas.width = maxWidth;
-                canvas.height = img.height * scaleFactor;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    return reject(new Error('Could not get canvas context'));
+            img.onload = async () => {
+                const sizes = [250, 360, 480];
+                const encodedImages: Partial<CoverImages> = {};
+
+                for (const width of sizes) {
+                    const canvas = document.createElement('canvas');
+                    const scaleFactor = width / img.width;
+                    canvas.width = width;
+                    canvas.height = img.height * scaleFactor;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        return reject(new Error('Could not get canvas context'));
+                    }
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const dataUrl = canvas.toDataURL('image/webp', 0.8);
+                    encodedImages[`size${width}` as keyof CoverImages] = dataUrl;
                 }
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                resolve(canvas.toDataURL('image/webp', 0.8)); // Convert to WebP with 80% quality
+                
+                resolve(encodedImages as CoverImages);
             };
             img.onerror = reject;
         };
@@ -75,11 +88,12 @@ const resizeImage = (file: File, maxWidth: number = 400): Promise<string> => {
 
 export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, genres, seriesList }: EditBookFormProps) {
   const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
-  const [imagePreview, setImagePreview] = useState<string | null>(bookToEdit.coverImage);
+  const [imagePreview, setImagePreview] = useState<string | null>(bookToEdit.coverImages.size480);
   
   const [genreInputValue, setGenreInputValue] = useState("");
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const genreInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -87,7 +101,7 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
       title: bookToEdit.title,
       authorId: bookToEdit.authorId,
       publicationDate: bookToEdit.publicationDate,
-      coverImage: bookToEdit.coverImage || "",
+      coverImages: bookToEdit.coverImages,
       summary: bookToEdit.summary,
       series: bookToEdit.series || "",
       seriesOrder: bookToEdit.seriesOrder ?? null,
@@ -103,41 +117,48 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
   });
   
   const seriesValue = form.watch("series");
-  const coverImageValue = form.watch('coverImage');
+  const coverImagesValue = form.watch('coverImages');
 
   useEffect(() => {
-    if (coverImageValue && (coverImageValue.startsWith('http') || coverImageValue.startsWith('data:'))) {
-      setImagePreview(coverImageValue);
+    if (coverImagesValue?.size480) {
+      setImagePreview(coverImagesValue.size480);
     } else {
-      setImagePreview("https://placehold.co/400x600.png");
+      setImagePreview("https://placehold.co/480x720.png");
     }
-  }, [coverImageValue]);
+  }, [coverImagesValue]);
   
   useEffect(() => {
-    if (bookToEdit.coverImage.startsWith('data:')) {
+    if (bookToEdit.coverImages.size480.startsWith('data:')) {
         setUploadType('file');
     } else {
         setUploadType('url');
     }
-  }, [bookToEdit.coverImage]);
+  }, [bookToEdit.coverImages]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
-        const resizedDataUrl = await resizeImage(file);
-        form.setValue('coverImage', resizedDataUrl, { shouldValidate: true });
+        const resizedDataUrls = await resizeAndEncodeImages(file);
+        form.setValue('coverImages', resizedDataUrls, { shouldValidate: true });
       } catch (error) {
         console.error("Failed to resize image", error);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const dataUrl = reader.result as string;
-            form.setValue('coverImage', dataUrl, { shouldValidate: true });
-        };
-        reader.readAsDataURL(file);
+        toast({ variant: "destructive", title: "Error", description: "Could not process image file." });
       }
     }
   };
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    if (z.string().url().safeParse(url).success || url === "") {
+        const newCoverImages = {
+            size250: url || "https://placehold.co/250x375.png",
+            size360: url || "https://placehold.co/360x540.png",
+            size480: url || "https://placehold.co/480x720.png",
+        };
+        form.setValue('coverImages', newCoverImages, { shouldValidate: true });
+    }
+  }
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const updatedBookData: Book = {
@@ -146,7 +167,7 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
         title: values.title,
         authorId: values.authorId,
         publicationDate: values.publicationDate,
-        coverImage: values.coverImage || "https://placehold.co/400x600.png",
+        coverImages: values.coverImages,
         summary: values.summary || '',
         series: (values.series === 'none' || !values.series) ? null : values.series,
         seriesOrder: (values.series && values.series !== 'none') ? (values.seriesOrder ?? null) : null,
@@ -334,8 +355,8 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
               <Image
                   src={imagePreview}
                   alt="Xem trước ảnh bìa"
-                  width={400}
-                  height={600}
+                  width={480}
+                  height={720}
                   className="rounded-md object-cover aspect-[2/3]"
                   data-ai-hint="book cover"
               />
@@ -344,17 +365,14 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
         
         <FormField
           control={form.control}
-          name="coverImage"
-          render={({ field }) => (
+          name="coverImages"
+          render={() => (
               <FormItem>
                   <FormLabel>Ảnh bìa</FormLabel>
                   <RadioGroup
                       value={uploadType}
                       className="flex space-x-4"
-                      onValueChange={(value: 'url' | 'file') => {
-                          setUploadType(value);
-                          form.setValue('coverImage', '', { shouldValidate: true });
-                      }}
+                      onValueChange={(value: 'url' | 'file') => setUploadType(value)}
                   >
                       <div className="flex items-center space-x-2">
                           <RadioGroupItem value="url" id="edit-r1" />
@@ -371,8 +389,8 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
                           <Input
                               key="edit-cover-image-url"
                               placeholder="https://..."
-                              value={field.value?.startsWith('data:') ? '' : field.value}
-                              onChange={field.onChange}
+                              defaultValue={coverImagesValue?.size480.startsWith('http') ? coverImagesValue.size480 : ''}
+                              onChange={handleUrlChange}
                           />
                       ) : (
                           <Input

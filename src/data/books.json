@@ -5,7 +5,11 @@
     "title": "The Way of Kings",
     "authorId": "author-1",
     "publicationDate": "2010-08-31",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "In a world of stone and storms, an unlikely hero discovers the lost magic of the Knights Radiant and fights to unite a fractured kingdom against a coming desolation.",
     "series": "The Stormlight Archive",
     "seriesOrder": 1,
@@ -18,7 +22,11 @@
     "title": "Dune",
     "authorId": "author-2",
     "publicationDate": "1965-08-01",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "The story of a young nobleman's rise to power on a desert planet that is the only source of a priceless spice, exploring themes of politics, religion, and ecology.",
     "series": "Dune Saga",
     "seriesOrder": 1,
@@ -31,7 +39,11 @@
     "title": "Project Hail Mary",
     "authorId": "author-3",
     "publicationDate": "2021-05-04",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "An amnesiac astronaut wakes up on a solo mission in deep space, tasked with saving humanity from an extinction-level event with the help of an unexpected alien ally.",
     "series": null,
     "seriesOrder": null,
@@ -44,7 +56,11 @@
     "title": "The Name of the Wind",
     "authorId": "author-4",
     "publicationDate": "2007-03-27",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "The tale of Kvothe, a gifted young man who grows to be the most notorious magician his world has ever seen. From a childhood in a troupe of traveling players, to years spent as an orphan in a crime-ridden city, to his daring bid to enter a legendary school of magic.",
     "series": "The Kingkiller Chronicle",
     "seriesOrder": 1,
@@ -57,7 +73,11 @@
     "title": "Mistborn: The Final Empire",
     "authorId": "author-1",
     "publicationDate": "2006-07-17",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "In a world where ash falls from the sky and mists rule the night, a young street urchin discovers she has a mysterious power and joins a crew of thieves to overthrow a god-like emperor.",
     "series": "Mistborn",
     "seriesOrder": 1,
@@ -70,7 +90,11 @@
     "title": "Neuromancer",
     "authorId": "author-5",
     "publicationDate": "1984-07-01",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "A washed-up computer hacker is hired by a mysterious employer to pull off the ultimate hack. This novel is a cornerstone of the cyberpunk genre.",
     "series": "Sprawl trilogy",
     "seriesOrder": 1,
@@ -83,7 +107,11 @@
     "title": "A Wizard of Earthsea",
     "authorId": "author-6",
     "publicationDate": "1968-01-01",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "A young boy named Ged, the greatest sorcerer in all of Earthsea, who was called Sparrowhawk in his reckless youth, comes to the island of Gont, a single mountain that rises from the sea.",
     "series": "Earthsea Cycle",
     "seriesOrder": 1,
@@ -96,7 +124,11 @@
     "title": "The Hobbit",
     "authorId": "author-7",
     "publicationDate": "1937-09-21",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "A hobbit, Bilbo Baggins, is swept into an epic quest to reclaim the lost Dwarf Kingdom of Erebor from the fearsome dragon Smaug.",
     "series": "The Lord of the Rings",
     "seriesOrder": 0,
@@ -109,7 +141,11 @@
     "title": "Words of Radiance",
     "authorId": "author-1",
     "publicationDate": "2014-03-04",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "As the world spirals into a new war, a scholar, a soldier, and a spy must navigate political intrigue and ancient secrets to prevent the return of the Voidbringers.",
     "series": "The Stormlight Archive",
     "seriesOrder": 2,
@@ -122,7 +158,11 @@
     "title": "Hyperion",
     "authorId": "author-8",
     "publicationDate": "1989-05-26",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "On the eve of Armageddon, seven pilgrims set forth on a final voyage to Hyperion seeking the answers to the unsolved riddles of their lives.",
     "series": "Hyperion Cantos",
     "seriesOrder": 1,
@@ -135,7 +175,11 @@
     "title": "The Martian",
     "authorId": "author-3",
     "publicationDate": "2011-09-27",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "An astronaut is presumed dead after a fierce storm and left behind by his crew. But he's alive and must find a way to signal to Earth that he's stranded on Mars.",
     "series": null,
     "seriesOrder": null,
@@ -148,7 +192,11 @@
     "title": "The Wise Man's Fear",
     "authorId": "author-4",
     "publicationDate": "2011-03-01",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "Kvothe's adventures continue as he travels to distant lands, learns powerful magic, and uncovers more about the mysterious Chandrian.",
     "series": "The Kingkiller Chronicle",
     "seriesOrder": 2,
@@ -161,7 +209,11 @@
     "title": "The Well of Ascension",
     "authorId": "author-1",
     "publicationDate": "2007-08-21",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "After overthrowing the Lord Ruler, Vin and Elend struggle to keep their new kingdom from falling into chaos from threats both internal and external.",
     "series": "Mistborn",
     "seriesOrder": 2,
@@ -174,7 +226,11 @@
     "title": "Snow Crash",
     "authorId": "author-9",
     "publicationDate": "1992-06-01",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "In a near-future America, a pizza delivery driver for the Mafia and a hacker named Hiro Protagonist investigates a new computer virus that is also a drug.",
     "series": null,
     "seriesOrder": null,
@@ -187,7 +243,11 @@
     "title": "The Tombs of Atuan",
     "authorId": "author-6",
     "publicationDate": "1971-01-01",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "A young priestess in the service of the Nameless Ones has her world turned upside down by the arrival of the wizard Ged, who seeks a legendary treasure.",
     "series": "Earthsea Cycle",
     "seriesOrder": 2,
@@ -200,7 +260,11 @@
     "title": "The Fellowship of the Ring",
     "authorId": "author-7",
     "publicationDate": "1954-07-29",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "A young hobbit, Frodo Baggins, is entrusted with an immensely powerful Ring and must begin a perilous journey to destroy it in the fires of Mount Doom.",
     "series": "The Lord of the Rings",
     "seriesOrder": 1,
@@ -213,7 +277,11 @@
     "title": "Oathbringer",
     "authorId": "author-1",
     "publicationDate": "2017-11-14",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "Humanity faces a new Desolation with the return of the Voidbringers, a foe with numbers as great as their thirst for vengeance.",
     "series": "The Stormlight Archive",
     "seriesOrder": 3,
@@ -226,7 +294,11 @@
     "title": "Children of Dune",
     "authorId": "author-2",
     "publicationDate": "1976-04-01",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "The children of Paul Atreides, Leto and Ghanima, contend with the political machinations of their aunt Alia and the future of the empire.",
     "series": "Dune Saga",
     "seriesOrder": 3,
@@ -239,7 +311,11 @@
     "title": "Ancillary Justice",
     "authorId": "author-10",
     "publicationDate": "2013-10-01",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "A soldier who was once a warship's AI seeks revenge for the destruction of her ship and crew.",
     "series": "Imperial Radch",
     "seriesOrder": 1,
@@ -252,7 +328,11 @@
     "title": "The Lies of Locke Lamora",
     "authorId": "author-11",
     "publicationDate": "2006-06-27",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "In the island city of Camorr, a talented thief and his gang, the Gentleman Bastards, con their way through the nobility.",
     "series": "Gentleman Bastard",
     "seriesOrder": 1,
@@ -265,7 +345,11 @@
     "title": "The Hero of Ages",
     "authorId": "author-1",
     "publicationDate": "2008-10-14",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "Vin and Elend fight to save their world from the encroaching mists and the dark god that controls them, leading to a cataclysmic final battle.",
     "series": "Mistborn",
     "seriesOrder": 3,
@@ -278,7 +362,11 @@
     "title": "Altered Carbon",
     "authorId": "author-12",
     "publicationDate": "2002-02-28",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "In a future where consciousness can be digitized, a former soldier is downloaded into a new body to solve a mind-bogglingly complex murder.",
     "series": "Takeshi Kovacs",
     "seriesOrder": 1,
@@ -291,7 +379,11 @@
     "title": "The Farthest Shore",
     "authorId": "author-6",
     "publicationDate": "1972-01-01",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "Ged, now the Archmage, and a young prince must journey to the ends of the earth to discover why magic is fading from the world.",
     "series": "Earthsea Cycle",
     "seriesOrder": 3,
@@ -304,7 +396,11 @@
     "title": "The Two Towers",
     "authorId": "author-7",
     "publicationDate": "1954-11-11",
-    "coverImage": "https://placehold.co/400x600.png",
+    "coverImages": {
+        "size250": "https://placehold.co/250x375.png",
+        "size360": "https://placehold.co/360x540.png",
+        "size480": "https://placehold.co/480x720.png"
+    },
     "summary": "The fellowship is broken. Frodo and Sam must continue their journey to Mordor alone, while their companions face the armies of Saruman.",
     "series": "The Lord of the Rings",
     "seriesOrder": 2,

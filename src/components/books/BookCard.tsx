@@ -24,7 +24,7 @@ export function BookCard({ book }: BookCardProps) {
         <CardHeader className="p-0">
           <div className="relative aspect-[2/3] w-full">
             <Image
-              src={book.coverImage}
+              src={book.coverImages.size360}
               alt={`Cover of ${book.title}`}
               fill
               className="object-cover"

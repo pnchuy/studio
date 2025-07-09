@@ -10,7 +10,6 @@ import { getAllAuthors as fetchAllAuthors } from '@/lib/authors';
 import { getAllGenres as fetchAllGenres } from '@/lib/genres';
 import { getAllSeries as fetchAllSeries } from '@/lib/series';
 import { db, isFirebaseConfigured } from '@/lib/firebase';
-import { uploadCoverImage, deleteCoverImage } from '@/lib/storage';
 import {
   Table,
   TableHeader,
@@ -116,11 +115,6 @@ export function BookManagement() {
         const newId = generateId(6);
         let bookToSave: Omit<Book, 'docId'> = { ...newBookData, id: newId };
         
-        if (bookToSave.coverImage.startsWith('data:image')) {
-            const imageUrl = await uploadCoverImage(bookToSave.coverImage, newId);
-            bookToSave.coverImage = imageUrl;
-        }
-        
         const docRef = await addDoc(collection(db, "books"), bookToSave);
         const newBook: Book = { ...bookToSave, docId: docRef.id };
         const updatedBooks = [newBook, ...books].sort((a, b) => a.title.localeCompare(b.title));
@@ -151,7 +145,20 @@ export function BookManagement() {
     }
 
     try {
-        await Promise.all(newBooks.map(book => addDoc(collection(db, "books"), book)));
+        const booksForFirestore = newBooks.map(book => {
+            const { coverImage, ...rest } = book;
+            const placeholderUrl = coverImage || "https://placehold.co/400x600.png";
+            return {
+                ...rest,
+                coverImages: {
+                    size250: placeholderUrl,
+                    size360: placeholderUrl,
+                    size480: placeholderUrl,
+                }
+            };
+        });
+
+        await Promise.all(booksForFirestore.map(book => addDoc(collection(db, "books"), book)));
         
         const freshBooks = await fetchAllBooks();
         setBooks(freshBooks);
@@ -236,18 +243,11 @@ export function BookManagement() {
   const handleBookUpdated = async (updatedBook: Book) => {
     if (!db || !updatedBook.docId) return;
     try {
-        let bookDataToUpdate = { ...updatedBook };
-
-        if (bookDataToUpdate.coverImage.startsWith('data:image')) {
-            const imageUrl = await uploadCoverImage(bookDataToUpdate.coverImage, bookDataToUpdate.id);
-            bookDataToUpdate.coverImage = imageUrl;
-        }
-
-        const bookRef = doc(db, "books", bookDataToUpdate.docId);
-        const { docId, ...bookData } = bookDataToUpdate;
+        const bookRef = doc(db, "books", updatedBook.docId);
+        const { docId, ...bookData } = updatedBook;
         await updateDoc(bookRef, bookData);
 
-        const updatedBooks = books.map(book => book.docId === updatedBook.docId ? bookDataToUpdate : book);
+        const updatedBooks = books.map(book => book.docId === updatedBook.docId ? updatedBook : book);
         setBooks(updatedBooks);
         if (updatedBook.series && !series.some(s => s.name === updatedBook.series)) {
             handleSeriesAdded({ name: updatedBook.series }, false);
@@ -267,7 +267,6 @@ export function BookManagement() {
     
     try {
         await deleteDoc(doc(db, "books", bookToDelete.docId));
-        await deleteCoverImage(bookToDelete.id);
         const updatedBooks = books.filter(book => book.docId !== bookToDelete.docId);
         setBooks(updatedBooks);
         toast({
@@ -618,7 +617,7 @@ export function BookManagement() {
                             <TableRow key={book.docId || book.id}>
                                 <TableCell>
                                     <Image
-                                        src={book.coverImage}
+                                        src={book.coverImages.size250}
                                         alt={`Bìa sách ${book.title}`}
                                         width={40}
                                         height={60}

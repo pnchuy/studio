@@ -47,7 +47,7 @@ export default async function BookPage({ params: { id } }: BookPageProps) {
             <div className="md:col-span-1">
                 <div className="relative aspect-[2/3] w-full max-w-sm mx-auto shadow-xl rounded-lg overflow-hidden">
                     <Image
-                    src={book.coverImage}
+                    src={book.coverImages.size480}
                     alt={`Cover of ${book.title}`}
                     fill
                     className="object-cover"

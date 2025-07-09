@@ -13,13 +13,19 @@ export type Series = {
   name: string;
 }
 
+export type CoverImages = {
+  size250: string;
+  size360: string;
+  size480: string;
+};
+
 export type Book = {
-  id: string;
+  id:string;
   docId?: string; // Firestore document ID
   title: string;
   authorId: string;
   publicationDate: string;
-  coverImage: string;
+  coverImages: CoverImages;
   summary: string;
   series: string | null;
   seriesOrder: number | null;
