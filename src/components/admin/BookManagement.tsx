@@ -10,6 +10,7 @@ import { getAllAuthors as fetchAllAuthors } from '@/lib/authors';
 import { getAllGenres as fetchAllGenres } from '@/lib/genres';
 import { getAllSeries as fetchAllSeries } from '@/lib/series';
 import { db, isFirebaseConfigured } from '@/lib/firebase';
+import { uploadCoverImage, deleteCoverImage } from '@/lib/storage';
 import {
   Table,
   TableHeader,
@@ -113,7 +114,12 @@ export function BookManagement() {
     if (!db) return;
     try {
         const newId = generateId(6);
-        const bookToSave: Omit<Book, 'docId'> = { ...newBookData, id: newId };
+        let bookToSave: Omit<Book, 'docId'> = { ...newBookData, id: newId };
+        
+        if (bookToSave.coverImage.startsWith('data:image')) {
+            const imageUrl = await uploadCoverImage(bookToSave.coverImage, newId);
+            bookToSave.coverImage = imageUrl;
+        }
         
         const docRef = await addDoc(collection(db, "books"), bookToSave);
         const newBook: Book = { ...bookToSave, docId: docRef.id };
@@ -230,11 +236,18 @@ export function BookManagement() {
   const handleBookUpdated = async (updatedBook: Book) => {
     if (!db || !updatedBook.docId) return;
     try {
-        const bookRef = doc(db, "books", updatedBook.docId);
-        const { docId, ...bookData } = updatedBook;
+        let bookDataToUpdate = { ...updatedBook };
+
+        if (bookDataToUpdate.coverImage.startsWith('data:image')) {
+            const imageUrl = await uploadCoverImage(bookDataToUpdate.coverImage, bookDataToUpdate.id);
+            bookDataToUpdate.coverImage = imageUrl;
+        }
+
+        const bookRef = doc(db, "books", bookDataToUpdate.docId);
+        const { docId, ...bookData } = bookDataToUpdate;
         await updateDoc(bookRef, bookData);
 
-        const updatedBooks = books.map(book => book.docId === updatedBook.docId ? updatedBook : book);
+        const updatedBooks = books.map(book => book.docId === updatedBook.docId ? bookDataToUpdate : book);
         setBooks(updatedBooks);
         if (updatedBook.series && !series.some(s => s.name === updatedBook.series)) {
             handleSeriesAdded({ name: updatedBook.series }, false);
@@ -254,6 +267,7 @@ export function BookManagement() {
     
     try {
         await deleteDoc(doc(db, "books", bookToDelete.docId));
+        await deleteCoverImage(bookToDelete.id);
         const updatedBooks = books.filter(book => book.docId !== bookToDelete.docId);
         setBooks(updatedBooks);
         toast({
