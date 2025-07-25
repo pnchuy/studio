@@ -63,6 +63,14 @@ import {
 } from "@/components/ui/select";
 import { generateId, slugify } from '@/lib/utils';
 import { uploadCoverImage, deleteCoverImage } from '@/lib/storage';
+import { Badge } from '@/components/ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 
 export function BookManagement() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -525,10 +533,10 @@ export function BookManagement() {
     return authors.find(a => a.id === authorId)?.name || 'N/A';
   }
 
-  const getGenreNames = (genreIds: string[] | undefined) => {
-    if (!genreIds) return '';
-    return genreIds.map(id => genres.find(g => g.id === id)?.name).filter(Boolean).join(', ');
-  }
+  const getBookGenres = (genreIds: string[] | undefined): Genre[] => {
+    if (!genreIds) return [];
+    return genreIds.map(id => genres.find(g => g.id === id)).filter((g): g is Genre => !!g);
+  };
 
   // Pagination logic
   const totalPages = Math.ceil(books.length / booksPerPage);
@@ -638,52 +646,72 @@ export function BookManagement() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {paginatedBooks.map((book) => (
-                            <TableRow key={book.docId || book.id}>
-                                <TableCell>
-                                    <Image
-                                        src={book.coverImages.size250}
-                                        alt={`Bìa sách ${book.title}`}
-                                        width={40}
-                                        height={60}
-                                        className="rounded-sm object-cover"
-                                        data-ai-hint="book cover"
-                                    />
-                                </TableCell>
-                                <TableCell className="font-medium">{book.title}</TableCell>
-                                <TableCell>{getAuthorName(book.authorId)}</TableCell>
-                                <TableCell>
-                                    <span className="inline-flex items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground truncate">
-                                        {getGenreNames(book.genreIds)}
-                                    </span>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
-                                            <DropdownMenuItem asChild>
-                                                <Link href={`/book/${book.id}-${slugify(book.title)}`}>
-                                                    <Eye className="mr-2 h-4 w-4"/>
-                                                    View
-                                                </Link>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleEditClick(book)}>
-                                                <Pencil className="mr-2 h-4 w-4"/>
-                                                Sửa
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => setBookToDelete(book)} className="text-destructive focus:text-destructive">
-                                                <Trash2 className="mr-2 h-4 w-4"/>
-                                                Xóa
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                            ))}
+                            {paginatedBooks.map((book) => {
+                                const bookGenres = getBookGenres(book.genreIds);
+                                const displayedGenres = bookGenres.slice(0, 3);
+                                const remainingCount = bookGenres.length - displayedGenres.length;
+                                return (
+                                <TableRow key={book.docId || book.id}>
+                                    <TableCell>
+                                        <Image
+                                            src={book.coverImages.size250}
+                                            alt={`Bìa sách ${book.title}`}
+                                            width={40}
+                                            height={60}
+                                            className="rounded-sm object-cover"
+                                            data-ai-hint="book cover"
+                                        />
+                                    </TableCell>
+                                    <TableCell className="font-medium">{book.title}</TableCell>
+                                    <TableCell>{getAuthorName(book.authorId)}</TableCell>
+                                    <TableCell>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <div className="flex flex-wrap gap-1 items-center">
+                                                        {displayedGenres.map(genre => (
+                                                            <Badge key={genre.id} variant="secondary">{genre.name}</Badge>
+                                                        ))}
+                                                        {remainingCount > 0 && (
+                                                            <Badge variant="outline">+{remainingCount}</Badge>
+                                                        )}
+                                                    </div>
+                                                </TooltipTrigger>
+                                                {bookGenres.length > 3 && (
+                                                    <TooltipContent>
+                                                        <p>{bookGenres.map(g => g.name).join(', ')}</p>
+                                                    </TooltipContent>
+                                                )}
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/book/${book.id}-${slugify(book.title)}`}>
+                                                        <Eye className="mr-2 h-4 w-4"/>
+                                                        View
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleEditClick(book)}>
+                                                    <Pencil className="mr-2 h-4 w-4"/>
+                                                    Sửa
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setBookToDelete(book)} className="text-destructive focus:text-destructive">
+                                                    <Trash2 className="mr-2 h-4 w-4"/>
+                                                    Xóa
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            )})}
                         </TableBody>
                         </Table>
                     </div>
@@ -817,5 +845,7 @@ export function BookManagement() {
     </>
   );
 }
+
+    
 
     
