@@ -19,7 +19,6 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Pencil, Trash2, Upload, Eye } from 'lucide-react';
 import {
@@ -540,242 +539,231 @@ export function BookManagement() {
 
   return (
     <>
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-            <CardTitle>Bộ sưu tập sách</CardTitle>
-            <CardDescription>
-                Thêm, sửa, xóa sách, tác giả, thể loại và series.
-            </CardDescription>
-        </div>
-        <div className="flex items-center gap-2">
-            <Dialog open={isImportBookOpen} onOpenChange={setIsImportBookOpen}>
-                <DialogTrigger asChild>
-                    <Button variant="outline">
-                        <Upload className="mr-2" />
-                        Import from Json file
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Import dữ liệu</DialogTitle>
-                    </DialogHeader>
-                    <ImportBooksDialog
-                      existingBooks={books}
-                      existingAuthors={authors}
-                      existingGenres={genres}
-                      existingSeries={series}
-                      onBooksImported={handleBooksImported}
-                      onAuthorsImported={handleAuthorsImported}
-                      onGenresImported={handleGenresImported}
-                      onSeriesImported={handleSeriesImported}
-                      onFinished={() => setIsImportBookOpen(false)}
-                    />
-                </DialogContent>
-            </Dialog>
-            <Dialog open={isAddBookOpen} onOpenChange={setIsAddBookOpen}>
-                <DialogTrigger asChild>
-                    <Button>
-                        <PlusCircle className="mr-2" />
-                        Thêm sách
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                        <DialogTitle>Thêm sách mới</DialogTitle>
-                    </DialogHeader>
-                    <AddBookForm 
-                      books={books}
-                      onBookAdded={(bookData) => handleBookAdded(bookData)}
-                      onFinished={() => setIsAddBookOpen(false)}
-                      authors={authors}
-                      genres={genres}
-                      seriesList={series}
-                    />
-                </DialogContent>
-            </Dialog>
-        </div>
-      </CardHeader>
-      <CardContent>
-         <Tabs defaultValue="books">
-            <TabsList>
-                <TabsTrigger value="books">Sách</TabsTrigger>
-                <TabsTrigger value="authors">Tác giả</TabsTrigger>
-                <TabsTrigger value="genres">Thể loại</TabsTrigger>
-                <TabsTrigger value="series">Series</TabsTrigger>
-            </TabsList>
-            <TabsContent value="books" className="mt-4">
-                {isLoading ? (
-                <div className="space-y-4">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                </div>
-                ) : (
-                <>
-                    <div className="border rounded-md">
-                        <Table>
-                        <TableHeader>
-                            <TableRow>
-                            <TableHead className="w-[60px]">Ảnh bìa</TableHead>
-                            <TableHead>Tiêu đề</TableHead>
-                            <TableHead>Tác giả</TableHead>
-                            <TableHead>Thể loại</TableHead>
-                            <TableHead className="text-right">Hành động</TableHead>
+      <div className="flex items-center justify-end gap-2 mb-4">
+          <Dialog open={isImportBookOpen} onOpenChange={setIsImportBookOpen}>
+              <DialogTrigger asChild>
+                  <Button variant="outline">
+                      <Upload className="mr-2" />
+                      Import from Json file
+                  </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                      <DialogTitle>Import dữ liệu</DialogTitle>
+                  </DialogHeader>
+                  <ImportBooksDialog
+                    existingBooks={books}
+                    existingAuthors={authors}
+                    existingGenres={genres}
+                    existingSeries={series}
+                    onBooksImported={handleBooksImported}
+                    onAuthorsImported={handleAuthorsImported}
+                    onGenresImported={handleGenresImported}
+                    onSeriesImported={handleSeriesImported}
+                    onFinished={() => setIsImportBookOpen(false)}
+                  />
+              </DialogContent>
+          </Dialog>
+          <Dialog open={isAddBookOpen} onOpenChange={setIsAddBookOpen}>
+              <DialogTrigger asChild>
+                  <Button>
+                      <PlusCircle className="mr-2" />
+                      Thêm sách
+                  </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl">
+                  <DialogHeader>
+                      <DialogTitle>Thêm sách mới</DialogTitle>
+                  </DialogHeader>
+                  <AddBookForm 
+                    books={books}
+                    onBookAdded={(bookData) => handleBookAdded(bookData)}
+                    onFinished={() => setIsAddBookOpen(false)}
+                    authors={authors}
+                    genres={genres}
+                    seriesList={series}
+                  />
+              </DialogContent>
+          </Dialog>
+      </div>
+
+     <Tabs defaultValue="books">
+        <TabsList>
+            <TabsTrigger value="books">Sách</TabsTrigger>
+            <TabsTrigger value="authors">Tác giả</TabsTrigger>
+            <TabsTrigger value="genres">Thể loại</TabsTrigger>
+            <TabsTrigger value="series">Series</TabsTrigger>
+        </TabsList>
+        <TabsContent value="books" className="mt-4">
+            {isLoading ? (
+            <div className="space-y-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+            </div>
+            ) : (
+            <>
+                <div className="border rounded-md">
+                    <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead className="w-[60px]">Ảnh bìa</TableHead>
+                        <TableHead>Tiêu đề</TableHead>
+                        <TableHead>Tác giả</TableHead>
+                        <TableHead>Thể loại</TableHead>
+                        <TableHead className="text-right">Hành động</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {paginatedBooks.map((book) => {
+                            const bookGenres = getBookGenres(book.genreIds);
+                            const displayedGenres = bookGenres.slice(0, 3);
+                            const remainingCount = bookGenres.length - displayedGenres.length;
+                            return (
+                            <TableRow key={book.docId || book.id}>
+                                <TableCell>
+                                    <Image
+                                        src={book.coverImages.size250}
+                                        alt={`Bìa sách ${book.title}`}
+                                        width={40}
+                                        height={60}
+                                        className="rounded-sm object-cover"
+                                        data-ai-hint="book cover"
+                                    />
+                                </TableCell>
+                                <TableCell className="font-medium">{book.title}</TableCell>
+                                <TableCell>{getAuthorName(book.authorId)}</TableCell>
+                                <TableCell>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div className="flex flex-wrap gap-1 items-center">
+                                                    {displayedGenres.map(genre => (
+                                                        <Badge key={genre.id} variant="secondary">{genre.name}</Badge>
+                                                    ))}
+                                                    {remainingCount > 0 && (
+                                                        <Badge variant="outline">+{remainingCount}</Badge>
+                                                    )}
+                                                </div>
+                                            </TooltipTrigger>
+                                            {bookGenres.length > 3 && (
+                                                <TooltipContent>
+                                                    <p>{bookGenres.map(g => g.name).join(', ')}</p>
+                                                </TooltipContent>
+                                            )}
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <DropdownMenuItem asChild>
+                                                <Link href={`/book/${book.id}-${slugify(book.title)}`}>
+                                                    <Eye className="mr-2 h-4 w-4"/>
+                                                    View
+                                                </Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleEditClick(book)}>
+                                                <Pencil className="mr-2 h-4 w-4"/>
+                                                Sửa
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => setBookToDelete(book)} className="text-destructive focus:text-destructive">
+                                                <Trash2 className="mr-2 h-4 w-4"/>
+                                                Xóa
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
                             </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {paginatedBooks.map((book) => {
-                                const bookGenres = getBookGenres(book.genreIds);
-                                const displayedGenres = bookGenres.slice(0, 3);
-                                const remainingCount = bookGenres.length - displayedGenres.length;
-                                return (
-                                <TableRow key={book.docId || book.id}>
-                                    <TableCell>
-                                        <Image
-                                            src={book.coverImages.size250}
-                                            alt={`Bìa sách ${book.title}`}
-                                            width={40}
-                                            height={60}
-                                            className="rounded-sm object-cover"
-                                            data-ai-hint="book cover"
-                                        />
-                                    </TableCell>
-                                    <TableCell className="font-medium">{book.title}</TableCell>
-                                    <TableCell>{getAuthorName(book.authorId)}</TableCell>
-                                    <TableCell>
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <div className="flex flex-wrap gap-1 items-center">
-                                                        {displayedGenres.map(genre => (
-                                                            <Badge key={genre.id} variant="secondary">{genre.name}</Badge>
-                                                        ))}
-                                                        {remainingCount > 0 && (
-                                                            <Badge variant="outline">+{remainingCount}</Badge>
-                                                        )}
-                                                    </div>
-                                                </TooltipTrigger>
-                                                {bookGenres.length > 3 && (
-                                                    <TooltipContent>
-                                                        <p>{bookGenres.map(g => g.name).join(', ')}</p>
-                                                    </TooltipContent>
-                                                )}
-                                            </Tooltip>
-                                        </TooltipProvider>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent>
-                                                <DropdownMenuItem asChild>
-                                                    <Link href={`/book/${book.id}-${slugify(book.title)}`}>
-                                                        <Eye className="mr-2 h-4 w-4"/>
-                                                        View
-                                                    </Link>
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleEditClick(book)}>
-                                                    <Pencil className="mr-2 h-4 w-4"/>
-                                                    Sửa
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => setBookToDelete(book)} className="text-destructive focus:text-destructive">
-                                                    <Trash2 className="mr-2 h-4 w-4"/>
-                                                    Xóa
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            )})}
-                        </TableBody>
-                        </Table>
+                        )})}
+                    </TableBody>
+                    </Table>
+                </div>
+                <div className="flex items-center justify-between py-4">
+                    <div className="flex items-center space-x-2">
+                        <p className="text-sm text-muted-foreground">Hiển thị</p>
+                        <Select
+                            value={`${booksPerPage}`}
+                            onValueChange={(value) => {
+                                setBooksPerPage(Number(value));
+                            }}
+                        >
+                            <SelectTrigger className="h-8 w-[70px]">
+                                <SelectValue placeholder={`${booksPerPage}`} />
+                            </SelectTrigger>
+                            <SelectContent side="top">
+                                {[10, 20, 50].map((pageSize) => (
+                                <SelectItem key={pageSize} value={`${pageSize}`}>
+                                    {pageSize}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-sm text-muted-foreground">kết quả trong tổng số {books.length}</p>
                     </div>
-                    <div className="flex items-center justify-between py-4">
-                        <div className="flex items-center space-x-2">
-                            <p className="text-sm text-muted-foreground">Hiển thị</p>
-                            <Select
-                                value={`${booksPerPage}`}
-                                onValueChange={(value) => {
-                                    setBooksPerPage(Number(value));
-                                }}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-end space-x-2">
+                            <span className="text-sm text-muted-foreground">
+                                Trang {currentPage} / {totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
                             >
-                                <SelectTrigger className="h-8 w-[70px]">
-                                    <SelectValue placeholder={`${booksPerPage}`} />
-                                </SelectTrigger>
-                                <SelectContent side="top">
-                                    {[10, 20, 50].map((pageSize) => (
-                                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                                        {pageSize}
-                                    </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <p className="text-sm text-muted-foreground">kết quả trong tổng số {books.length}</p>
+                                Trước
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                            >
+                                Sau
+                            </Button>
                         </div>
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-end space-x-2">
-                                <span className="text-sm text-muted-foreground">
-                                    Trang {currentPage} / {totalPages}
-                                </span>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                >
-                                    Trước
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                    disabled={currentPage === totalPages}
-                                >
-                                    Sau
-                                </Button>
-                            </div>
-                        )}
-                    </div>
-                </>
-                )}
-            </TabsContent>
-            <TabsContent value="authors" className="mt-4">
-                <AuthorManagement 
-                  authors={authors}
-                  books={books}
-                  isLoading={isLoading}
-                  onAuthorAdded={(author) => handleAuthorAdded(author)}
-                  onAuthorUpdated={handleAuthorUpdated}
-                  onAuthorDeleted={handleAuthorDeleted}
-                />
-            </TabsContent>
-            <TabsContent value="genres" className="mt-4">
-                <GenreManagement 
-                  genres={genres}
-                  isLoading={isLoading}
-                  onGenreAdded={(genre) => handleGenreAdded(genre)}
-                  onGenreUpdated={handleGenreUpdated}
-                  onGenreDeleted={handleGenreDeleted}
-                />
-            </TabsContent>
-            <TabsContent value="series" className="mt-4">
-                <SeriesManagement 
-                  series={series}
-                  books={books}
-                  isLoading={isLoading}
-                  onSeriesAdded={handleSeriesAdded}
-                  onSeriesDeleted={handleSeriesDeleted}
-                  onSeriesUpdated={handleSeriesUpdated}
-                />
-            </TabsContent>
-         </Tabs>
-      </CardContent>
-    </Card>
+                    )}
+                </div>
+            </>
+            )}
+        </TabsContent>
+        <TabsContent value="authors" className="mt-4">
+            <AuthorManagement 
+              authors={authors}
+              books={books}
+              isLoading={isLoading}
+              onAuthorAdded={(author) => handleAuthorAdded(author)}
+              onAuthorUpdated={handleAuthorUpdated}
+              onAuthorDeleted={handleAuthorDeleted}
+            />
+        </TabsContent>
+        <TabsContent value="genres" className="mt-4">
+            <GenreManagement 
+              genres={genres}
+              isLoading={isLoading}
+              onGenreAdded={(genre) => handleGenreAdded(genre)}
+              onGenreUpdated={handleGenreUpdated}
+              onGenreDeleted={handleGenreDeleted}
+            />
+        </TabsContent>
+        <TabsContent value="series" className="mt-4">
+            <SeriesManagement 
+              series={series}
+              books={books}
+              isLoading={isLoading}
+              onSeriesAdded={handleSeriesAdded}
+              onSeriesDeleted={handleSeriesDeleted}
+              onSeriesUpdated={handleSeriesUpdated}
+            />
+        </TabsContent>
+     </Tabs>
      
     <Dialog open={isEditBookOpen} onOpenChange={setIsEditBookOpen}>
         <DialogContent className="max-w-4xl">
@@ -825,3 +813,5 @@ export function BookManagement() {
     </>
   );
 }
+
+    
