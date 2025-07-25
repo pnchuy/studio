@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Book as BookIcon, Hash, User as UserIcon } from 'lucide-react';
 import BookDetailClient from './BookDetailClient';
 import { CommentSection } from '@/components/comments/CommentSection';
-import ReactMarkdown from 'react-markdown';
 import { Separator } from '@/components/ui/separator';
+import DOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
 
 type BookPageProps = {
   params: {
@@ -32,6 +33,10 @@ export async function generateMetadata({ params: { id } }: BookPageProps) {
     }
 }
 
+// We need to use JSDOM on the server to allow DOMPurify to work.
+const window = new JSDOM('').window;
+const purify = DOMPurify(window as any);
+
 export default async function BookPage({ params: { id } }: BookPageProps) {
   const bookId = id.split('-')[0];
   const book = await getBookById(bookId);
@@ -42,6 +47,8 @@ export default async function BookPage({ params: { id } }: BookPageProps) {
 
   const author = await getAuthorById(book.authorId);
   const genres = await getGenresByIds(book.genreIds);
+  
+  const sanitizedLongDescription = book.longDescription ? purify.sanitize(book.longDescription) : '';
 
   return (
     <article>
@@ -97,13 +104,14 @@ export default async function BookPage({ params: { id } }: BookPageProps) {
             </div>
         )}
 
-        {book.longDescription && (
+        {sanitizedLongDescription && (
              <div className="mt-12">
                 <Separator />
                 <h2 className="text-2xl font-bold font-headline my-4">Mô tả chi tiết</h2>
-                <div className="prose dark:prose-invert max-w-none text-lg leading-relaxed">
-                  <ReactMarkdown>{book.longDescription}</ReactMarkdown>
-                </div>
+                <div 
+                    className="prose dark:prose-invert max-w-none text-lg leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: sanitizedLongDescription }}
+                />
             </div>
         )}
         

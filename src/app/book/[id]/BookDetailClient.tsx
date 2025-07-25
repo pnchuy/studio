@@ -19,7 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { convertYoutubeUrlToEmbed } from '@/lib/utils';
-import ReactMarkdown from 'react-markdown';
+import DOMPurify from 'dompurify';
 
 interface BookDetailClientProps {
     book: Book;
@@ -106,6 +106,9 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
     };
 
     const hasContentForModal = hasYoutubeLinks || book.shortDescription || book.longDescription;
+    const combinedDescription = book.longDescription || book.shortDescription;
+    const sanitizedDescription = DOMPurify.sanitize(combinedDescription);
+
 
     return (
         <div className="mt-8 border-t pt-8 flex flex-wrap items-center gap-4">
@@ -190,10 +193,11 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                         </TabsContent>
                         <TabsContent value="read">
                              <ScrollArea className="h-[400px] w-full py-4">
-                                {book.longDescription || book.shortDescription ? (
-                                    <div className="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
-                                        <ReactMarkdown>{book.longDescription || book.shortDescription}</ReactMarkdown>
-                                    </div>
+                                {combinedDescription ? (
+                                    <div 
+                                        className="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed"
+                                        dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+                                    />
                                 ) : (
                                     <div className="flex items-center justify-center h-full text-muted-foreground">
                                         <p>No summary available for this book.</p>

@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
@@ -26,6 +26,7 @@ import { convertYoutubeUrlToEmbed } from "@/lib/utils";
 import { PlusCircle, Trash2, X, Loader2 } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { RichTextEditor } from "../ui/rich-text-editor";
 
 const youtubeLinkSchema = z.object({
   url: z.string().url({ message: "Link YouTube không hợp lệ." }).or(z.literal('')),
@@ -457,19 +458,24 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
             </FormItem>
           )}
         />
-         <FormField
-          control={form.control}
-          name="longDescription"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Mô tả chi tiết</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Mô tả chi tiết nội dung sách, có thể dùng Markdown..." {...field} rows={6}/>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+         
+        <Controller
+            control={form.control}
+            name="longDescription"
+            render={({field}) => (
+                <FormItem>
+                    <FormLabel>Mô tả chi tiết</FormLabel>
+                    <FormControl>
+                        <RichTextEditor
+                            value={field.value}
+                            onChange={field.onChange}
+                        />
+                    </FormControl>
+                    <FormMessage/>
+                </FormItem>
+            )}
         />
+
         <FormField
           control={form.control}
           name="series"

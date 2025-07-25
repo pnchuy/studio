@@ -6,12 +6,12 @@
     "authorId": "author-1",
     "publicationDate": "2010-08-31",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1659905963l/7235533.jpg",
+        "size360": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1659905963l/7235533.jpg",
+        "size480": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1659905963l/7235533.jpg"
     },
     "shortDescription": "In a world of stone and storms, an unlikely hero discovers the lost magic of the Knights Radiant and fights to unite a fractured kingdom against a coming desolation.",
-    "longDescription": "",
+    "longDescription": "<p>Roshar is a world of stone and storms. Uncanny tempests of incredible power sweep across the rocky terrain so frequently that they have shaped ecology and civilization alike. Animals hide in shells, trees pull in branches, and grass retracts into the soilless ground. Cities are built only where the topography offers shelter.</p><p>It has been centuries since the fall of the ten consecrated orders of knights known as the Knights Radiant, but their Shardblades and Shardplate remain: mystical swords and suits of armor that transform ordinary men into near-invincible warriors. Men trade kingdoms for Shardblades. Wars are fought for them, and won by them.</p>",
     "series": "The Stormlight Archive",
     "seriesOrder": 1,
     "genreIds": ["genre-1"],
@@ -24,9 +24,9 @@
     "authorId": "author-2",
     "publicationDate": "1965-08-01",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1434908555l/234225.jpg",
+        "size360": "https://images.gr-assets.com/books/1434908555l/234225.jpg",
+        "size480": "https://images.gr-assets.com/books/1434908555l/234225.jpg"
     },
     "shortDescription": "The story of a young nobleman's rise to power on a desert planet that is the only source of a priceless spice, exploring themes of politics, religion, and ecology.",
     "longDescription": "",
@@ -45,9 +45,9 @@
     "authorId": "author-3",
     "publicationDate": "2021-05-04",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1625048838i/48727813.jpg",
+        "size360": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1625048838i/48727813.jpg",
+        "size480": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1625048838i/48727813.jpg"
     },
     "shortDescription": "An amnesiac astronaut wakes up on a solo mission in deep space, tasked with saving humanity from an extinction-level event with the help of an unexpected alien ally.",
     "longDescription": "",
@@ -63,9 +63,9 @@
     "authorId": "author-4",
     "publicationDate": "2007-03-27",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1529614768l/186074.jpg",
+        "size360": "https://images.gr-assets.com/books/1529614768l/186074.jpg",
+        "size480": "https://images.gr-assets.com/books/1529614768l/186074.jpg"
     },
     "shortDescription": "The tale of Kvothe, a gifted young man who grows to be the most notorious magician his world has ever seen. From a childhood in a troupe of traveling players, to years spent as an orphan in a crime-ridden city, to his daring bid to enter a legendary school of magic.",
     "longDescription": "",
@@ -81,9 +81,9 @@
     "authorId": "author-1",
     "publicationDate": "2006-07-17",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1661108253l/68428.jpg",
+        "size360": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1661108253l/68428.jpg",
+        "size480": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1661108253l/68428.jpg"
     },
     "shortDescription": "In a world where ash falls from the sky and mists rule the night, a young street urchin discovers she has a mysterious power and joins a crew of thieves to overthrow a god-like emperor.",
     "longDescription": "",
@@ -99,9 +99,9 @@
     "authorId": "author-5",
     "publicationDate": "1984-07-01",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1554433139l/6088007.jpg",
+        "size360": "https://images.gr-assets.com/books/1554433139l/6088007.jpg",
+        "size480": "https://images.gr-assets.com/books/1554433139l/6088007.jpg"
     },
     "shortDescription": "A washed-up computer hacker is hired by a mysterious employer to pull off the ultimate hack. This novel is a cornerstone of the cyberpunk genre.",
     "longDescription": "",
@@ -117,9 +117,9 @@
     "authorId": "author-6",
     "publicationDate": "1968-01-01",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1353429953l/13642.jpg",
+        "size360": "https://images.gr-assets.com/books/1353429953l/13642.jpg",
+        "size480": "https://images.gr-assets.com/books/1353429953l/13642.jpg"
     },
     "shortDescription": "A young boy named Ged, the greatest sorcerer in all of Earthsea, who was called Sparrowhawk in his reckless youth, comes to the island of Gont, a single mountain that rises from the sea.",
     "longDescription": "",
@@ -135,9 +135,9 @@
     "authorId": "author-7",
     "publicationDate": "1937-09-21",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1546071216l/5907.jpg",
+        "size360": "https://images.gr-assets.com/books/1546071216l/5907.jpg",
+        "size480": "https://images.gr-assets.com/books/1546071216l/5907.jpg"
     },
     "shortDescription": "A hobbit, Bilbo Baggins, is swept into an epic quest to reclaim the lost Dwarf Kingdom of Erebor from the fearsome dragon Smaug.",
     "longDescription": "",
@@ -153,9 +153,9 @@
     "authorId": "author-1",
     "publicationDate": "2014-03-04",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1659905963l/17332218.jpg",
+        "size360": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1659905963l/17332218.jpg",
+        "size480": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1659905963l/17332218.jpg"
     },
     "shortDescription": "As the world spirals into a new war, a scholar, a soldier, and a spy must navigate political intrigue and ancient secrets to prevent the return of the Voidbringers.",
     "longDescription": "",
@@ -171,9 +171,9 @@
     "authorId": "author-8",
     "publicationDate": "1989-05-26",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/15 Hyperion 35234580l/77566.jpg",
+        "size360": "https://images.gr-assets.com/books/1535234580l/77566.jpg",
+        "size480": "https://images.gr-assets.com/books/1535234580l/77566.jpg"
     },
     "shortDescription": "On the eve of Armageddon, seven pilgrims set forth on a final voyage to Hyperion seeking the answers to the unsolved riddles of their lives.",
     "longDescription": "",
@@ -189,9 +189,9 @@
     "authorId": "author-3",
     "publicationDate": "2011-09-27",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1413706054l/18007564.jpg",
+        "size360": "https://images.gr-assets.com/books/1413706054l/18007564.jpg",
+        "size480": "https://images.gr-assets.com/books/1413706054l/18007564.jpg"
     },
     "shortDescription": "An astronaut is presumed dead after a fierce storm and left behind by his crew. But he's alive and must find a way to signal to Earth that he's stranded on Mars.",
     "longDescription": "",
@@ -207,9 +207,9 @@
     "authorId": "author-4",
     "publicationDate": "2011-03-01",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1452622728l/1215032.jpg",
+        "size360": "https://images.gr-assets.com/books/1452622728l/1215032.jpg",
+        "size480": "https://images.gr-assets.com/books/1452622728l/1215032.jpg"
     },
     "shortDescription": "Kvothe's adventures continue as he travels to distant lands, learns powerful magic, and uncovers more about the mysterious Chandrian.",
     "longDescription": "",
@@ -225,9 +225,9 @@
     "authorId": "author-1",
     "publicationDate": "2007-08-21",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1437792773l/68429.jpg",
+        "size360": "https://images.gr-assets.com/books/1437792773l/68429.jpg",
+        "size480": "https://images.gr-assets.com/books/1437792773l/68429.jpg"
     },
     "shortDescription": "After overthrowing the Lord Ruler, Vin and Elend struggle to keep their new kingdom from falling into chaos from threats both internal and external.",
     "longDescription": "",
@@ -243,9 +243,9 @@
     "authorId": "author-9",
     "publicationDate": "1992-06-01",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1388182283l/830.jpg",
+        "size360": "https://images.gr-assets.com/books/1388182283l/830.jpg",
+        "size480": "https://images.gr-assets.com/books/1388182283l/830.jpg"
     },
     "shortDescription": "In a near-future America, a pizza delivery driver for the Mafia and a hacker named Hiro Protagonist investigates a new computer virus that is also a drug.",
     "longDescription": "",
@@ -261,9 +261,9 @@
     "authorId": "author-6",
     "publicationDate": "1971-01-01",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1353429953l/13642.jpg",
+        "size360": "https://images.gr-assets.com/books/1353429953l/13642.jpg",
+        "size480": "https://images.gr-assets.com/books/1353429953l/13642.jpg"
     },
     "shortDescription": "A young priestess in the service of the Nameless Ones has her world turned upside down by the arrival of the wizard Ged, who seeks a legendary treasure.",
     "longDescription": "",
@@ -279,9 +279,9 @@
     "authorId": "author-7",
     "publicationDate": "1954-07-29",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1347836932l/18512.jpg",
+        "size360": "https://images.gr-assets.com/books/1347836932l/18512.jpg",
+        "size480": "https://images.gr-assets.com/books/1347836932l/18512.jpg"
     },
     "shortDescription": "A young hobbit, Frodo Baggins, is entrusted with an immensely powerful Ring and must begin a perilous journey to destroy it in the fires of Mount Doom.",
     "longDescription": "",
@@ -297,9 +297,9 @@
     "authorId": "author-1",
     "publicationDate": "2017-11-14",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1494619391l/34002132.jpg",
+        "size360": "https://images.gr-assets.com/books/1494619391l/34002132.jpg",
+        "size480": "https://images.gr-assets.com/books/1494619391l/34002132.jpg"
     },
     "shortDescription": "Humanity faces a new Desolation with the return of the Voidbringers, a foe with numbers as great as their thirst for vengeance.",
     "longDescription": "",
@@ -315,9 +315,9 @@
     "authorId": "author-2",
     "publicationDate": "1976-04-01",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1434908624l/234227.jpg",
+        "size360": "https://images.gr-assets.com/books/1434908624l/234227.jpg",
+        "size480": "https://images.gr-assets.com/books/1434908624l/234227.jpg"
     },
     "shortDescription": "The children of Paul Atreides, Leto and Ghanima, contend with the political machinations of their aunt Alia and the future of the empire.",
     "longDescription": "",
@@ -333,9 +333,9 @@
     "authorId": "author-10",
     "publicationDate": "2013-10-01",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1364303964l/17333324.jpg",
+        "size360": "https://images.gr-assets.com/books/1364303964l/17333324.jpg",
+        "size480": "https://images.gr-assets.com/books/1364303964l/17333324.jpg"
     },
     "shortDescription": "A soldier who was once a warship's AI seeks revenge for the destruction of her ship and crew.",
     "longDescription": "",
@@ -351,9 +351,9 @@
     "authorId": "author-11",
     "publicationDate": "2006-06-27",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1386923939l/127455.jpg",
+        "size360": "https://images.gr-assets.com/books/1386923939l/127455.jpg",
+        "size480": "https://images.gr-assets.com/books/1386923939l/127455.jpg"
     },
     "shortDescription": "In the island city of Camorr, a talented thief and his gang, the Gentleman Bastards, con their way through the nobility.",
     "longDescription": "",
@@ -369,9 +369,9 @@
     "authorId": "author-1",
     "publicationDate": "2008-10-14",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1482200403l/2767793.jpg",
+        "size360": "https://images.gr-assets.com/books/1482200403l/2767793.jpg",
+        "size480": "https://images.gr-assets.com/books/1482200403l/2767793.jpg"
     },
     "shortDescription": "Vin and Elend fight to save their world from the encroaching mists and the dark god that controls them, leading to a cataclysmic final battle.",
     "longDescription": "",
@@ -387,9 +387,9 @@
     "authorId": "author-12",
     "publicationDate": "2002-02-28",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1512404987l/40445.jpg",
+        "size360": "https://images.gr-assets.com/books/1512404987l/40445.jpg",
+        "size480": "https://images.gr-assets.com/books/1512404987l/40445.jpg"
     },
     "shortDescription": "In a future where consciousness can be digitized, a former soldier is downloaded into a new body to solve a mind-bogglingly complex murder.",
     "longDescription": "",
@@ -405,9 +405,9 @@
     "authorId": "author-6",
     "publicationDate": "1972-01-01",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1353429953l/13642.jpg",
+        "size360": "https://images.gr-assets.com/books/1353429953l/13642.jpg",
+        "size480": "https://images.gr-assets.com/books/1353429953l/13642.jpg"
     },
     "shortDescription": "Ged, now the Archmage, and a young prince must journey to the ends of the earth to discover why magic is fading from the world.",
     "longDescription": "",
@@ -423,9 +423,9 @@
     "authorId": "author-7",
     "publicationDate": "1954-11-11",
     "coverImages": {
-        "size250": "https://placehold.co/250x375.png",
-        "size360": "https://placehold.co/360x540.png",
-        "size480": "https://placehold.co/480x720.png"
+        "size250": "https://images.gr-assets.com/books/1479203673l/15241.jpg",
+        "size360": "https://images.gr-assets.com/books/1479203673l/15241.jpg",
+        "size480": "https://images.gr-assets.com/books/1479203673l/15241.jpg"
     },
     "shortDescription": "The fellowship is broken. Frodo and Sam must continue their journey to Mordor alone, while their companions face the armies of Saruman.",
     "longDescription": "",
