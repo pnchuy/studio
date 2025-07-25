@@ -614,7 +614,6 @@ export function BookManagement() {
                 </div>
                 ) : (
                 <>
-                    <p className="text-sm text-muted-foreground mb-4">Tổng số sách: {books.length}.</p>
                     <div className="border rounded-md">
                         <Table>
                         <TableHeader>
@@ -716,7 +715,7 @@ export function BookManagement() {
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <p className="text-sm text-muted-foreground">kết quả</p>
+                            <p className="text-sm text-muted-foreground">kết quả trong tổng số {books.length}</p>
                         </div>
                         {totalPages > 1 && (
                             <div className="flex items-center justify-end space-x-2">

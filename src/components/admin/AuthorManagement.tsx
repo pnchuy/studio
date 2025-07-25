@@ -147,7 +147,6 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
           </div>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mb-4">Tổng số tác giả: {authors.length}.</p>
             <div className="border rounded-md">
                 <Table>
                 <TableHeader>
@@ -206,7 +205,7 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
                             ))}
                         </SelectContent>
                     </Select>
-                    <p className="text-sm text-muted-foreground">kết quả</p>
+                    <p className="text-sm text-muted-foreground">kết quả trong tổng số {authors.length}</p>
                 </div>
                 {totalPages > 1 && (
                     <div className="flex items-center justify-end space-x-2">

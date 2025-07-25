@@ -146,7 +146,6 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreUpdate
           </div>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mb-4">Tổng số thể loại: {genres.length}.</p>
             <div className="border rounded-md">
                 <Table>
                 <TableHeader>
@@ -203,7 +202,7 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreUpdate
                             ))}
                         </SelectContent>
                     </Select>
-                    <p className="text-sm text-muted-foreground">kết quả</p>
+                    <p className="text-sm text-muted-foreground">kết quả trong tổng số {genres.length}</p>
                 </div>
                 {totalPages > 1 && (
                     <div className="flex items-center justify-end space-x-2">

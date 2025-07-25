@@ -201,7 +201,6 @@ export function CommentManagement() {
                         </Alert>
                     ) : (
                         <>
-                        <p className="text-sm text-muted-foreground mb-4">Tổng số bình luận: {commentsToDisplay.length}.</p>
                         <div className="border rounded-md">
                             <Table>
                                 <TableHeader>
@@ -284,7 +283,7 @@ export function CommentManagement() {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <p className="text-sm text-muted-foreground">kết quả</p>
+                                <p className="text-sm text-muted-foreground">kết quả trong tổng số {commentsToDisplay.length}</p>
                             </div>
                             {totalPages > 1 && (
                                 <div className="flex items-center justify-end space-x-2">
