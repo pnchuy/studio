@@ -3,6 +3,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import type { Book, Author, Genre, Series } from '@/types';
 import { getAllBooks as fetchAllBooks } from '@/lib/books';
@@ -20,7 +21,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Upload } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Upload, Eye } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -60,7 +61,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { generateId } from '@/lib/utils';
+import { generateId, slugify } from '@/lib/utils';
+import { uploadCoverImage, deleteCoverImage } from '@/lib/storage';
 
 export function BookManagement() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -111,9 +113,19 @@ export function BookManagement() {
   
   const handleBookAdded = async (newBookData: Omit<Book, 'id' | 'docId'>) => {
     if (!db) return;
+    const newId = generateId(6);
+
     try {
-        const newId = generateId(6);
-        let bookToSave: Omit<Book, 'docId'> = { ...newBookData, id: newId };
+        const processedCoverImages = await Promise.all(Object.entries(newBookData.coverImages).map(async ([key, value]) => {
+            const uploadedUrl = await uploadCoverImage(value, newId, key.replace('size', ''));
+            return { [key]: uploadedUrl };
+        })).then(images => Object.assign({}, ...images));
+        
+        let bookToSave: Omit<Book, 'docId'> = { 
+            ...newBookData, 
+            id: newId,
+            coverImages: processedCoverImages as Book['coverImages']
+        };
         
         const docRef = await addDoc(collection(db, "books"), bookToSave);
         const newBook: Book = { ...bookToSave, docId: docRef.id };
@@ -146,14 +158,13 @@ export function BookManagement() {
 
     try {
         const booksForFirestore = newBooks.map(book => {
-            const { coverImage, ...rest } = book;
-            const placeholderUrl = coverImage || "https://placehold.co/400x600.png";
+            const { ...rest } = book;
             return {
                 ...rest,
                 coverImages: {
-                    size250: placeholderUrl,
-                    size360: placeholderUrl,
-                    size480: placeholderUrl,
+                    size250: "https://placehold.co/250x375.png",
+                    size360: "https://placehold.co/360x540.png",
+                    size480: "https://placehold.co/480x720.png",
                 }
             };
         });
@@ -240,15 +251,28 @@ export function BookManagement() {
     }
   };
 
-  const handleBookUpdated = async (updatedBook: Book) => {
+ const handleBookUpdated = async (updatedBook: Book) => {
     if (!db || !updatedBook.docId) return;
     try {
         const bookRef = doc(db, "books", updatedBook.docId);
-        const { docId, ...bookData } = updatedBook;
+
+        // Process cover images: upload if they are new (base64)
+        const processedCoverImages = await Promise.all(Object.entries(updatedBook.coverImages).map(async ([key, value]) => {
+            const uploadedUrl = await uploadCoverImage(value, updatedBook.id, key.replace('size', ''));
+            return { [key]: uploadedUrl };
+        })).then(images => Object.assign({}, ...images));
+        
+        const bookDataWithProcessedImages = {
+            ...updatedBook,
+            coverImages: processedCoverImages as Book['coverImages']
+        };
+
+        const { docId, ...bookData } = bookDataWithProcessedImages;
         await updateDoc(bookRef, bookData);
 
-        const updatedBooks = books.map(book => book.docId === updatedBook.docId ? updatedBook : book);
+        const updatedBooks = books.map(book => book.docId === updatedBook.docId ? bookDataWithProcessedImages : book);
         setBooks(updatedBooks);
+        
         if (updatedBook.series && !series.some(s => s.name === updatedBook.series)) {
             handleSeriesAdded({ name: updatedBook.series }, false);
         }
@@ -267,6 +291,7 @@ export function BookManagement() {
     
     try {
         await deleteDoc(doc(db, "books", bookToDelete.docId));
+        await deleteCoverImage(bookToDelete.id);
         const updatedBooks = books.filter(book => book.docId !== bookToDelete.docId);
         setBooks(updatedBooks);
         toast({
@@ -640,6 +665,12 @@ export function BookManagement() {
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent>
+                                            <DropdownMenuItem asChild>
+                                                <Link href={`/book/${book.id}-${slugify(book.title)}`}>
+                                                    <Eye className="mr-2 h-4 w-4"/>
+                                                    View
+                                                </Link>
+                                            </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => handleEditClick(book)}>
                                                 <Pencil className="mr-2 h-4 w-4"/>
                                                 Sửa
@@ -786,3 +817,5 @@ export function BookManagement() {
     </>
   );
 }
+
+    
