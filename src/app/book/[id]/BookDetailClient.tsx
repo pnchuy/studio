@@ -146,61 +146,62 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                     <DialogHeader>
                         <DialogTitle>{book.title}</DialogTitle>
                     </DialogHeader>
+                    {hasYoutubeLinks && (
+                        <>
+                         <div className="flex flex-wrap items-center gap-2">
+                                {book.youtubeLinks.map((link, index) => (
+                                    <Button
+                                        key={index}
+                                        variant={selectedYoutubeLink?.url === link.url ? "default" : "outline"}
+                                        onClick={() => handleYoutubeLinkSelect(link)}
+                                    >
+                                        Video {index + 1}
+                                    </Button>
+                                ))}
+                                {chapters.length > 0 && (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="secondary" className="flex items-center gap-2">
+                                                <span>Select Part</span>
+                                                <ChevronDown className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            <ScrollArea className="h-48">
+                                                {chapters.map((time, index) => (
+                                                    <DropdownMenuItem key={index} onSelect={() => seekTo(time)} className="cursor-pointer">
+                                                        Part {chapterNumberingOffset + index + 1}
+                                                    </DropdownMenuItem>
+                                                ))}
+                                            </ScrollArea>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                )}
+                            </div>
+                           
+                            {selectedYoutubeLink && (
+                                <div className="aspect-video w-full mt-4">
+                                    <iframe
+                                        ref={iframeRef}
+                                        key={selectedYoutubeLink.url} // Change key to force re-render
+                                        className="w-full h-full rounded-lg"
+                                        src={`${convertYoutubeUrlToEmbed(selectedYoutubeLink.url)}?enablejsapi=1`}
+                                        title={`YouTube video player for ${book.title}`}
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowFullScreen
+                                    ></iframe>
+                                </div>
+                            )}
+                        </>
+                    )}
                     <Tabs defaultValue={hasYoutubeLinks ? "listen" : "read"} className="w-full mt-2">
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="listen" disabled={!hasYoutubeLinks}>Listen</TabsTrigger>
                             <TabsTrigger value="read" disabled={!book.longDescription}>Read</TabsTrigger>
                         </TabsList>
                         <TabsContent value="listen">
-                            <div className="py-4 space-y-4 min-h-[300px]">
-                                {hasYoutubeLinks ? (
-                                    <>
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            {book.youtubeLinks.map((link, index) => (
-                                                <Button
-                                                    key={index}
-                                                    variant={selectedYoutubeLink?.url === link.url ? "default" : "outline"}
-                                                    onClick={() => handleYoutubeLinkSelect(link)}
-                                                >
-                                                    Video {index + 1}
-                                                </Button>
-                                            ))}
-                                            {chapters.length > 0 && (
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="secondary" className="flex items-center gap-2">
-                                                            <span>Select Part</span>
-                                                            <ChevronDown className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent>
-                                                        <ScrollArea className="h-48">
-                                                            {chapters.map((time, index) => (
-                                                                <DropdownMenuItem key={index} onSelect={() => seekTo(time)} className="cursor-pointer">
-                                                                    Part {chapterNumberingOffset + index + 1}
-                                                                </DropdownMenuItem>
-                                                            ))}
-                                                        </ScrollArea>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            )}
-                                        </div>
-                                       
-                                        {selectedYoutubeLink && (
-                                            <div className="aspect-video w-full mt-4">
-                                                <iframe
-                                                    ref={iframeRef}
-                                                    key={selectedYoutubeLink.url} // Change key to force re-render
-                                                    className="w-full h-full rounded-lg"
-                                                    src={`${convertYoutubeUrlToEmbed(selectedYoutubeLink.url)}?enablejsapi=1`}
-                                                    title={`YouTube video player for ${book.title}`}
-                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                                    allowFullScreen
-                                                ></iframe>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
+                           <div className="py-4 space-y-4 min-h-[50px]">
+                                {!hasYoutubeLinks && (
                                     <div className="flex items-center justify-center h-full text-muted-foreground">
                                         <p>No audio/video content available for this book.</p>
                                     </div>
