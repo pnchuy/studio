@@ -3,7 +3,7 @@
 
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
+import TiptapLink from '@tiptap/extension-link';
 import {
   Bold,
   Italic,
@@ -15,10 +15,13 @@ import {
   Quote,
   Minus,
   Link as LinkIcon,
+  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useCallback } from 'react';
+import { useCallback, useState, useEffect } from 'react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
 
 interface EditorToolbarProps {
   editor: any;
@@ -28,25 +31,44 @@ const EditorToolbar = ({ editor }: EditorToolbarProps) => {
   if (!editor) {
     return null;
   }
+  
+  const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
 
-  const setLink = useCallback(() => {
-    const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URL', previousUrl);
+  const handleLinkPopoverOpenChange = (open: boolean) => {
+    setIsLinkPopoverOpen(open);
+    if (open) {
+      const existingUrl = editor.getAttributes('link').href;
+      setLinkUrl(existingUrl || '');
+      // Try to paste from clipboard
+      if (!existingUrl) {
+          navigator.clipboard.readText().then(text => {
+            if(text && (text.startsWith('http') || text.startsWith('https'))){
+                setLinkUrl(text);
+            }
+          }).catch(err => {
+            // Permissions might not be granted, fail silently
+          });
+      }
+    }
+  }
 
-    // cancelled
-    if (url === null) {
+  const handleSetLink = () => {
+    if (linkUrl === null) {
       return;
     }
-
     // empty
-    if (url === '') {
+    if (linkUrl === '') {
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      setIsLinkPopoverOpen(false);
+      setLinkUrl('');
       return;
     }
-
     // update link
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  }, [editor]);
+    editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run();
+    setIsLinkPopoverOpen(false);
+    setLinkUrl('');
+  };
 
 
   const ToggleButton = ({
@@ -108,13 +130,34 @@ const EditorToolbar = ({ editor }: EditorToolbarProps) => {
       >
         <Strikethrough className="h-4 w-4" />
       </ToggleButton>
-       <ToggleButton
-        pressed={editor.isActive('link')}
-        onPressedChange={setLink}
-        title="Link"
-      >
-        <LinkIcon className="h-4 w-4" />
-      </ToggleButton>
+
+      <Popover open={isLinkPopoverOpen} onOpenChange={handleLinkPopoverOpenChange}>
+          <PopoverTrigger asChild>
+              <Button type="button" size="sm" variant="ghost" className={cn("h-9 px-2.5", editor.isActive('link') && "bg-accent text-accent-foreground")} title="Link">
+                  <LinkIcon className="h-4 w-4" />
+              </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-2">
+            <div className="flex gap-2">
+              <Input
+                type="url"
+                placeholder="https://example.com"
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSetLink();
+                  }
+                }}
+              />
+              <Button size="icon" onClick={handleSetLink}>
+                <Check className="h-4 w-4" />
+              </Button>
+            </div>
+          </PopoverContent>
+      </Popover>
+
        <ToggleButton
         pressed={editor.isActive('paragraph')}
         onPressedChange={() => editor.chain().focus().setParagraph().run()}
@@ -185,7 +228,7 @@ export const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
           }
         }
       }),
-      Link.configure({
+      TiptapLink.configure({
         openOnClick: false,
         autolink: true,
         linkOnPaste: true,
