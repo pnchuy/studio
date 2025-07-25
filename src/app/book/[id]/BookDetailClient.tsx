@@ -7,7 +7,7 @@ import type { Book, YoutubeLink } from '@/types';
 import { useLibrary } from '@/hooks/use-library';
 import { useSearchHistory } from '@/hooks/use-search-history';
 import { Button } from '@/components/ui/button';
-import { BookmarkPlus, BookmarkCheck, ShoppingCart, Headphones } from 'lucide-react';
+import { BookmarkPlus, BookmarkCheck, ShoppingCart, Headphones, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
     Dialog,
@@ -16,6 +16,12 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+  } from "@/components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { convertYoutubeUrlToEmbed } from '@/lib/utils';
@@ -149,7 +155,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                             <div className="py-4 space-y-4 min-h-[300px]">
                                 {hasYoutubeLinks ? (
                                     <>
-                                        <div className="flex flex-wrap gap-2">
+                                        <div className="flex flex-wrap items-center gap-2">
                                             {book.youtubeLinks.map((link, index) => (
                                                 <Button
                                                     key={index}
@@ -159,20 +165,27 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                                                     Video {index + 1}
                                                 </Button>
                                             ))}
+                                            {chapters.length > 0 && (
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="secondary" className="flex items-center gap-2">
+                                                            <span>Select Part</span>
+                                                            <ChevronDown className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent>
+                                                        <ScrollArea className="h-48">
+                                                            {chapters.map((time, index) => (
+                                                                <DropdownMenuItem key={index} onSelect={() => seekTo(time)} className="cursor-pointer">
+                                                                    Part {chapterNumberingOffset + index + 1}
+                                                                </DropdownMenuItem>
+                                                            ))}
+                                                        </ScrollArea>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            )}
                                         </div>
-                                        {chapters.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 border-t pt-4 mt-4">
-                                                {chapters.map((time, index) => (
-                                                    <Button
-                                                        key={index}
-                                                        variant="secondary"
-                                                        onClick={() => seekTo(time)}
-                                                    >
-                                                        Part {chapterNumberingOffset + index + 1}
-                                                    </Button>
-                                                ))}
-                                            </div>
-                                        )}
+                                       
                                         {selectedYoutubeLink && (
                                             <div className="aspect-video w-full mt-4">
                                                 <iframe
