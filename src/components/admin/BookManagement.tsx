@@ -580,7 +580,7 @@ export function BookManagement() {
                         Thêm sách
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-4xl">
                     <DialogHeader>
                         <DialogTitle>Thêm sách mới</DialogTitle>
                     </DialogHeader>
@@ -779,7 +779,7 @@ export function BookManagement() {
     </Card>
      
     <Dialog open={isEditBookOpen} onOpenChange={setIsEditBookOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl">
             <DialogHeader>
                 <DialogTitle>Sửa thông tin sách</DialogTitle>
             </DialogHeader>
@@ -826,6 +826,8 @@ export function BookManagement() {
     </>
   );
 }
+
+    
 
     
 
