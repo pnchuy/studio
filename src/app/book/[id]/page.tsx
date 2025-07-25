@@ -102,7 +102,7 @@ export default async function BookPage({ params: { id } }: BookPageProps) {
                 <Separator />
                 <h2 className="text-2xl font-bold font-headline my-4">Mô tả chi tiết</h2>
                 <div 
-                    className="prose dark:prose-invert max-w-none text-lg leading-relaxed"
+                    className="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: sanitizedLongDescription }}
                 />
             </div>

@@ -3,6 +3,7 @@
 
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
 import {
   Bold,
   Italic,
@@ -13,9 +14,11 @@ import {
   ListOrdered,
   Quote,
   Minus,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useCallback } from 'react';
 
 interface EditorToolbarProps {
   editor: any;
@@ -25,6 +28,26 @@ const EditorToolbar = ({ editor }: EditorToolbarProps) => {
   if (!editor) {
     return null;
   }
+
+  const setLink = useCallback(() => {
+    const previousUrl = editor.getAttributes('link').href;
+    const url = window.prompt('URL', previousUrl);
+
+    // cancelled
+    if (url === null) {
+      return;
+    }
+
+    // empty
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+      return;
+    }
+
+    // update link
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+  }, [editor]);
+
 
   const ToggleButton = ({
     pressed,
@@ -86,6 +109,13 @@ const EditorToolbar = ({ editor }: EditorToolbarProps) => {
         <Strikethrough className="h-4 w-4" />
       </ToggleButton>
        <ToggleButton
+        pressed={editor.isActive('link')}
+        onPressedChange={setLink}
+        title="Link"
+      >
+        <LinkIcon className="h-4 w-4" />
+      </ToggleButton>
+       <ToggleButton
         pressed={editor.isActive('paragraph')}
         onPressedChange={() => editor.chain().focus().setParagraph().run()}
         title="Paragraph"
@@ -142,18 +172,29 @@ interface RichTextEditorProps {
 
 export const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
   const editor = useEditor({
-    extensions: [StarterKit.configure({
-      codeBlock: {
-        HTMLAttributes: {
-          class: 'bg-muted text-muted-foreground rounded-sm p-2 text-sm',
+    extensions: [
+      StarterKit.configure({
+        codeBlock: {
+          HTMLAttributes: {
+            class: 'bg-muted text-muted-foreground rounded-sm p-2 text-sm',
+          },
         },
-      },
-      blockquote: {
-        HTMLAttributes: {
-            class: 'border-l-4 border-primary pl-4 my-2',
+        blockquote: {
+          HTMLAttributes: {
+              class: 'border-l-4 border-primary pl-4 my-2',
+          }
         }
-      }
-    })],
+      }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        HTMLAttributes: {
+          class: 'text-primary underline hover:text-primary/80',
+          rel: 'noopener noreferrer nofollow',
+          target: '_blank',
+        },
+      }),
+    ],
     content: value,
     editorProps: {
       attributes: {
