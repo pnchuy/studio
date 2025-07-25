@@ -1,3 +1,4 @@
+
 import { getBookById } from '@/lib/books';
 import { getAuthorById } from '@/lib/authors';
 import { getGenresByIds } from '@/lib/genres';
@@ -7,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Book as BookIcon, Hash, User as UserIcon } from 'lucide-react';
 import BookDetailClient from './BookDetailClient';
 import { CommentSection } from '@/components/comments/CommentSection';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
 
@@ -98,14 +99,17 @@ export default async function BookPage({ params: { id } }: BookPageProps) {
         </div>
 
         {sanitizedLongDescription && (
-             <div className="mt-12">
-                <Separator />
-                <h2 className="text-2xl font-bold font-headline my-4">Mô tả chi tiết</h2>
-                <div 
-                    className="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: sanitizedLongDescription }}
-                />
-            </div>
+            <Card className="mt-12">
+                <CardHeader>
+                    <CardTitle className="text-2xl font-bold font-headline">Mô tả chi tiết</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div 
+                        className="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: sanitizedLongDescription }}
+                    />
+                </CardContent>
+            </Card>
         )}
         
         <CommentSection bookId={book.id} />
