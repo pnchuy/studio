@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import type { Book, YoutubeLink } from '@/types';
 import { useLibrary } from '@/hooks/use-library';
@@ -38,6 +39,22 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
 
     const hasYoutubeLinks = book.youtubeLinks && book.youtubeLinks.length > 0 && book.youtubeLinks.some(link => link.url.trim() !== '');
     const isBookInLibrary = isInLibrary(book.id);
+
+    const chapterNumberingOffset = useMemo(() => {
+        if (!selectedYoutubeLink || !hasYoutubeLinks) return 0;
+
+        let offset = 0;
+        for (const link of book.youtubeLinks) {
+            if (link.url === selectedYoutubeLink.url) {
+                break;
+            }
+            if (link.chapters) {
+                offset += link.chapters.split('|').filter(t => t.trim() !== '').length;
+            }
+        }
+        return offset;
+    }, [selectedYoutubeLink, book.youtubeLinks, hasYoutubeLinks]);
+
 
     const handleToggleLibrary = () => {
         if (isBookInLibrary) {
@@ -142,7 +159,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                                                         variant="secondary"
                                                         onClick={() => seekTo(time)}
                                                     >
-                                                        Part {index + 1}
+                                                        Part {chapterNumberingOffset + index + 1}
                                                     </Button>
                                                 ))}
                                             </div>
@@ -196,3 +213,4 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
         </div>
     );
 }
+
