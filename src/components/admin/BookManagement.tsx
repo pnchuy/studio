@@ -543,7 +543,7 @@ export function BookManagement() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-            <CardTitle>Quản lý Bộ sưu tập sách</CardTitle>
+            <CardTitle>Bộ sưu tập sách</CardTitle>
             <CardDescription>
                 Thêm, sửa, xóa sách, tác giả, thể loại và series.
             </CardDescription>
@@ -825,5 +825,3 @@ export function BookManagement() {
     </>
   );
 }
-
-    

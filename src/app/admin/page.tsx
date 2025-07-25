@@ -7,11 +7,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { BookManagement } from '@/components/admin/BookManagement';
 import { MemberManagement } from '@/components/admin/MemberManagement';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Book, Users } from 'lucide-react';
+import { Book, Users, Database } from 'lucide-react';
 import { 
     SidebarProvider, 
     Sidebar, 
-    SidebarHeader, 
     SidebarTrigger, 
     SidebarContent, 
     SidebarMenu, 
@@ -19,13 +18,14 @@ import {
     SidebarMenuButton, 
     SidebarInset 
 } from '@/components/ui/sidebar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-type Section = 'books' | 'members';
+type Section = 'collection' | 'members';
 
 export default function AdminPage() {
     const router = useRouter();
     const { user, isLoggedIn, isLoading: authLoading } = useAuth();
-    const [activeSection, setActiveSection] = useState<Section>('books');
+    const [activeSection, setActiveSection] = useState<Section>('collection');
 
     useEffect(() => {
         if (!authLoading) {
@@ -58,11 +58,6 @@ export default function AdminPage() {
             </div>
         );
     }
-
-    const navItems = [
-        { id: 'books', label: 'Quản lý sách', icon: Book },
-        { id: 'members', label: 'Quản lý thành viên', icon: Users },
-    ];
     
     return (
         <SidebarProvider>
@@ -70,18 +65,18 @@ export default function AdminPage() {
                 <Sidebar>
                     <SidebarContent>
                         <SidebarMenu>
-                            {navItems.map((item) => (
-                                <SidebarMenuItem key={item.id}>
-                                    <SidebarMenuButton
-                                        onClick={() => setActiveSection(item.id as Section)}
-                                        isActive={activeSection === item.id}
-                                        tooltip={item.label}
-                                    >
-                                        <item.icon />
-                                        <span>{item.label}</span>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
+                            <SidebarMenuItem>
+                                <SidebarMenuButton onClick={() => setActiveSection('collection')} isActive={activeSection === 'collection'} tooltip="Quản lý Bộ sưu tập">
+                                    <Database />
+                                    <span>Quản lý Bộ sưu tập</span>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                             <SidebarMenuItem>
+                                <SidebarMenuButton onClick={() => setActiveSection('members')} isActive={activeSection === 'members'} tooltip="Quản lý Thành viên">
+                                    <Users />
+                                    <span>Quản lý Thành viên</span>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
                         </SidebarMenu>
                     </SidebarContent>
                 </Sidebar>
@@ -98,7 +93,7 @@ export default function AdminPage() {
                         </div>
                         
                         <div className="flex-1 mt-8">
-                            {activeSection === 'books' && <BookManagement />}
+                            {activeSection === 'collection' && <BookManagement />}
                             {activeSection === 'members' && <MemberManagement />}
                         </div>
                     </div>
