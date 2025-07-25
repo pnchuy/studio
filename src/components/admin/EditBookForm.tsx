@@ -141,17 +141,20 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
   }, [coverImagesValue]);
   
   useEffect(() => {
-    if (bookToEdit.coverImages.size480.startsWith('data:')) {
+    // Heuristic to check if the image is a data URL or a regular URL
+    if (bookToEdit.coverImages.size480.startsWith('data:image')) {
         setUploadType('file');
     } else {
         setUploadType('url');
     }
-  }, [bookToEdit.coverImages]);
+  }, [bookToEdit.coverImages.size480]);
+
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setIsProcessingImage(true);
+      form.setValue('coverImages', { size250: '', size360: '', size480: '' }); // Clear preview
       try {
         const resizedDataUrls = await processImageFromBlob(file);
         form.setValue('coverImages', resizedDataUrls, { shouldValidate: true });
@@ -165,34 +168,20 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
     }
   };
 
-  const handleUrlChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
-    if (!z.string().url().safeParse(url).success) {
-       if (url === "") {
-             form.setValue('coverImages', {
-                size250: "https://placehold.co/250x375.png",
-                size360: "https://placehold.co/360x540.png",
-                size480: "https://placehold.co/480x720.png",
-            }, { shouldValidate: true });
-        }
-        return;
-    }
-    
-    setIsProcessingImage(true);
-    try {
-      const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image. Status: ${response.status}`);
-      }
-      const blob = await response.blob();
-      const resizedDataUrls = await processImageFromBlob(blob);
-      form.setValue('coverImages', resizedDataUrls, { shouldValidate: true });
-      toast({ title: "Success", description: "Image from URL processed and ready." });
-    } catch (error) {
-      console.error("Failed to process image from URL", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not process image from the provided URL. The URL might be invalid or blocked." });
-    } finally {
-      setIsProcessingImage(false);
+    if (z.string().url().safeParse(url).success) {
+      form.setValue('coverImages', {
+        size250: url,
+        size360: url,
+        size480: url,
+      }, { shouldValidate: true });
+    } else {
+       form.setValue('coverImages', {
+        size250: "https://placehold.co/250x375.png",
+        size360: "https://placehold.co/360x540.png",
+        size480: "https://placehold.co/480x720.png",
+      }, { shouldValidate: true });
     }
   }
 

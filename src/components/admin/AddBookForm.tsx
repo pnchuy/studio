@@ -37,9 +37,9 @@ const formSchema = z.object({
   authorId: z.string({ required_error: "Vui lòng chọn một tác giả." }),
   publicationDate: z.string().min(1, { message: "Ngày xuất bản là bắt buộc." }).refine((val) => !isNaN(Date.parse(val)), { message: "Ngày xuất bản không hợp lệ." }),
   coverImages: z.object({
-    size250: z.string(),
-    size360: z.string(),
-    size480: z.string(),
+    size250: z.string().url().or(z.literal("https://placehold.co/250x375.png")),
+    size360: z.string().url().or(z.literal("https://placehold.co/360x540.png")),
+    size480: z.string().url().or(z.literal("https://placehold.co/480x720.png")),
   }),
   summary: z.string().optional(),
   series: z.string().optional().nullable(),
@@ -100,7 +100,7 @@ const processImageFromBlob = (blob: Blob): Promise<CoverImages> => {
 
 export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, seriesList }: AddBookFormProps) {
   const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
-  const [imagePreview, setImagePreview] = useState<string | null>("https://placehold.co/480x720.png");
+  const [imagePreview, setImagePreview] = useState<string>("https://placehold.co/480x720.png");
   const [isProcessingImage, setIsProcessingImage] = useState(false);
   
   const [genreInputValue, setGenreInputValue] = useState("");
@@ -148,6 +148,7 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
     const file = e.target.files?.[0];
     if (file) {
       setIsProcessingImage(true);
+      form.setValue('coverImages', { size250: '', size360: '', size480: '' }); // Clear preview
       try {
         const resizedDataUrls = await processImageFromBlob(file);
         form.setValue('coverImages', resizedDataUrls, { shouldValidate: true });
@@ -161,36 +162,20 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
     }
   };
 
-  const handleUrlChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
-    // Basic URL validation before fetching
-    if (!z.string().url().safeParse(url).success) {
-        if (url === "") {
-             form.setValue('coverImages', {
-                size250: "https://placehold.co/250x375.png",
-                size360: "https://placehold.co/360x540.png",
-                size480: "https://placehold.co/480x720.png",
-            }, { shouldValidate: true });
-        }
-        return;
-    }
-    
-    setIsProcessingImage(true);
-    try {
-      // Using a CORS proxy to fetch images from other domains
-      const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image. Status: ${response.status}`);
-      }
-      const blob = await response.blob();
-      const resizedDataUrls = await processImageFromBlob(blob);
-      form.setValue('coverImages', resizedDataUrls, { shouldValidate: true });
-      toast({ title: "Success", description: "Image from URL processed and ready." });
-    } catch (error) {
-      console.error("Failed to process image from URL", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not process image from the provided URL. The URL might be invalid or blocked." });
-    } finally {
-      setIsProcessingImage(false);
+    if (z.string().url().safeParse(url).success) {
+      form.setValue('coverImages', {
+        size250: url,
+        size360: url,
+        size480: url,
+      }, { shouldValidate: true });
+    } else {
+       form.setValue('coverImages', {
+        size250: "https://placehold.co/250x375.png",
+        size360: "https://placehold.co/360x540.png",
+        size480: "https://placehold.co/480x720.png",
+      }, { shouldValidate: true });
     }
   }
 
@@ -441,7 +426,7 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
                               key="cover-image-url"
                               placeholder="https://..."
                               disabled={isProcessingImage}
-                              onBlur={handleUrlChange} // Use onBlur to trigger fetch
+                              onBlur={handleUrlChange}
                           />
                       ) : (
                           <Input
