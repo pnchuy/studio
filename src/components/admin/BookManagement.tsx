@@ -62,7 +62,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { generateId, slugify } from '@/lib/utils';
-import { uploadCoverImage, deleteCoverImage } from '@/lib/storage';
 import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
@@ -124,15 +123,9 @@ export function BookManagement() {
     const newId = generateId(6);
 
     try {
-        const processedCoverImages = await Promise.all(Object.entries(newBookData.coverImages).map(async ([key, value]) => {
-            const uploadedUrl = await uploadCoverImage(value, newId, key.replace('size', ''));
-            return { [key]: uploadedUrl };
-        })).then(images => Object.assign({}, ...images));
-        
         let bookToSave: Omit<Book, 'docId'> = { 
             ...newBookData, 
             id: newId,
-            coverImages: processedCoverImages as Book['coverImages']
         };
         
         const docRef = await addDoc(collection(db, "books"), bookToSave);
@@ -263,22 +256,11 @@ export function BookManagement() {
     if (!db || !updatedBook.docId) return;
     try {
         const bookRef = doc(db, "books", updatedBook.docId);
-
-        // Process cover images: upload if they are new (base64)
-        const processedCoverImages = await Promise.all(Object.entries(updatedBook.coverImages).map(async ([key, value]) => {
-            const uploadedUrl = await uploadCoverImage(value, updatedBook.id, key.replace('size', ''));
-            return { [key]: uploadedUrl };
-        })).then(images => Object.assign({}, ...images));
         
-        const bookDataWithProcessedImages = {
-            ...updatedBook,
-            coverImages: processedCoverImages as Book['coverImages']
-        };
-
-        const { docId, ...bookData } = bookDataWithProcessedImages;
+        const { docId, ...bookData } = updatedBook;
         await updateDoc(bookRef, bookData);
 
-        const updatedBooks = books.map(book => book.docId === updatedBook.docId ? bookDataWithProcessedImages : book);
+        const updatedBooks = books.map(book => book.docId === updatedBook.docId ? updatedBook : book);
         setBooks(updatedBooks);
         
         if (updatedBook.series && !series.some(s => s.name === updatedBook.series)) {
@@ -299,7 +281,6 @@ export function BookManagement() {
     
     try {
         await deleteDoc(doc(db, "books", bookToDelete.docId));
-        await deleteCoverImage(bookToDelete.id);
         const updatedBooks = books.filter(book => book.docId !== bookToDelete.docId);
         setBooks(updatedBooks);
         toast({

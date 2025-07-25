@@ -1,41 +1,9 @@
-import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
+// This file is no longer used for cover images, but could be useful for other file uploads in the future.
+// The logic has been moved to the Add/Edit book form components to handle Base64 encoding.
+
+import { ref, deleteObject } from 'firebase/storage';
 import { storage, isFirebaseConfigured } from './firebase';
 
-/**
- * Uploads a Base64 data URL to Firebase Storage and returns the public URL.
- * @param base64DataUrl The 'data:image/...' string.
- * @param bookId The unique ID of the book, used as the image file name.
- * @returns The public URL of the uploaded image.
- */
-export async function uploadCoverImage(
-  base64DataUrl: string,
-  bookId: string
-): Promise<string> {
-  if (!isFirebaseConfigured || !storage || !base64DataUrl.startsWith('data:image')) {
-    // If firebase isn't configured or it's not a data URL, return it as is (might be a placeholder or existing URL)
-    return base64DataUrl;
-  }
-
-  const storageRef = ref(storage, `covers/${bookId}.webp`);
-
-  // Extract the Base64 part of the data URL
-  const base64String = base64DataUrl.split(',')[1];
-
-  try {
-    // Upload the new image
-    await uploadString(storageRef, base64String, 'base64', {
-      contentType: 'image/webp',
-    });
-
-    // Get the public URL
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
-  } catch (error) {
-    console.error("Error uploading image to Firebase Storage:", error);
-    // Fallback to a placeholder if upload fails
-    return "https://placehold.co/400x600.png";
-  }
-}
 
 /**
  * Deletes a cover image from Firebase Storage.

@@ -23,7 +23,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import type { Book, Author, Genre, Series, CoverImages, YoutubeLink } from "@/types";
 import { convertYoutubeUrlToEmbed } from "@/lib/utils";
-import { PlusCircle, Trash2, X } from "lucide-react";
+import { PlusCircle, Trash2, X, Loader2 } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { useToast } from "@/hooks/use-toast";
 
@@ -58,10 +58,10 @@ interface EditBookFormProps {
     seriesList: Series[];
 }
 
-const resizeAndEncodeImages = (file: File): Promise<CoverImages> => {
+const processImageFromBlob = (blob: Blob): Promise<CoverImages> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(blob);
         reader.onload = (event) => {
             const img = document.createElement('img');
             img.src = event.target?.result as string;
@@ -85,15 +85,23 @@ const resizeAndEncodeImages = (file: File): Promise<CoverImages> => {
                 
                 resolve(encodedImages as CoverImages);
             };
-            img.onerror = reject;
+            img.onerror = (error) => {
+                console.error("Image loading error", error);
+                reject(new Error("Image could not be loaded from data URL."));
+            };
         };
-        reader.onerror = reject;
+        reader.onerror = (error) => {
+            console.error("FileReader error", error);
+            reject(new Error("Could not read image file."));
+        };
     });
 };
+
 
 export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, genres, seriesList }: EditBookFormProps) {
   const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
   const [imagePreview, setImagePreview] = useState<string | null>(bookToEdit.coverImages.size480);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
   
   const [genreInputValue, setGenreInputValue] = useState("");
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
@@ -143,25 +151,48 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setIsProcessingImage(true);
       try {
-        const resizedDataUrls = await resizeAndEncodeImages(file);
+        const resizedDataUrls = await processImageFromBlob(file);
         form.setValue('coverImages', resizedDataUrls, { shouldValidate: true });
+        toast({ title: "Success", description: "Image processed and ready to be saved." });
       } catch (error) {
         console.error("Failed to resize image", error);
         toast({ variant: "destructive", title: "Error", description: "Could not process image file." });
+      } finally {
+        setIsProcessingImage(false);
       }
     }
   };
 
-  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUrlChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
-    if (z.string().url().safeParse(url).success || url === "") {
-        const newCoverImages = {
-            size250: url || "https://placehold.co/250x375.png",
-            size360: url || "https://placehold.co/360x540.png",
-            size480: url || "https://placehold.co/480x720.png",
-        };
-        form.setValue('coverImages', newCoverImages, { shouldValidate: true });
+    if (!z.string().url().safeParse(url).success) {
+       if (url === "") {
+             form.setValue('coverImages', {
+                size250: "https://placehold.co/250x375.png",
+                size360: "https://placehold.co/360x540.png",
+                size480: "https://placehold.co/480x720.png",
+            }, { shouldValidate: true });
+        }
+        return;
+    }
+    
+    setIsProcessingImage(true);
+    try {
+      const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image. Status: ${response.status}`);
+      }
+      const blob = await response.blob();
+      const resizedDataUrls = await processImageFromBlob(blob);
+      form.setValue('coverImages', resizedDataUrls, { shouldValidate: true });
+      toast({ title: "Success", description: "Image from URL processed and ready." });
+    } catch (error) {
+      console.error("Failed to process image from URL", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not process image from the provided URL. The URL might be invalid or blocked." });
+    } finally {
+      setIsProcessingImage(false);
     }
   }
 
@@ -357,19 +388,22 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
           )}
         />
 
-        {imagePreview && (
-          <div className="w-32 mx-auto">
-              <p className="text-center text-sm font-medium mb-2">Ảnh bìa xem trước</p>
-              <Image
-                  src={imagePreview}
-                  alt="Xem trước ảnh bìa"
-                  width={480}
-                  height={720}
-                  className="rounded-md object-cover aspect-[2/3]"
-                  data-ai-hint="book cover"
-              />
-          </div>
-        )}
+        <div className="relative w-32 mx-auto">
+            <p className="text-center text-sm font-medium mb-2">Ảnh bìa xem trước</p>
+            {isProcessingImage && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+            )}
+            <Image
+                src={imagePreview || "https://placehold.co/480x720.png"}
+                alt="Xem trước ảnh bìa"
+                width={480}
+                height={720}
+                className="rounded-md object-cover aspect-[2/3]"
+                data-ai-hint="book cover"
+            />
+        </div>
         
         <FormField
           control={form.control}
@@ -397,13 +431,15 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
                           <Input
                               key="edit-cover-image-url"
                               placeholder="https://..."
+                              disabled={isProcessingImage}
                               defaultValue={coverImagesValue?.size480.startsWith('http') ? coverImagesValue.size480 : ''}
-                              onChange={handleUrlChange}
+                              onBlur={handleUrlChange}
                           />
                       ) : (
                           <Input
                               key="edit-cover-image-file"
                               type="file"
+                              disabled={isProcessingImage}
                               accept="image/png, image/jpeg, image/webp"
                               onChange={handleFileChange}
                               className="pt-2 h-11"
@@ -542,7 +578,10 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
         />
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onFinished}>Hủy</Button>
-            <Button type="submit">Cập nhật sách</Button>
+            <Button type="submit" disabled={isProcessingImage}>
+                {isProcessingImage && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Cập nhật sách
+            </Button>
         </div>
       </form>
     </Form>
