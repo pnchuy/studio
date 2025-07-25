@@ -18,7 +18,6 @@ import {
     SidebarMenuButton, 
     SidebarInset 
 } from '@/components/ui/sidebar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type Section = 'collection' | 'members';
 
