@@ -27,6 +27,7 @@ import { PlusCircle, Trash2, X, Loader2 } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { RichTextEditor } from "../ui/rich-text-editor";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
 const youtubeLinkSchema = z.object({
   url: z.string().url({ message: "Link YouTube không hợp lệ." }).or(z.literal('')),
@@ -213,381 +214,427 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto p-1">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tiêu đề</FormLabel>
-              <FormControl>
-                <Input placeholder="The Way of Kings" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="authorId"
-          render={({ field }) => (
-            <FormItem>
-                <FormLabel>Tác giả</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Chọn một tác giả" />
-                        </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        {authors.map(author => (
-                            <SelectItem key={author.id} value={author.id}>
-                                {author.name}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="genreIds"
-          render={({ field }) => {
-            const selectedGenres = genres.filter(g => (field.value || []).includes(g.id));
-
-            const handleGenreRemove = (genreId: string) => {
-                const newGenreIds = (field.value || []).filter((id: string) => id !== genreId);
-                field.onChange(newGenreIds);
-            };
-
-            const processGenreInput = (input: string) => {
-              const newGenreNames = input.split(',').map(name => name.trim()).filter(Boolean);
-              if (newGenreNames.length === 0) return;
-
-              const currentIds = field.value || [];
-              const newGenreIds = newGenreNames.reduce((acc, name) => {
-                  const foundGenre = genres.find(g => g.name.toLowerCase() === name.toLowerCase());
-                  if (foundGenre && !currentIds.includes(foundGenre.id)) {
-                    acc.push(foundGenre.id);
-                  }
-                  return acc;
-              }, [] as string[]);
-              
-              if (newGenreIds.length > 0) {
-                  field.onChange([...currentIds, ...newGenreIds]);
-              }
-              setGenreInputValue("");
-            };
-
-            const handleGenreInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-              if (e.key === ',' || e.key === 'Enter') {
-                  e.preventDefault();
-                  processGenreInput(genreInputValue);
-                  setIsSuggestionsOpen(false);
-              } else if (e.key === 'Backspace' && genreInputValue === '' && (field.value || []).length > 0) {
-                  const currentIds = field.value || [];
-                  const lastGenreId = currentIds[currentIds.length - 1];
-                  handleGenreRemove(lastGenreId);
-              }
-            };
-
-            const handleSuggestionClick = (genreId: string) => {
-              const currentIds = field.value || [];
-              field.onChange([...currentIds, genreId]);
-              setGenreInputValue("");
-              setIsSuggestionsOpen(false);
-              genreInputRef.current?.focus();
-            };
-
-            const filteredSuggestions = genres.filter(genre => 
-              !(field.value || []).includes(genre.id) &&
-              genre.name.toLowerCase().includes(genreInputValue.toLowerCase()) &&
-              genreInputValue.length > 0
-            );
-
-            return (
-              <FormItem>
-                <FormLabel>Thể loại</FormLabel>
-                <Popover open={isSuggestionsOpen && filteredSuggestions.length > 0} onOpenChange={setIsSuggestionsOpen}>
-                  <PopoverTrigger asChild>
-                      <div className="flex flex-wrap gap-2 rounded-md border border-input min-h-10 p-1.5 items-center" onClick={() => genreInputRef.current?.focus()}>
-                      {selectedGenres.map(genre => (
-                          <Badge key={genre.id} variant="secondary" className="flex items-center gap-1">
-                          {genre.name}
-                          <button
-                              type="button"
-                              className="rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                              onClick={() => handleGenreRemove(genre.id)}
-                          >
-                              <X className="h-3 w-3" />
-                          </button>
-                          </Badge>
-                      ))}
-                      <input
-                          ref={genreInputRef}
-                          type="text"
-                          value={genreInputValue}
-                          onChange={(e) => {
-                              setGenreInputValue(e.target.value);
-                              if (!isSuggestionsOpen) setIsSuggestionsOpen(true);
-                          }}
-                          onKeyDown={handleGenreInputKeyDown}
-                          onBlur={() => {
-                              processGenreInput(genreInputValue);
-                              setIsSuggestionsOpen(false);
-                          }}
-                          className="inline-flex flex-grow bg-transparent outline-none placeholder:text-muted-foreground text-sm px-1"
-                          placeholder={selectedGenres.length > 0 ? "" : "Nhập thể loại, cách nhau bởi dấu phẩy"}
-                      />
-                      </div>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
-                      <div className="max-h-60 overflow-y-auto">
-                      {filteredSuggestions.map((genre) => (
-                          <Button
-                          key={genre.id}
-                          type="button"
-                          variant="ghost"
-                          className="w-full justify-start rounded-md"
-                          onMouseDown={(e) => {
-                              e.preventDefault();
-                              handleSuggestionClick(genre.id);
-                          }}
-                          >
-                          {genre.name}
-                          </Button>
-                      ))}
-                      </div>
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )
-          }}
-        />
-         <FormField
-          control={form.control}
-          name="publicationDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Ngày xuất bản</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="relative w-32 mx-auto">
-            <p className="text-center text-sm font-medium mb-2">Ảnh bìa xem trước</p>
-            {isProcessingImage && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
-            )}
-            <Image
-                src={imagePreview || "https://placehold.co/480x720.png"}
-                alt="Xem trước ảnh bìa"
-                width={480}
-                height={720}
-                className="rounded-md object-cover aspect-[2/3]"
-                data-ai-hint="book cover"
-            />
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="coverImages"
-          render={() => (
-              <FormItem>
-                  <FormLabel>Ảnh bìa</FormLabel>
-                  <RadioGroup
-                      value={uploadType}
-                      className="flex space-x-4"
-                      onValueChange={(value: 'url' | 'file') => setUploadType(value)}
-                  >
-                      <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="url" id="edit-r1" />
-                          <Label htmlFor="edit-r1">Từ URL</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="file" id="edit-r2" />
-                          <Label htmlFor="edit-r2">Tải lên từ máy</Label>
-                      </div>
-                  </RadioGroup>
-                  <FormControl>
-                    <div>
-                      {uploadType === 'url' ? (
-                          <Input
-                              key="edit-cover-image-url"
-                              placeholder="https://..."
-                              disabled={isProcessingImage}
-                              defaultValue={coverImagesValue?.size480.startsWith('http') ? coverImagesValue.size480 : ''}
-                              onBlur={handleUrlChange}
-                          />
-                      ) : (
-                          <Input
-                              key="edit-cover-image-file"
-                              type="file"
-                              disabled={isProcessingImage}
-                              accept="image/png, image/jpeg, image/webp"
-                              onChange={handleFileChange}
-                              className="pt-2 h-11"
-                          />
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-              </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="shortDescription"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Mô tả ngắn</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Tóm tắt nội dung sách..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-         
-        <Controller
-            control={form.control}
-            name="longDescription"
-            render={({field}) => (
-                <FormItem>
-                    <FormLabel>Mô tả chi tiết</FormLabel>
-                    <FormControl>
-                        <RichTextEditor
-                            value={field.value}
-                            onChange={field.onChange}
-                        />
-                    </FormControl>
-                    <FormMessage/>
-                </FormItem>
-            )}
-        />
-
-        <FormField
-          control={form.control}
-          name="series"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Series (Tùy chọn)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
-                    <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Chọn series có sẵn" />
-                        </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                        <SelectItem value="none">Không có</SelectItem>
-                        {seriesList.map(series => (
-                            <SelectItem key={series.id} value={series.name}>
-                                {series.name}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {seriesValue && seriesValue !== 'none' && (
-            <FormField
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-h-[80vh] overflow-y-auto p-1 pr-4">
+        <Card>
+            <CardHeader>
+                <CardTitle>Thông tin cơ bản</CardTitle>
+                <CardDescription>Nhập các chi tiết chính của sách.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <FormField
                 control={form.control}
-                name="seriesOrder"
+                name="title"
                 render={({ field }) => (
-                <FormItem>
-                    <FormLabel>Thứ tự trong Series</FormLabel>
+                    <FormItem>
+                    <FormLabel>Tiêu đề</FormLabel>
                     <FormControl>
-                    <Input
-                        type="number"
-                        placeholder="1"
-                        {...field}
-                        onChange={e => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}
-                        value={field.value ?? ""}
-                        step="0.1"
-                        min="0"
-                    />
+                        <Input placeholder="The Way of Kings" {...field} />
                     </FormControl>
                     <FormMessage />
-                </FormItem>
+                    </FormItem>
                 )}
-            />
-        )}
+                />
+                <FormField
+                control={form.control}
+                name="authorId"
+                render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Tác giả</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Chọn một tác giả" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {authors.map(author => (
+                                    <SelectItem key={author.id} value={author.id}>
+                                        {author.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <FormField
+                control={form.control}
+                name="genreIds"
+                render={({ field }) => {
+                    const selectedGenres = genres.filter(g => (field.value || []).includes(g.id));
 
-        <div className="space-y-4">
-            <FormLabel>Link YouTube (Trailer/Review)</FormLabel>
-            {fields.map((item, index) => (
-               <div key={item.id} className="space-y-2 p-3 border rounded-md relative">
-                    {fields.length > 1 && (
-                        <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1" onClick={() => remove(index)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                    )}
-                    <FormField
-                        control={form.control}
-                        name={`youtubeLinks.${index}.url`}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Link</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="https://youtube.com/watch?v=..." {...field} value={field.value ?? ''} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
+                    const handleGenreRemove = (genreId: string) => {
+                        const newGenreIds = (field.value || []).filter((id: string) => id !== genreId);
+                        field.onChange(newGenreIds);
+                    };
+
+                    const processGenreInput = (input: string) => {
+                    const newGenreNames = input.split(',').map(name => name.trim()).filter(Boolean);
+                    if (newGenreNames.length === 0) return;
+
+                    const currentIds = field.value || [];
+                    const newGenreIds = newGenreNames.reduce((acc, name) => {
+                        const foundGenre = genres.find(g => g.name.toLowerCase() === name.toLowerCase());
+                        if (foundGenre && !currentIds.includes(foundGenre.id)) {
+                            acc.push(foundGenre.id);
+                        }
+                        return acc;
+                    }, [] as string[]);
+                    
+                    if (newGenreIds.length > 0) {
+                        field.onChange([...currentIds, ...newGenreIds]);
+                    }
+                    setGenreInputValue("");
+                    };
+
+                    const handleGenreInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === ',' || e.key === 'Enter') {
+                        e.preventDefault();
+                        processGenreInput(genreInputValue);
+                        setIsSuggestionsOpen(false);
+                    } else if (e.key === 'Backspace' && genreInputValue === '' && (field.value || []).length > 0) {
+                        const currentIds = field.value || [];
+                        const lastGenreId = currentIds[currentIds.length - 1];
+                        handleGenreRemove(lastGenreId);
+                    }
+                    };
+
+                    const handleSuggestionClick = (genreId: string) => {
+                    const currentIds = field.value || [];
+                    field.onChange([...currentIds, genreId]);
+                    setGenreInputValue("");
+                    setIsSuggestionsOpen(false);
+                    genreInputRef.current?.focus();
+                    };
+
+                    const filteredSuggestions = genres.filter(genre => 
+                    !(field.value || []).includes(genre.id) &&
+                    genre.name.toLowerCase().includes(genreInputValue.toLowerCase()) &&
+                    genreInputValue.length > 0
+                    );
+
+                    return (
+                    <FormItem>
+                        <FormLabel>Thể loại</FormLabel>
+                        <Popover open={isSuggestionsOpen && filteredSuggestions.length > 0} onOpenChange={setIsSuggestionsOpen}>
+                        <PopoverTrigger asChild>
+                            <div className="flex flex-wrap gap-2 rounded-md border border-input min-h-10 p-1.5 items-center" onClick={() => genreInputRef.current?.focus()}>
+                            {selectedGenres.map(genre => (
+                                <Badge key={genre.id} variant="secondary" className="flex items-center gap-1">
+                                {genre.name}
+                                <button
+                                    type="button"
+                                    className="rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                    onClick={() => handleGenreRemove(genre.id)}
+                                >
+                                    <X className="h-3 w-3" />
+                                </button>
+                                </Badge>
+                            ))}
+                            <input
+                                ref={genreInputRef}
+                                type="text"
+                                value={genreInputValue}
+                                onChange={(e) => {
+                                    setGenreInputValue(e.target.value);
+                                    if (!isSuggestionsOpen) setIsSuggestionsOpen(true);
+                                }}
+                                onKeyDown={handleGenreInputKeyDown}
+                                onBlur={() => {
+                                    processGenreInput(genreInputValue);
+                                    setIsSuggestionsOpen(false);
+                                }}
+                                className="inline-flex flex-grow bg-transparent outline-none placeholder:text-muted-foreground text-sm px-1"
+                                placeholder={selectedGenres.length > 0 ? "" : "Nhập thể loại, cách nhau bởi dấu phẩy"}
+                            />
+                            </div>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
+                            <div className="max-h-60 overflow-y-auto">
+                            {filteredSuggestions.map((genre) => (
+                                <Button
+                                key={genre.id}
+                                type="button"
+                                variant="ghost"
+                                className="w-full justify-start rounded-md"
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    handleSuggestionClick(genre.id);
+                                }}
+                                >
+                                {genre.name}
+                                </Button>
+                            ))}
+                            </div>
+                        </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                    </FormItem>
+                    )
+                }}
+                />
+                 <FormField
+                control={form.control}
+                name="publicationDate"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Ngày xuất bản</FormLabel>
+                    <FormControl>
+                        <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Ảnh bìa</CardTitle>
+                <CardDescription>Tải ảnh bìa lên từ máy hoặc dùng link ngoài.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-3 gap-6">
+                <div className="col-span-1">
+                    <div className="relative w-full mx-auto">
+                        <p className="text-center text-sm font-medium mb-2">Ảnh bìa xem trước</p>
+                        {isProcessingImage && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10 rounded-md">
+                                <Loader2 className="h-8 w-8 animate-spin" />
+                            </div>
                         )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name={`youtubeLinks.${index}.chapters`}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Chapters (tùy chọn)</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="0|2848|3979..." {...field} value={field.value ?? ''} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                        <Image
+                            src={imagePreview || "https://placehold.co/480x720.png"}
+                            alt="Xem trước ảnh bìa"
+                            width={480}
+                            height={720}
+                            className="rounded-md object-cover aspect-[2/3]"
+                            data-ai-hint="book cover"
+                        />
+                    </div>
                 </div>
-            ))}
-            <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => append({ url: "", chapters: "" })}
-            >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Thêm link
-            </Button>
-        </div>
-        <FormField
-          control={form.control}
-          name="amazonLink"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Link Amazon (Tùy chọn)</FormLabel>
-              <FormControl>
-                <Input placeholder="https://amazon.com/dp/..." {...field} value={field.value ?? ''} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-end gap-2 pt-4">
+                 <div className="col-span-2 space-y-4">
+                    <FormField
+                    control={form.control}
+                    name="coverImages"
+                    render={() => (
+                        <FormItem>
+                            <FormControl>
+                                <RadioGroup
+                                    value={uploadType}
+                                    className="flex space-x-4"
+                                    onValueChange={(value: 'url' | 'file') => setUploadType(value)}
+                                >
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="url" id="edit-r1" />
+                                        <Label htmlFor="edit-r1">Từ URL</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="file" id="edit-r2" />
+                                        <Label htmlFor="edit-r2">Tải lên từ máy</Label>
+                                    </div>
+                                </RadioGroup>
+                            </FormControl>
+                            
+                            <FormControl>
+                                <div>
+                                {uploadType === 'url' ? (
+                                    <Input
+                                        key="edit-cover-image-url"
+                                        placeholder="https://..."
+                                        disabled={isProcessingImage}
+                                        defaultValue={coverImagesValue?.size480.startsWith('http') ? coverImagesValue.size480 : ''}
+                                        onBlur={handleUrlChange}
+                                    />
+                                ) : (
+                                    <Input
+                                        key="edit-cover-image-file"
+                                        type="file"
+                                        disabled={isProcessingImage}
+                                        accept="image/png, image/jpeg, image/webp"
+                                        onChange={handleFileChange}
+                                        className="pt-2 h-11"
+                                    />
+                                )}
+                                </div>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                 </div>
+            </CardContent>
+        </Card>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle>Nội dung mô tả</CardTitle>
+                <CardDescription>Cung cấp mô tả ngắn gọn và chi tiết về cuốn sách.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <FormField
+                control={form.control}
+                name="shortDescription"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Mô tả ngắn</FormLabel>
+                    <FormControl>
+                        <Textarea placeholder="Tóm tắt nội dung sách..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                
+                <Controller
+                    control={form.control}
+                    name="longDescription"
+                    render={({field}) => (
+                        <FormItem>
+                            <FormLabel>Mô tả chi tiết</FormLabel>
+                            <FormControl>
+                                <RichTextEditor
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                />
+                            </FormControl>
+                            <FormMessage/>
+                        </FormItem>
+                    )}
+                />
+            </CardContent>
+        </Card>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle>Thông tin Series</CardTitle>
+                <CardDescription>Liên kết sách này với một series nếu có.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 <FormField
+                    control={form.control}
+                    name="series"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Series (Tùy chọn)</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Chọn series có sẵn" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="none">Không có</SelectItem>
+                                    {seriesList.map(series => (
+                                        <SelectItem key={series.id} value={series.name}>
+                                            {series.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+
+                    {seriesValue && seriesValue !== 'none' && (
+                        <FormField
+                            control={form.control}
+                            name="seriesOrder"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Thứ tự trong Series</FormLabel>
+                                <FormControl>
+                                <Input
+                                    type="number"
+                                    placeholder="1"
+                                    {...field}
+                                    onChange={e => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}
+                                    value={field.value ?? ""}
+                                    step="0.1"
+                                    min="0"
+                                />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                    )}
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Liên kết ngoài</CardTitle>
+                <CardDescription>Thêm các liên kết hữu ích như trailer hoặc trang bán sách.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 <div className="space-y-4">
+                    <FormLabel>Link YouTube (Trailer/Review)</FormLabel>
+                    {fields.map((item, index) => (
+                    <div key={item.id} className="space-y-2 p-3 border rounded-md relative">
+                            {fields.length > 1 && (
+                                <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1" onClick={() => remove(index)}>
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                            )}
+                            <FormField
+                                control={form.control}
+                                name={`youtubeLinks.${index}.url`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Link</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="https://youtube.com/watch?v=..." {...field} value={field.value ?? ''} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`youtubeLinks.${index}.chapters`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Chapters (tùy chọn)</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="0|2848|3979..." {...field} value={field.value ?? ''} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    ))}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => append({ url: "", chapters: "" })}
+                    >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Thêm link
+                    </Button>
+                </div>
+                <FormField
+                control={form.control}
+                name="amazonLink"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Link Amazon (Tùy chọn)</FormLabel>
+                    <FormControl>
+                        <Input placeholder="https://amazon.com/dp/..." {...field} value={field.value ?? ''} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            </CardContent>
+        </Card>
+        
+        <div className="flex justify-end gap-2 pt-4 sticky bottom-0 bg-background py-4">
             <Button type="button" variant="outline" onClick={onFinished}>Hủy</Button>
             <Button type="submit" disabled={isProcessingImage}>
                 {isProcessingImage && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -598,3 +645,5 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
     </Form>
   );
 }
+
+    
