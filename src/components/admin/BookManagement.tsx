@@ -612,6 +612,7 @@ export function BookManagement() {
                         <TableHead>Tiêu đề</TableHead>
                         <TableHead>Tác giả</TableHead>
                         <TableHead>Thể loại</TableHead>
+                        <TableHead>Ngày phát hành</TableHead>
                         <TableHead className="text-right">Hành động</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -654,6 +655,9 @@ export function BookManagement() {
                                             )}
                                         </Tooltip>
                                     </TooltipProvider>
+                                </TableCell>
+                                <TableCell>
+                                    {new Date(book.publicationDate).toLocaleDateString()}
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <DropdownMenu>
