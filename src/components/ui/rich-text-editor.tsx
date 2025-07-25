@@ -188,6 +188,7 @@ export const RichTextEditor = ({ value, onChange }: RichTextEditorProps) => {
       Link.configure({
         openOnClick: false,
         autolink: true,
+        linkOnPaste: true,
         HTMLAttributes: {
           class: 'text-primary underline hover:text-primary/80',
           rel: 'noopener noreferrer nofollow',
