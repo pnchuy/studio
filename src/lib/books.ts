@@ -1,4 +1,4 @@
-import type { Book, BookWithDetails } from '@/types';
+import type { Book, BookWithDetails, YoutubeLink } from '@/types';
 import { db, isFirebaseConfigured } from './firebase';
 import { collection, getDocs, doc, getDoc, query, orderBy, limit as firestoreLimit, startAfter, documentId, where, limit } from 'firebase/firestore';
 import { getAllAuthors } from './authors';
@@ -11,15 +11,24 @@ export async function getAllBooks(): Promise<Book[]> {
     const bookSnapshot = await getDocs(booksCol);
     return bookSnapshot.docs.map(doc => {
         const data = doc.data();
+        // Backward compatibility for old youtubeLink structure
+        const youtubeLinks = (data.youtubeLinks || (data.youtubeLink || [])).map((link: string | YoutubeLink) => {
+          if (typeof link === 'string') {
+            return { url: link, chapters: '' };
+          }
+          return link;
+        });
+
         return {
             ...data,
-            id: data.id || doc.id, // Fallback to doc.id if custom id doesn't exist
+            id: data.id || doc.id,
             docId: doc.id,
             coverImages: data.coverImages || {
                 size250: "https://placehold.co/250x375.png",
                 size360: "https://placehold.co/360x540.png",
                 size480: "https://placehold.co/480x720.png",
             },
+            youtubeLinks,
         } as Book;
     }).filter(book => book.id);
   } catch (error) {
@@ -34,14 +43,12 @@ export async function getBookById(id: string): Promise<Book | null> {
     const booksRef = collection(db, 'books');
     let docToProcess: any = null;
 
-    // First, try to find by custom ID
     const q = query(booksRef, where("id", "==", id), limit(1));
     const querySnapshot = await getDocs(q);
 
     if (!querySnapshot.empty) {
       docToProcess = querySnapshot.docs[0];
     } else {
-        // If not found, try to find by Firestore document ID (for backward compatibility)
         const bookDocRef = doc(db, 'books', id);
         const bookDoc = await getDoc(bookDocRef);
         if (bookDoc.exists()) {
@@ -52,6 +59,15 @@ export async function getBookById(id: string): Promise<Book | null> {
     }
     
     const data = docToProcess.data();
+
+    // Backward compatibility for old youtubeLink structure
+    const youtubeLinks = (data.youtubeLinks || (data.youtubeLink || [])).map((link: string | YoutubeLink) => {
+        if (typeof link === 'string') {
+            return { url: link, chapters: '' };
+        }
+        return link;
+    });
+
     return {
         ...data,
         id: data.id || docToProcess.id,
@@ -61,6 +77,7 @@ export async function getBookById(id: string): Promise<Book | null> {
           size360: "https://placehold.co/360x540.png",
           size480: "https://placehold.co/480x720.png",
         },
+        youtubeLinks,
     } as Book;
 
   } catch (error) {
@@ -71,8 +88,6 @@ export async function getBookById(id: string): Promise<Book | null> {
 
 const BOOKS_PER_PAGE = 10;
 
-// Note: This implementation fetches all books for simplicity.
-// For large datasets, a more sophisticated pagination strategy with cursors would be needed.
 export async function getPaginatedBooksWithDetails({ page = 1, limit = BOOKS_PER_PAGE }: { page?: number; limit?: number }) {
   const allBooks = await getAllBooks();
   const allAuthors = await getAllAuthors();

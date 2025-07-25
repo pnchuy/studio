@@ -19,6 +19,11 @@ export type CoverImages = {
   size480: string;
 };
 
+export type YoutubeLink = {
+  url: string;
+  chapters?: string;
+}
+
 export type Book = {
   id:string;
   docId?: string; // Firestore document ID
@@ -30,7 +35,7 @@ export type Book = {
   series: string | null;
   seriesOrder: number | null;
   genreIds: string[];
-  youtubeLink: string[];
+  youtubeLinks: YoutubeLink[];
   amazonLink: string;
 };
 

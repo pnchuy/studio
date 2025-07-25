@@ -14,7 +14,7 @@
     "series": "The Stormlight Archive",
     "seriesOrder": 1,
     "genreIds": ["genre-1"],
-    "youtubeLink": ["https://www.youtube.com/embed/s_4d2i3H5M8"],
+    "youtubeLinks": [{"url": "https://www.youtube.com/embed/s_4d2i3H5M8", "chapters": ""}],
     "amazonLink": ""
   },
   {
@@ -31,7 +31,10 @@
     "series": "Dune Saga",
     "seriesOrder": 1,
     "genreIds": ["genre-2"],
-    "youtubeLink": ["https://youtu.be/gRMytDZAH4w","https://youtu.be/uM6-BnAsUwM"],
+    "youtubeLinks": [
+        {"url": "https://youtu.be/gRMytDZAH4w", "chapters": "0|2848|3979|6270|7515|9255|10304|11801"},
+        {"url": "https://youtu.be/uM6-BnAsUwM", "chapters": ""}
+    ],
     "amazonLink": "https://amzn.to/3Rq24Cg"
   },
   {
@@ -48,7 +51,7 @@
     "series": null,
     "seriesOrder": null,
     "genreIds": ["genre-3"],
-    "youtubeLink": ["https://www.youtube.com/embed/cno-j2fT4gQ"],
+    "youtubeLinks": [{"url": "https://www.youtube.com/embed/cno-j2fT4gQ", "chapters": ""}],
     "amazonLink": ""
   },
   {
@@ -65,7 +68,7 @@
     "series": "The Kingkiller Chronicle",
     "seriesOrder": 1,
     "genreIds": ["genre-4"],
-    "youtubeLink": ["https://www.youtube.com/embed/J7XmF1A65e4"],
+    "youtubeLinks": [{"url": "https://www.youtube.com/embed/J7XmF1A65e4", "chapters": ""}],
     "amazonLink": ""
   },
   {
@@ -82,7 +85,7 @@
     "series": "Mistborn",
     "seriesOrder": 1,
     "genreIds": ["genre-4"],
-    "youtubeLink": ["https://www.youtube.com/embed/ST5oGPG1-e0"],
+    "youtubeLinks": [{"url": "https://www.youtube.com/embed/ST5oGPG1-e0", "chapters": ""}],
     "amazonLink": ""
   },
   {
@@ -99,7 +102,7 @@
     "series": "Sprawl trilogy",
     "seriesOrder": 1,
     "genreIds": ["genre-5"],
-    "youtubeLink": ["https://www.youtube.com/embed/kxi3n42kIqI"],
+    "youtubeLinks": [{"url": "https://www.youtube.com/embed/kxi3n42kIqI", "chapters": ""}],
     "amazonLink": ""
   },
     {
@@ -116,7 +119,7 @@
     "series": "Earthsea Cycle",
     "seriesOrder": 1,
     "genreIds": ["genre-4"],
-    "youtubeLink": ["https://www.youtube.com/embed/zpcY_s_v8kI"],
+    "youtubeLinks": [{"url": "https://www.youtube.com/embed/zpcY_s_v8kI", "chapters": ""}],
     "amazonLink": ""
   },
   {
@@ -133,7 +136,7 @@
     "series": "The Lord of the Rings",
     "seriesOrder": 0,
     "genreIds": ["genre-6"],
-    "youtubeLink": ["https://www.youtube.com/embed/1_iU_Y5Lh20"],
+    "youtubeLinks": [{"url": "https://www.youtube.com/embed/1_iU_Y5Lh20", "chapters": ""}],
     "amazonLink": ""
   },
   {
@@ -150,7 +153,7 @@
     "series": "The Stormlight Archive",
     "seriesOrder": 2,
     "genreIds": ["genre-1"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -167,7 +170,7 @@
     "series": "Hyperion Cantos",
     "seriesOrder": 1,
     "genreIds": ["genre-2"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -184,7 +187,7 @@
     "series": null,
     "seriesOrder": null,
     "genreIds": ["genre-3"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -201,7 +204,7 @@
     "series": "The Kingkiller Chronicle",
     "seriesOrder": 2,
     "genreIds": ["genre-4"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -218,7 +221,7 @@
     "series": "Mistborn",
     "seriesOrder": 2,
     "genreIds": ["genre-4"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -235,7 +238,7 @@
     "series": null,
     "seriesOrder": null,
     "genreIds": ["genre-5"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -252,7 +255,7 @@
     "series": "Earthsea Cycle",
     "seriesOrder": 2,
     "genreIds": ["genre-4"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -269,7 +272,7 @@
     "series": "The Lord of the Rings",
     "seriesOrder": 1,
     "genreIds": ["genre-6"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -286,7 +289,7 @@
     "series": "The Stormlight Archive",
     "seriesOrder": 3,
     "genreIds": ["genre-1"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -303,7 +306,7 @@
     "series": "Dune Saga",
     "seriesOrder": 3,
     "genreIds": ["genre-2"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -320,7 +323,7 @@
     "series": "Imperial Radch",
     "seriesOrder": 1,
     "genreIds": ["genre-2"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -337,7 +340,7 @@
     "series": "Gentleman Bastard",
     "seriesOrder": 1,
     "genreIds": ["genre-4"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -354,7 +357,7 @@
     "series": "Mistborn",
     "seriesOrder": 3,
     "genreIds": ["genre-4"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -371,7 +374,7 @@
     "series": "Takeshi Kovacs",
     "seriesOrder": 1,
     "genreIds": ["genre-5"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -388,7 +391,7 @@
     "series": "Earthsea Cycle",
     "seriesOrder": 3,
     "genreIds": ["genre-4"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   },
   {
@@ -405,7 +408,7 @@
     "series": "The Lord of the Rings",
     "seriesOrder": 2,
     "genreIds": ["genre-6"],
-    "youtubeLink": [],
+    "youtubeLinks": [],
     "amazonLink": ""
   }
 ]

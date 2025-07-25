@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-import type { Book } from '@/types';
+import type { Book, YoutubeLink } from '@/types';
 import { useLibrary } from '@/hooks/use-library';
 import { useSearchHistory } from '@/hooks/use-search-history';
 import { Button } from '@/components/ui/button';
@@ -28,13 +28,15 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
     const { addViewedBook } = useSearchHistory();
     const { toast } = useToast();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedYoutubeLink, setSelectedYoutubeLink] = useState<string | null>(null);
+    const [selectedYoutubeLink, setSelectedYoutubeLink] = useState<YoutubeLink | null>(null);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const [chapters, setChapters] = useState<number[]>([]);
 
     useEffect(() => {
         addViewedBook(book.title);
     }, [book.title, addViewedBook]);
 
-    const hasYoutubeLinks = book.youtubeLink && book.youtubeLink.length > 0 && book.youtubeLink.some(link => link.trim() !== '');
+    const hasYoutubeLinks = book.youtubeLinks && book.youtubeLinks.length > 0 && book.youtubeLinks.some(link => link.url.trim() !== '');
     const isBookInLibrary = isInLibrary(book.id);
 
     const handleToggleLibrary = () => {
@@ -56,9 +58,34 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
     const handleOpenChange = (isOpen: boolean) => {
         setIsModalOpen(isOpen);
         if (!isOpen) {
-            setSelectedYoutubeLink(null); // Reset when closing
+            setSelectedYoutubeLink(null); 
+            setChapters([]);
+        } else {
+             const firstLink = hasYoutubeLinks ? book.youtubeLinks[0] : null;
+             handleYoutubeLinkSelect(firstLink);
         }
     }
+    
+    const handleYoutubeLinkSelect = (link: YoutubeLink | null) => {
+        if (!link) return;
+        setSelectedYoutubeLink(link);
+        if (link.chapters) {
+            const chapterTimes = link.chapters.split('|').map(Number).filter(t => !isNaN(t));
+            setChapters(chapterTimes);
+        } else {
+            setChapters([]);
+        }
+    };
+    
+    const seekTo = (seconds: number) => {
+        if (iframeRef.current) {
+            const currentSrc = iframeRef.current.src;
+            const url = new URL(currentSrc);
+            url.searchParams.set('start', seconds.toString());
+            // Force re-render of iframe to apply new start time
+            iframeRef.current.src = url.toString();
+        }
+    };
 
     return (
         <div className="mt-8 border-t pt-8 flex flex-wrap items-center gap-4">
@@ -97,22 +124,36 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                                 {hasYoutubeLinks ? (
                                     <>
                                         <div className="flex flex-wrap gap-2">
-                                            {book.youtubeLink.map((link, index) => (
+                                            {book.youtubeLinks.map((link, index) => (
                                                 <Button
                                                     key={index}
-                                                    variant={selectedYoutubeLink === link ? "default" : "outline"}
-                                                    onClick={() => setSelectedYoutubeLink(link)}
+                                                    variant={selectedYoutubeLink?.url === link.url ? "default" : "outline"}
+                                                    onClick={() => handleYoutubeLinkSelect(link)}
                                                 >
-                                                    Part {index + 1}
+                                                    Video {index + 1}
                                                 </Button>
                                             ))}
                                         </div>
+                                        {chapters.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 border-t pt-4 mt-4">
+                                                {chapters.map((time, index) => (
+                                                    <Button
+                                                        key={index}
+                                                        variant="secondary"
+                                                        onClick={() => seekTo(time)}
+                                                    >
+                                                        Part {index + 1}
+                                                    </Button>
+                                                ))}
+                                            </div>
+                                        )}
                                         {selectedYoutubeLink && (
                                             <div className="aspect-video w-full mt-4">
                                                 <iframe
-                                                    key={selectedYoutubeLink}
+                                                    ref={iframeRef}
+                                                    key={selectedYoutubeLink.url} // Change key to force re-render
                                                     className="w-full h-full rounded-lg"
-                                                    src={convertYoutubeUrlToEmbed(selectedYoutubeLink)}
+                                                    src={`${convertYoutubeUrlToEmbed(selectedYoutubeLink.url)}?enablejsapi=1`}
                                                     title={`YouTube video player for ${book.title}`}
                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                                     allowFullScreen

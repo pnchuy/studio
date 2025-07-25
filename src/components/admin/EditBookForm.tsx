@@ -21,11 +21,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import type { Book, Author, Genre, Series, CoverImages } from "@/types";
+import type { Book, Author, Genre, Series, CoverImages, YoutubeLink } from "@/types";
 import { convertYoutubeUrlToEmbed } from "@/lib/utils";
 import { PlusCircle, Trash2, X } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { useToast } from "@/hooks/use-toast";
+
+const youtubeLinkSchema = z.object({
+  url: z.string().url({ message: "Link YouTube không hợp lệ." }).or(z.literal('')),
+  chapters: z.string().regex(/^[0-9|]*$/, { message: "Chapters chỉ được chứa số và dấu '|'."}).optional(),
+});
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Tiêu đề phải có ít nhất 2 ký tự." }),
@@ -40,7 +45,7 @@ const formSchema = z.object({
   series: z.string().optional().nullable(),
   seriesOrder: z.number().nonnegative({ message: "Thứ tự phải là số không âm."}).optional().nullable(),
   genreIds: z.array(z.string()).optional().default([]),
-  youtubeLink: z.array(z.string().url({ message: "Link YouTube không hợp lệ." }).or(z.literal(''))).optional(),
+  youtubeLinks: z.array(youtubeLinkSchema).optional(),
   amazonLink: z.string().url({ message: "Link Amazon không hợp lệ." }).optional().or(z.literal('')),
 });
 
@@ -106,14 +111,14 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
       series: bookToEdit.series || "",
       seriesOrder: bookToEdit.seriesOrder ?? null,
       genreIds: bookToEdit.genreIds,
-      youtubeLink: bookToEdit.youtubeLink && bookToEdit.youtubeLink.length > 0 ? bookToEdit.youtubeLink : [""],
+      youtubeLinks: bookToEdit.youtubeLinks && bookToEdit.youtubeLinks.length > 0 ? bookToEdit.youtubeLinks : [{ url: "", chapters: "" }],
       amazonLink: bookToEdit.amazonLink || "",
     },
   });
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "youtubeLink",
+    name: "youtubeLinks",
   });
   
   const seriesValue = form.watch("series");
@@ -172,7 +177,10 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
         series: (values.series === 'none' || !values.series) ? null : values.series,
         seriesOrder: (values.series && values.series !== 'none') ? (values.seriesOrder ?? null) : null,
         genreIds: values.genreIds || [],
-        youtubeLink: values.youtubeLink?.map(link => convertYoutubeUrlToEmbed(link)).filter(Boolean) as string[] ?? [],
+        youtubeLinks: values.youtubeLinks?.map(link => ({
+            ...link,
+            url: convertYoutubeUrlToEmbed(link.url)
+        })).filter(link => link.url) ?? [],
         amazonLink: values.amazonLink || "",
     };
     onBookUpdated(updatedBookData);
@@ -471,36 +479,49 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
             />
         )}
 
-        <div className="space-y-2">
+        <div className="space-y-4">
             <FormLabel>Link YouTube (Trailer/Review)</FormLabel>
             {fields.map((item, index) => (
-              <FormField
-                key={item.id}
-                control={form.control}
-                name={`youtubeLink.${index}`}
-                render={({ field }) => (
-                    <FormItem>
-                        <div className="flex items-center gap-2">
-                            <FormControl>
-                                <Input placeholder="https://youtube.com/watch?v=..." {...field} value={field.value ?? ''} />
-                            </FormControl>
-                            {fields.length > 1 && (
-                                <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                            )}
-                        </div>
-                        <FormMessage />
-                    </FormItem>
-                )}
-              />
+               <div key={item.id} className="space-y-2 p-3 border rounded-md relative">
+                    {fields.length > 1 && (
+                        <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1" onClick={() => remove(index)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                    )}
+                    <FormField
+                        control={form.control}
+                        name={`youtubeLinks.${index}.url`}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Link</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="https://youtube.com/watch?v=..." {...field} value={field.value ?? ''} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name={`youtubeLinks.${index}.chapters`}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Chapters (tùy chọn)</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="0|2848|3979..." {...field} value={field.value ?? ''} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
             ))}
             <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 className="mt-2"
-                onClick={() => append("")}
+                onClick={() => append({ url: "", chapters: "" })}
             >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Thêm link
