@@ -265,6 +265,68 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
                 />
                 <FormField
                 control={form.control}
+                name="publicationDate"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Ngày xuất bản</FormLabel>
+                    <FormControl>
+                        <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="series"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Series (Tùy chọn)</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Chọn series có sẵn" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="none">Không có</SelectItem>
+                                    {seriesList.map(series => (
+                                        <SelectItem key={series.id} value={series.name}>
+                                            {series.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+
+                    {seriesValue && seriesValue !== 'none' && (
+                        <FormField
+                            control={form.control}
+                            name="seriesOrder"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Thứ tự trong Series</FormLabel>
+                                <FormControl>
+                                <Input
+                                    type="number"
+                                    placeholder="1"
+                                    {...field}
+                                    onChange={e => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}
+                                    value={field.value ?? ""}
+                                    step="0.1"
+                                    min="0"
+                                />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                    )}
+                <FormField
+                control={form.control}
                 name="genreIds"
                 render={({ field }) => {
                     const selectedGenres = genres.filter(g => (field.value || []).includes(g.id));
@@ -379,19 +441,6 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
                     );
                 }}
                 />
-                <FormField
-                control={form.control}
-                name="publicationDate"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Ngày xuất bản</FormLabel>
-                    <FormControl>
-                        <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
             </CardContent>
         </Card>
 
@@ -400,9 +449,9 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
                 <CardTitle>Ảnh bìa</CardTitle>
                 <CardDescription>Tải ảnh bìa lên từ máy hoặc dùng link ngoài.</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-3 gap-6">
+            <CardContent className="grid sm:grid-cols-3 gap-6">
                 <div className="col-span-1">
-                    <div className="relative w-full mx-auto">
+                    <div className="relative w-full max-w-[200px] mx-auto">
                         <p className="text-center text-sm font-medium mb-2">Ảnh bìa xem trước</p>
                         {isProcessingImage && (
                             <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10 rounded-md">
@@ -410,16 +459,16 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
                             </div>
                         )}
                         <Image
-                            src={imagePreview || "https://placehold.co/480x720.png"}
+                            src={imagePreview || "https://placehold.co/250x375.png"}
                             alt="Xem trước ảnh bìa"
-                            width={480}
-                            height={720}
+                            width={250}
+                            height={375}
                             className="rounded-md object-cover aspect-[2/3]"
                             data-ai-hint="book cover"
                         />
                     </div>
                 </div>
-                 <div className="col-span-2 space-y-4">
+                 <div className="sm:col-span-2 space-y-4">
                     <FormField
                         control={form.control}
                         name="coverImages"
@@ -509,64 +558,6 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
                 />
             </CardContent>
         </Card>
-
-        <Card>
-             <CardHeader>
-                <CardTitle>Thông tin Series</CardTitle>
-                <CardDescription>Liên kết sách này với một series nếu có.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                 <FormField
-                    control={form.control}
-                    name="series"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Series (Tùy chọn)</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
-                                <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Chọn series có sẵn" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="none">Không có</SelectItem>
-                                    {seriesList.map(series => (
-                                        <SelectItem key={series.id} value={series.name}>
-                                            {series.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                    />
-
-                    {seriesValue && seriesValue !== 'none' && (
-                        <FormField
-                            control={form.control}
-                            name="seriesOrder"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Thứ tự trong Series</FormLabel>
-                                <FormControl>
-                                <Input
-                                    type="number"
-                                    placeholder="1"
-                                    {...field}
-                                    onChange={e => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}
-                                    value={field.value ?? ""}
-                                    step="0.1"
-                                    min="0"
-                                />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-                    )}
-            </CardContent>
-        </Card>
         
         <Card>
             <CardHeader>
@@ -649,5 +640,3 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
     </Form>
   );
 }
-
-    
