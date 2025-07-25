@@ -14,7 +14,8 @@ import {
   Quote,
   Minus,
 } from 'lucide-react';
-import { Toggle } from '@/components/ui/toggle';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface EditorToolbarProps {
   editor: any;
@@ -25,90 +26,110 @@ const EditorToolbar = ({ editor }: EditorToolbarProps) => {
     return null;
   }
 
-  return (
-    <div className="border border-input rounded-t-md p-2 flex flex-wrap items-center gap-1">
-      <Toggle
+  const ToggleButton = ({
+    pressed,
+    onPressedChange,
+    disabled,
+    title,
+    children,
+  }: {
+    pressed: boolean;
+    onPressedChange: () => void;
+    disabled?: boolean;
+    title: string;
+    children: React.ReactNode;
+  }) => (
+    <Button
+        type="button"
         size="sm"
+        variant="ghost"
+        className={cn("h-9 px-2.5", pressed && "bg-accent text-accent-foreground")}
+        onClick={onPressedChange}
+        disabled={disabled}
+        title={title}
+    >
+        {children}
+    </Button>
+  );
+
+  return (
+    <div className="border border-input rounded-t-md p-1 flex flex-wrap items-center gap-1">
+      <ToggleButton
         pressed={editor.isActive('heading', { level: 2 })}
         onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         title="Heading"
       >
         H
-      </Toggle>
-      <Toggle
-        size="sm"
+      </ToggleButton>
+      <ToggleButton
         pressed={editor.isActive('bold')}
         onPressedChange={() => editor.chain().focus().toggleBold().run()}
         disabled={!editor.can().chain().focus().toggleBold().run()}
         title="Bold"
       >
         <Bold className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        size="sm"
+      </ToggleButton>
+      <ToggleButton
         pressed={editor.isActive('italic')}
         onPressedChange={() => editor.chain().focus().toggleItalic().run()}
         disabled={!editor.can().chain().focus().toggleItalic().run()}
         title="Italic"
       >
         <Italic className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        size="sm"
+      </ToggleButton>
+      <ToggleButton
         pressed={editor.isActive('strike')}
         onPressedChange={() => editor.chain().focus().toggleStrike().run()}
         disabled={!editor.can().chain().focus().toggleStrike().run()}
         title="Strikethrough"
       >
         <Strikethrough className="h-4 w-4" />
-      </Toggle>
-       <Toggle
-        size="sm"
+      </ToggleButton>
+       <ToggleButton
         pressed={editor.isActive('paragraph')}
         onPressedChange={() => editor.chain().focus().setParagraph().run()}
         title="Paragraph"
       >
         <Pilcrow className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        size="sm"
+      </ToggleButton>
+      <ToggleButton
         pressed={editor.isActive('bulletList')}
         onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
         title="Bullet List"
       >
         <List className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        size="sm"
+      </ToggleButton>
+      <ToggleButton
         pressed={editor.isActive('orderedList')}
         onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
         title="Ordered List"
       >
         <ListOrdered className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        size="sm"
+      </ToggleButton>
+      <ToggleButton
         pressed={editor.isActive('codeBlock')}
         onPressedChange={() => editor.chain().focus().toggleCodeBlock().run()}
         title="Code Block"
       >
         <Code className="h-4 w-4" />
-      </Toggle>
-       <Toggle
-        size="sm"
+      </ToggleButton>
+       <ToggleButton
         pressed={editor.isActive('blockquote')}
         onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
          title="Blockquote"
       >
         <Quote className="h-4 w-4" />
-      </Toggle>
-       <Toggle
+      </ToggleButton>
+       <Button
+        type="button"
         size="sm"
-        onPressedChange={() => editor.chain().focus().setHorizontalRule().run()}
+        variant="ghost"
+        className="h-9 px-2.5"
+        onClick={() => editor.chain().focus().setHorizontalRule().run()}
         title="Horizontal Rule"
       >
         <Minus className="h-4 w-4" />
-      </Toggle>
+      </Button>
     </div>
   );
 };
