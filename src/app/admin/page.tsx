@@ -7,24 +7,12 @@ import { useAuth } from '@/hooks/use-auth';
 import { BookManagement } from '@/components/admin/BookManagement';
 import { MemberManagement } from '@/components/admin/MemberManagement';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Book, Users, Database } from 'lucide-react';
-import { 
-    SidebarProvider, 
-    Sidebar, 
-    SidebarTrigger, 
-    SidebarContent, 
-    SidebarMenu, 
-    SidebarMenuItem, 
-    SidebarMenuButton, 
-    SidebarInset 
-} from '@/components/ui/sidebar';
-
-type Section = 'collection' | 'members';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function AdminPage() {
     const router = useRouter();
     const { user, isLoggedIn, isLoading: authLoading } = useAuth();
-    const [activeSection, setActiveSection] = useState<Section>('collection');
 
     useEffect(() => {
         if (!authLoading) {
@@ -59,45 +47,36 @@ export default function AdminPage() {
     }
     
     return (
-        <SidebarProvider>
-            <div className="flex">
-                <Sidebar>
-                    <SidebarContent>
-                        <SidebarMenu>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton onClick={() => setActiveSection('collection')} isActive={activeSection === 'collection'} tooltip="Quản lý Bộ sưu tập">
-                                    <Database />
-                                    <span>Quản lý Bộ sưu tập</span>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                             <SidebarMenuItem>
-                                <SidebarMenuButton onClick={() => setActiveSection('members')} isActive={activeSection === 'members'} tooltip="Quản lý Thành viên">
-                                    <Users />
-                                    <span>Quản lý Thành viên</span>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        </SidebarMenu>
-                    </SidebarContent>
-                </Sidebar>
-                <SidebarInset className="flex-1">
-                    <div className="space-y-6">
-                        <div className="flex items-center gap-4">
-                            <SidebarTrigger />
-                            <div>
-                                <h1 className="text-3xl font-bold tracking-tight font-headline">Trang quản trị</h1>
-                                <p className="text-muted-foreground mt-1">
-                                    Quản lý sách, tác giả, thể loại và thành viên của Bibliophile.
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <div className="flex-1 mt-8">
-                            {activeSection === 'collection' && <BookManagement />}
-                            {activeSection === 'members' && <MemberManagement />}
-                        </div>
-                    </div>
-                </SidebarInset>
+        <div className="space-y-6">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight font-headline">Trang quản trị</h1>
+                <p className="text-muted-foreground mt-1">
+                    Quản lý sách, tác giả, thể loại và thành viên của Bibliophile.
+                </p>
             </div>
-        </SidebarProvider>
+            
+             <Tabs defaultValue="collection" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="collection">Quản lý Bộ sưu tập</TabsTrigger>
+                    <TabsTrigger value="members">Quản lý Thành viên</TabsTrigger>
+                </TabsList>
+                <TabsContent value="collection">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Bộ sưu tập sách</CardTitle>
+                            <CardDescription>
+                                Thêm, sửa, xóa sách, tác giả, thể loại và series.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <BookManagement />
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+                <TabsContent value="members">
+                    <MemberManagement />
+                </TabsContent>
+            </Tabs>
+        </div>
     );
 }

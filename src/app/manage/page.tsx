@@ -9,23 +9,11 @@ import { CommentManagement } from '@/components/admin/CommentManagement';
 import { SecurityTab } from '@/components/manage/SecurityTab';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Heart, MessageSquare, Lock } from 'lucide-react';
-import { 
-    SidebarProvider, 
-    Sidebar, 
-    SidebarTrigger, 
-    SidebarContent, 
-    SidebarMenu, 
-    SidebarMenuItem, 
-    SidebarMenuButton, 
-    SidebarInset 
-} from '@/components/ui/sidebar';
-
-type Section = 'favorites' | 'comments' | 'security';
 
 export default function ManagePage() {
     const router = useRouter();
     const { user, isLoggedIn, isLoading: authLoading } = useAuth();
-    const [activeSection, setActiveSection] = useState<Section>('favorites');
+    const [activeSection, setActiveSection] = useState('favorites');
 
     useEffect(() => {
         if (!authLoading && !isLoggedIn) {
@@ -62,47 +50,47 @@ export default function ManagePage() {
         { id: 'security', label: 'Bảo mật', icon: Lock },
     ];
 
+    const renderContent = () => {
+        switch (activeSection) {
+            case 'favorites':
+                return <FavoriteBooks />;
+            case 'comments':
+                return <CommentManagement />;
+            case 'security':
+                return <SecurityTab />;
+            default:
+                return null;
+        }
+    };
+    
     return (
-        <SidebarProvider>
-            <div className="flex">
-                <Sidebar>
-                    <SidebarContent>
-                        <SidebarMenu>
-                            {navItems.map((item) => (
-                                <SidebarMenuItem key={item.id}>
-                                    <SidebarMenuButton
-                                        onClick={() => setActiveSection(item.id as Section)}
-                                        isActive={activeSection === item.id}
-                                        tooltip={item.label}
-                                    >
-                                        <item.icon />
-                                        <span>{item.label}</span>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
-                        </SidebarMenu>
-                    </SidebarContent>
-                </Sidebar>
-                <SidebarInset className="flex-1">
-                     <div className="space-y-6">
-                        <div className="flex items-center gap-4">
-                             <SidebarTrigger />
-                             <div>
-                                <h1 className="text-3xl font-bold tracking-tight font-headline">Trang cá nhân</h1>
-                                <p className="text-muted-foreground mt-1">
-                                    Quản lý sách yêu thích, bình luận và bảo mật tài khoản.
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <div className="flex-1 mt-8">
-                            {activeSection === 'favorites' && <FavoriteBooks />}
-                            {activeSection === 'comments' && <CommentManagement />}
-                            {activeSection === 'security' && <SecurityTab />}
-                        </div>
-                    </div>
-                </SidebarInset>
+        <div className="space-y-6">
+             <div>
+                <h1 className="text-3xl font-bold tracking-tight font-headline">Trang cá nhân</h1>
+                <p className="text-muted-foreground mt-1">
+                    Quản lý sách yêu thích, bình luận và bảo mật tài khoản.
+                </p>
             </div>
-        </SidebarProvider>
+
+            <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
+                <aside className="lg:w-1/4">
+                    <nav className="flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1">
+                        {navItems.map(item => (
+                            <button
+                                key={item.id}
+                                onClick={() => setActiveSection(item.id)}
+                                className={`inline-flex items-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 justify-start px-4 py-2 w-full ${activeSection === item.id ? 'bg-primary text-primary-foreground' : 'hover:bg-accent hover:text-accent-foreground'}`}
+                            >
+                                <item.icon className="mr-2 h-4 w-4" />
+                                {item.label}
+                            </button>
+                        ))}
+                    </nav>
+                </aside>
+                <div className="flex-1">
+                   {renderContent()}
+                </div>
+            </div>
+        </div>
     );
 }
