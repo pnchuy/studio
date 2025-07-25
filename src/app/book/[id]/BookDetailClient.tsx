@@ -19,6 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { convertYoutubeUrlToEmbed } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
 
 interface BookDetailClientProps {
     book: Book;
@@ -104,6 +105,8 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
         }
     };
 
+    const hasContentForModal = hasYoutubeLinks || book.shortDescription || book.longDescription;
+
     return (
         <div className="mt-8 border-t pt-8 flex flex-wrap items-center gap-4">
             <Button onClick={handleToggleLibrary} size="lg" className="flex-grow sm:flex-grow-0">
@@ -122,7 +125,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
 
              <Dialog open={isModalOpen} onOpenChange={handleOpenChange}>
                 <DialogTrigger asChild>
-                    <Button size="lg" disabled={!hasYoutubeLinks && !book.summary} className="flex-grow sm:flex-grow-0 bg-accent text-accent-foreground hover:bg-accent/90">
+                    <Button size="lg" disabled={!hasContentForModal} className="flex-grow sm:flex-grow-0 bg-accent text-accent-foreground hover:bg-accent/90">
                         <Headphones className="mr-2 h-5 w-5" />
                         Listen and Read
                     </Button>
@@ -134,7 +137,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                     <Tabs defaultValue={hasYoutubeLinks ? "listen" : "read"} className="w-full mt-2">
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="listen" disabled={!hasYoutubeLinks}>Listen</TabsTrigger>
-                            <TabsTrigger value="read" disabled={!book.summary}>Read</TabsTrigger>
+                            <TabsTrigger value="read" disabled={!book.shortDescription && !book.longDescription}>Read</TabsTrigger>
                         </TabsList>
                         <TabsContent value="listen">
                             <div className="py-4 space-y-4 min-h-[300px]">
@@ -187,9 +190,9 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                         </TabsContent>
                         <TabsContent value="read">
                              <ScrollArea className="h-[400px] w-full py-4">
-                                {book.summary ? (
+                                {book.longDescription || book.shortDescription ? (
                                     <div className="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed">
-                                        {book.summary}
+                                        <ReactMarkdown>{book.longDescription || book.shortDescription}</ReactMarkdown>
                                     </div>
                                 ) : (
                                     <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -213,4 +216,3 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
         </div>
     );
 }
-

@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Book as BookIcon, Hash, User as UserIcon } from 'lucide-react';
 import BookDetailClient from './BookDetailClient';
 import { CommentSection } from '@/components/comments/CommentSection';
+import ReactMarkdown from 'react-markdown';
+import { Separator } from '@/components/ui/separator';
 
 type BookPageProps = {
   params: {
@@ -26,7 +28,7 @@ export async function generateMetadata({ params: { id } }: BookPageProps) {
     const author = await getAuthorById(book.authorId);
     return {
         title: `${book.title} by ${author?.name || 'Unknown'} | Bibliophile`,
-        description: book.summary,
+        description: book.shortDescription,
     }
 }
 
@@ -88,10 +90,22 @@ export default async function BookPage({ params: { id } }: BookPageProps) {
             </div>
         </div>
 
-        <div className="mt-12">
-            <h2 className="text-2xl font-bold font-headline mb-4">Summary</h2>
-            <p className="prose dark:prose-invert max-w-none text-lg leading-relaxed">{book.summary}</p>
-        </div>
+        {book.shortDescription && (
+            <div className="mt-12">
+                <h2 className="text-2xl font-bold font-headline mb-4">Mô tả ngắn</h2>
+                <p className="prose dark:prose-invert max-w-none text-lg leading-relaxed">{book.shortDescription}</p>
+            </div>
+        )}
+
+        {book.longDescription && (
+             <div className="mt-12">
+                <Separator />
+                <h2 className="text-2xl font-bold font-headline my-4">Mô tả chi tiết</h2>
+                <div className="prose dark:prose-invert max-w-none text-lg leading-relaxed">
+                  <ReactMarkdown>{book.longDescription}</ReactMarkdown>
+                </div>
+            </div>
+        )}
         
         <CommentSection bookId={book.id} />
     </article>

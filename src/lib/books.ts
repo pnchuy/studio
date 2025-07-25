@@ -29,6 +29,8 @@ export async function getAllBooks(): Promise<Book[]> {
                 size480: "https://placehold.co/480x720.png",
             },
             youtubeLinks,
+            shortDescription: data.shortDescription || data.summary || '',
+            longDescription: data.longDescription || '',
         } as Book;
     }).filter(book => book.id);
   } catch (error) {
@@ -78,6 +80,8 @@ export async function getBookById(id: string): Promise<Book | null> {
           size480: "https://placehold.co/480x720.png",
         },
         youtubeLinks,
+        shortDescription: data.shortDescription || data.summary || '',
+        longDescription: data.longDescription || '',
     } as Book;
 
   } catch (error) {

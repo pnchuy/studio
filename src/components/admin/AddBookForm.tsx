@@ -37,11 +37,12 @@ const formSchema = z.object({
   authorId: z.string({ required_error: "Vui lòng chọn một tác giả." }),
   publicationDate: z.string().min(1, { message: "Ngày xuất bản là bắt buộc." }).refine((val) => !isNaN(Date.parse(val)), { message: "Ngày xuất bản không hợp lệ." }),
   coverImages: z.object({
-    size250: z.string().url().or(z.literal("https://placehold.co/250x375.png")),
-    size360: z.string().url().or(z.literal("https://placehold.co/360x540.png")),
-    size480: z.string().url().or(z.literal("https://placehold.co/480x720.png")),
+    size250: z.string(),
+    size360: z.string(),
+    size480: z.string(),
   }),
-  summary: z.string().optional(),
+  shortDescription: z.string().optional(),
+  longDescription: z.string().optional(),
   series: z.string().optional().nullable(),
   seriesOrder: z.number().nonnegative({ message: "Thứ tự phải là số không âm."}).optional().nullable(),
   genreIds: z.array(z.string()).optional().default([]),
@@ -119,7 +120,8 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
         size360: "https://placehold.co/360x540.png",
         size480: "https://placehold.co/480x720.png",
       },
-      summary: "",
+      shortDescription: "",
+      longDescription: "",
       series: "",
       seriesOrder: null,
       genreIds: [],
@@ -198,7 +200,8 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
         authorId: values.authorId,
         publicationDate: values.publicationDate,
         coverImages: values.coverImages,
-        summary: values.summary || '',
+        shortDescription: values.shortDescription || '',
+        longDescription: values.longDescription || '',
         series: (values.series === 'none' || !values.series) ? null : values.series,
         seriesOrder: (values.series && values.series !== 'none') ? (values.seriesOrder ?? null) : null,
         genreIds: values.genreIds || [],
@@ -447,10 +450,10 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
         
         <FormField
           control={form.control}
-          name="summary"
+          name="shortDescription"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tóm tắt</FormLabel>
+              <FormLabel>Mô tả ngắn</FormLabel>
               <FormControl>
                 <Textarea placeholder="Tóm tắt nội dung sách..." {...field} />
               </FormControl>
@@ -458,6 +461,21 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="longDescription"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mô tả chi tiết</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Mô tả chi tiết nội dung sách, có thể dùng Markdown..." {...field} rows={6}/>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="series"

@@ -31,7 +31,8 @@ export type Book = {
   authorId: string;
   publicationDate: string;
   coverImages: CoverImages;
-  summary: string;
+  shortDescription: string;
+  longDescription: string;
   series: string | null;
   seriesOrder: number | null;
   genreIds: string[];

@@ -41,7 +41,8 @@ const formSchema = z.object({
     size360: z.string(),
     size480: z.string(),
   }),
-  summary: z.string().optional(),
+  shortDescription: z.string().optional(),
+  longDescription: z.string().optional(),
   series: z.string().optional().nullable(),
   seriesOrder: z.number().nonnegative({ message: "Thứ tự phải là số không âm."}).optional().nullable(),
   genreIds: z.array(z.string()).optional().default([]),
@@ -115,7 +116,8 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
       authorId: bookToEdit.authorId,
       publicationDate: bookToEdit.publicationDate,
       coverImages: bookToEdit.coverImages,
-      summary: bookToEdit.summary,
+      shortDescription: bookToEdit.shortDescription,
+      longDescription: bookToEdit.longDescription,
       series: bookToEdit.series || "",
       seriesOrder: bookToEdit.seriesOrder ?? null,
       genreIds: bookToEdit.genreIds,
@@ -193,7 +195,8 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
         authorId: values.authorId,
         publicationDate: values.publicationDate,
         coverImages: values.coverImages,
-        summary: values.summary || '',
+        shortDescription: values.shortDescription || '',
+        longDescription: values.longDescription || '',
         series: (values.series === 'none' || !values.series) ? null : values.series,
         seriesOrder: (values.series && values.series !== 'none') ? (values.seriesOrder ?? null) : null,
         genreIds: values.genreIds || [],
@@ -443,12 +446,25 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
         
         <FormField
           control={form.control}
-          name="summary"
+          name="shortDescription"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tóm tắt</FormLabel>
+              <FormLabel>Mô tả ngắn</FormLabel>
               <FormControl>
                 <Textarea placeholder="Tóm tắt nội dung sách..." {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="longDescription"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Mô tả chi tiết</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Mô tả chi tiết nội dung sách, có thể dùng Markdown..." {...field} rows={6}/>
               </FormControl>
               <FormMessage />
             </FormItem>
