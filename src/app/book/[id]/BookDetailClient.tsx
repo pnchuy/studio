@@ -107,7 +107,11 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
 
     const hasContentForModal = hasYoutubeLinks || book.shortDescription || book.longDescription;
     const combinedDescription = book.longDescription || book.shortDescription;
-    const sanitizedDescription = DOMPurify.sanitize(combinedDescription);
+    
+    const sanitizedDescription = useMemo(() => {
+        if (typeof window === 'undefined') return combinedDescription;
+        return DOMPurify.sanitize(combinedDescription);
+    }, [combinedDescription]);
 
 
     return (
