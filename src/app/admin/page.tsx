@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -7,7 +8,17 @@ import { BookManagement } from '@/components/admin/BookManagement';
 import { MemberManagement } from '@/components/admin/MemberManagement';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Book, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { 
+    SidebarProvider, 
+    Sidebar, 
+    SidebarHeader, 
+    SidebarTrigger, 
+    SidebarContent, 
+    SidebarMenu, 
+    SidebarMenuItem, 
+    SidebarMenuButton, 
+    SidebarInset 
+} from '@/components/ui/sidebar';
 
 type Section = 'books' | 'members';
 
@@ -54,35 +65,45 @@ export default function AdminPage() {
     ];
     
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight font-headline">Trang quản trị</h1>
-                <p className="text-muted-foreground mt-2">
-                    Quản lý sách, tác giả, thể loại và thành viên của Bibliophile.
-                </p>
+        <SidebarProvider>
+            <div className="flex">
+                <Sidebar>
+                    <SidebarContent>
+                        <SidebarMenu>
+                            {navItems.map((item) => (
+                                <SidebarMenuItem key={item.id}>
+                                    <SidebarMenuButton
+                                        onClick={() => setActiveSection(item.id as Section)}
+                                        isActive={activeSection === item.id}
+                                        tooltip={item.label}
+                                    >
+                                        <item.icon />
+                                        <span>{item.label}</span>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            ))}
+                        </SidebarMenu>
+                    </SidebarContent>
+                </Sidebar>
+                <SidebarInset className="flex-1">
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-4">
+                            <SidebarTrigger />
+                            <div>
+                                <h1 className="text-3xl font-bold tracking-tight font-headline">Trang quản trị</h1>
+                                <p className="text-muted-foreground mt-1">
+                                    Quản lý sách, tác giả, thể loại và thành viên của Bibliophile.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex-1 mt-8">
+                            {activeSection === 'books' && <BookManagement />}
+                            {activeSection === 'members' && <MemberManagement />}
+                        </div>
+                    </div>
+                </SidebarInset>
             </div>
-            
-            <div className="flex flex-col space-y-8 lg:flex-row lg:space-x-8 lg:space-y-0">
-                <aside className="lg:w-60">
-                    <nav className="flex flex-col space-y-1">
-                        {navItems.map((item) => (
-                            <Button
-                                key={item.id}
-                                variant={activeSection === item.id ? 'default' : 'ghost'}
-                                className="w-full justify-start px-3"
-                                onClick={() => setActiveSection(item.id as Section)}
-                            >
-                                <item.icon className="mr-2 h-4 w-4" />
-                                {item.label}
-                            </Button>
-                        ))}
-                    </nav>
-                </aside>
-                <div className="flex-1">
-                    {activeSection === 'books' && <BookManagement />}
-                    {activeSection === 'members' && <MemberManagement />}
-                </div>
-            </div>
-        </div>
+        </SidebarProvider>
     );
 }
