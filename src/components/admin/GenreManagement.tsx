@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
-import type { Genre } from '@/types';
+import type { Book, Genre } from '@/types';
 import {
   Table,
   TableHeader,
@@ -50,13 +50,14 @@ import {
 
 interface GenreManagementProps {
     genres: Genre[];
+    books: Book[];
     isLoading: boolean;
     onGenreAdded: (newGenreData: Omit<Genre, 'id'>) => void;
     onGenreUpdated: (genre: Genre) => void;
     onGenreDeleted: (genreId: string) => void;
 }
 
-export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreUpdated, onGenreDeleted }: GenreManagementProps) {
+export function GenreManagement({ genres, books, isLoading, onGenreAdded, onGenreUpdated, onGenreDeleted }: GenreManagementProps) {
   const [isAddGenreOpen, setIsAddGenreOpen] = useState(false);
   const [isEditGenreOpen, setIsEditGenreOpen] = useState(false);
   const [editingGenre, setEditingGenre] = useState<Genre | null>(null);
@@ -151,6 +152,7 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreUpdate
                 <TableHeader>
                     <TableRow>
                     <TableHead>Tên thể loại</TableHead>
+                    <TableHead>Số lượng sách</TableHead>
                     <TableHead className="text-right">Hành động</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -158,6 +160,7 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreUpdate
                     {paginatedGenres.map((genre) => (
                     <TableRow key={genre.id}>
                         <TableCell className="font-medium">{genre.name}</TableCell>
+                        <TableCell>{books.filter(b => b.genreIds.includes(genre.id)).length}</TableCell>
                         <TableCell className="text-right">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -277,3 +280,5 @@ export function GenreManagement({ genres, isLoading, onGenreAdded, onGenreUpdate
     </>
   );
 }
+
+    

@@ -751,6 +751,7 @@ export function BookManagement() {
         <TabsContent value="genres" className="mt-4">
             <GenreManagement 
               genres={genres}
+              books={books}
               isLoading={isLoading}
               onGenreAdded={(genre) => handleGenreAdded(genre)}
               onGenreUpdated={handleGenreUpdated}
@@ -817,5 +818,7 @@ export function BookManagement() {
     </>
   );
 }
+
+    
 
     
