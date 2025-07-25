@@ -105,13 +105,12 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
         }
     };
 
-    const hasContentForModal = hasYoutubeLinks || book.shortDescription || book.longDescription;
-    const combinedDescription = book.longDescription || book.shortDescription;
+    const hasContentForModal = hasYoutubeLinks || book.longDescription;
     
     const sanitizedDescription = useMemo(() => {
-        if (typeof window === 'undefined') return combinedDescription;
-        return DOMPurify.sanitize(combinedDescription);
-    }, [combinedDescription]);
+        if (typeof window === 'undefined') return book.longDescription;
+        return DOMPurify.sanitize(book.longDescription);
+    }, [book.longDescription]);
 
 
     return (
@@ -144,7 +143,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                     <Tabs defaultValue={hasYoutubeLinks ? "listen" : "read"} className="w-full mt-2">
                         <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="listen" disabled={!hasYoutubeLinks}>Listen</TabsTrigger>
-                            <TabsTrigger value="read" disabled={!book.shortDescription && !book.longDescription}>Read</TabsTrigger>
+                            <TabsTrigger value="read" disabled={!book.longDescription}>Read</TabsTrigger>
                         </TabsList>
                         <TabsContent value="listen">
                             <div className="py-4 space-y-4 min-h-[300px]">
@@ -197,7 +196,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                         </TabsContent>
                         <TabsContent value="read">
                              <ScrollArea className="h-[400px] w-full py-4">
-                                {combinedDescription ? (
+                                {book.longDescription ? (
                                     <div 
                                         className="prose dark:prose-invert max-w-none text-muted-foreground leading-relaxed"
                                         dangerouslySetInnerHTML={{ __html: sanitizedDescription }}

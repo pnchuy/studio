@@ -97,13 +97,6 @@ export default async function BookPage({ params: { id } }: BookPageProps) {
             </div>
         </div>
 
-        {book.shortDescription && (
-            <div className="mt-12">
-                <h2 className="text-2xl font-bold font-headline mb-4">Mô tả ngắn</h2>
-                <p className="prose dark:prose-invert max-w-none text-lg leading-relaxed">{book.shortDescription}</p>
-            </div>
-        )}
-
         {sanitizedLongDescription && (
              <div className="mt-12">
                 <Separator />
