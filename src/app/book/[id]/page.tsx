@@ -11,6 +11,8 @@ import { CommentSection } from '@/components/comments/CommentSection';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import DOMPurify from 'dompurify';
 import { JSDOM } from 'jsdom';
+import Link from 'next/link';
+import { slugify } from '@/lib/utils';
 
 type BookPageProps = {
   params: {
@@ -83,7 +85,12 @@ export default async function BookPage({ params: { id } }: BookPageProps) {
                     {book.series && (
                          <div className="flex items-center gap-3">
                             <BookIcon className="w-5 h-5 text-muted-foreground" />
-                            <span>From <span className="font-semibold">{book.series}</span> {book.seriesOrder !== null ? `#${book.seriesOrder}` : ''}</span>
+                            <span>From{' '}
+                                <Link href={`/series/${slugify(book.series)}`} className="font-semibold text-primary hover:underline">
+                                    {book.series}
+                                </Link>
+                                {' '}{book.seriesOrder !== null ? `#${book.seriesOrder}` : ''}
+                            </span>
                         </div>
                     )}
                      <div className="flex items-start gap-3">
