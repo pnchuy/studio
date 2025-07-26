@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { BookManagement } from '@/components/admin/BookManagement';
 import { MemberManagement } from '@/components/admin/MemberManagement';
+import { SystemManagement } from '@/components/admin/SystemManagement';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -36,6 +37,7 @@ export default function AdminPage() {
                         <div className="space-y-2">
                             <Skeleton className="h-9 w-full" />
                             <Skeleton className="h-9 w-full" />
+                            <Skeleton className="h-9 w-full" />
                         </div>
                     </aside>
                     <div className="flex-1">
@@ -56,9 +58,10 @@ export default function AdminPage() {
             </div>
             
              <Tabs defaultValue="collection" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="collection">Quản lý Bộ sưu tập</TabsTrigger>
                     <TabsTrigger value="members">Quản lý Thành viên</TabsTrigger>
+                    <TabsTrigger value="system">Hệ thống</TabsTrigger>
                 </TabsList>
                 <TabsContent value="collection">
                     <Card>
@@ -75,6 +78,9 @@ export default function AdminPage() {
                 </TabsContent>
                 <TabsContent value="members">
                     <MemberManagement />
+                </TabsContent>
+                <TabsContent value="system">
+                    <SystemManagement />
                 </TabsContent>
             </Tabs>
         </div>
