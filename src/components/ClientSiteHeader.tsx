@@ -2,6 +2,8 @@
 "use client";
 
 import Link from 'next/link';
+import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { BookOpen, LogIn, LogOut, UserPlus, Shield, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
@@ -19,14 +21,29 @@ import { getInitials } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { Skeleton } from './ui/skeleton';
 
+const LOGO_STORAGE_KEY = 'bibliophile-logo';
+
 export function ClientSiteHeader() {
   const { user, isLoggedIn, logout, isLoading } = useAuth();
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    // This effect runs only on the client, so it's safe to use localStorage.
+    const storedLogo = localStorage.getItem(LOGO_STORAGE_KEY);
+    if (storedLogo) {
+      setLogoUrl(storedLogo);
+    }
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-sm shadow-sm">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center space-x-2">
-          <BookOpen className="h-6 w-6 text-primary" />
+          {logoUrl ? (
+            <Image src={logoUrl} alt="Logo" width={24} height={24} className="h-6 w-auto" />
+          ) : (
+            <BookOpen className="h-6 w-6 text-primary" />
+          )}
           <span className="font-bold font-headline text-lg">Listen and Read</span>
         </Link>
         <div className="flex items-center space-x-2">
