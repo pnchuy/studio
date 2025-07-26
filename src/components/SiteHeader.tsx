@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -25,7 +26,7 @@ export function SiteHeader() {
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center space-x-2">
           <BookOpen className="h-6 w-6 text-primary" />
-          <span className="font-bold font-headline text-lg">Bibliophile</span>
+          <span className="font-bold font-headline text-lg">Listen and Read</span>
         </Link>
         <div className="flex items-center space-x-2">
           <ThemeToggle />
