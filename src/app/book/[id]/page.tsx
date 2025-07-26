@@ -74,7 +74,13 @@ export default async function BookPage({ params: { id } }: BookPageProps) {
                 <h1 className="text-4xl font-bold font-headline leading-tight">{book.title}</h1>
                 <div className="flex items-center gap-2 mt-2">
                     <UserIcon className="w-5 h-5 text-muted-foreground" />
-                    <p className="text-xl text-muted-foreground">{author?.name || 'Unknown Author'}</p>
+                    {author ? (
+                        <Link href={`/author/${author.id}`} className="text-xl text-muted-foreground hover:text-primary hover:underline">
+                            {author.name}
+                        </Link>
+                    ) : (
+                        <p className="text-xl text-muted-foreground">Unknown Author</p>
+                    )}
                 </div>
                 
                 <div className="mt-6 space-y-4">
