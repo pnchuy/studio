@@ -15,6 +15,7 @@ const USER_STORAGE_KEY = 'bibliophile-user-auth-state';
 interface AuthContextType {
   user: User | null;
   firebaseUser: FirebaseUser | null;
+  authProviderId: string | null;
   unverifiedUser: FirebaseUser | null;
   isLoggedIn: boolean;
   isLoading: boolean;
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [authProviderId, setAuthProviderId] = useState<string | null>(null);
   const [unverifiedUser, setUnverifiedUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
@@ -44,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (fbUser && fbUser.emailVerified) {
         setUnverifiedUser(null);
         setFirebaseUser(fbUser);
+        setAuthProviderId(fbUser.providerData?.[0]?.providerId || 'password');
         const userDocRef = doc(db, 'users', fbUser.uid);
         const userDoc = await getDoc(userDocRef);
         
@@ -98,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         setUser(null);
         setFirebaseUser(null);
+        setAuthProviderId(null);
         localStorage.removeItem(USER_STORAGE_KEY);
       }
       setIsLoading(false);
@@ -336,6 +340,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = {
       user,
       firebaseUser,
+      authProviderId,
       unverifiedUser,
       isLoggedIn: !!user,
       isLoading,

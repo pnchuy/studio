@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -15,6 +16,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/hooks/use-auth";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Lock } from "lucide-react";
 
 const formSchema = z.object({
   currentPassword: z.string().min(1, { message: "Mật khẩu hiện tại là bắt buộc." }),
@@ -27,6 +31,7 @@ const formSchema = z.object({
 
 export function SecurityTab() {
   const { toast } = useToast();
+  const { authProviderId } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -48,59 +53,76 @@ export function SecurityTab() {
     form.reset();
   }
 
+  const isPasswordProvider = authProviderId === 'password';
+
   return (
     <Card>
         <CardHeader>
-            <CardTitle>Đổi mật khẩu</CardTitle>
-            <CardDescription>Nhập mật khẩu hiện tại và mật khẩu mới của bạn vào bên dưới.</CardDescription>
+            <CardTitle>Bảo mật tài khoản</CardTitle>
+             <CardDescription>
+                {isPasswordProvider
+                    ? "Quản lý mật khẩu của bạn."
+                    : "Bạn đang đăng nhập thông qua một nhà cung cấp bên ngoài."
+                }
+            </CardDescription>
         </CardHeader>
         <CardContent>
-            <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-lg">
-                <FormField
-                control={form.control}
-                name="currentPassword"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Mật khẩu hiện tại</FormLabel>
-                    <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <FormField
-                control={form.control}
-                name="newPassword"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Mật khẩu mới</FormLabel>
-                    <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                 <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Xác nhận mật khẩu mới</FormLabel>
-                    <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Đang đổi..." : "Đổi mật khẩu"}
-                </Button>
-            </form>
-            </Form>
+            {isPasswordProvider ? (
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 max-w-lg">
+                        <FormField
+                        control={form.control}
+                        name="currentPassword"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Mật khẩu hiện tại</FormLabel>
+                            <FormControl>
+                                <Input type="password" placeholder="••••••••" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="newPassword"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Mật khẩu mới</FormLabel>
+                            <FormControl>
+                                <Input type="password" placeholder="••••••••" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Xác nhận mật khẩu mới</FormLabel>
+                            <FormControl>
+                                <Input type="password" placeholder="••••••••" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <Button type="submit" disabled={form.formState.isSubmitting}>
+                        {form.formState.isSubmitting ? "Đang đổi..." : "Đổi mật khẩu"}
+                        </Button>
+                    </form>
+                </Form>
+            ) : (
+                 <Alert>
+                    <Lock className="h-4 w-4" />
+                    <AlertTitle>Quản lý mật khẩu bên ngoài</AlertTitle>
+                    <AlertDescription>
+                        Tài khoản của bạn được liên kết với một nhà cung cấp bên ngoài (ví dụ: Google). Để thay đổi mật khẩu, vui lòng thực hiện thông qua trang web của nhà cung cấp đó.
+                    </AlertDescription>
+                </Alert>
+            )}
         </CardContent>
     </Card>
   );
