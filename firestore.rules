@@ -1,55 +1,36 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /books/{bookId} {
-      allow read: if true;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
+  
+    function isOneOfRoles(roles) {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in roles;
     }
 
-    match /authors/{authorId} {
+    // Books, Authors, Genres, Series: Public read, Admin/Manager write
+    match /{collectionName}/{docId} where collectionName in ['books', 'authors', 'genres', 'series'] {
       allow read: if true;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
+      allow write: if request.auth != null && isOneOfRoles(['ADMIN', 'MANAGER']);
     }
 
-    match /genres/{genreId} {
-      allow read: if true;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
-    }
-
-    match /series/{seriesId} {
-      allow read: if true;
-      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
-    }
-
+    // Users:
     match /users/{userId} {
-      // Allow admins/managers to list all users for the management UI.
-      // Also allow any new authenticated user to query for the *existence* of any user,
-      // which is needed during signup to determine if they are the first user.
-      // This is safe because it only allows checking for one document.
-      allow list: if request.auth != null &&
-                 (request.query.limit <= 1 ||
-                  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER']);
+      // Allow user to read their own data, or if user is an admin/manager
+      allow get: if request.auth != null && (request.auth.uid == userId || isOneOfRoles(['ADMIN', 'MANAGER']));
+      // Allow admins/managers to list users
+      allow list: if request.auth != null && isOneOfRoles(['ADMIN', 'MANAGER']);
+      
+      // Allow user to create their own profile (on signup)
+      allow create: if request.auth != null && request.auth.uid == userId;
 
-      // Any authenticated user can read any user's profile.
-      // This is generally safe as we don't store sensitive info.
-      allow read: if request.auth != null;
-
-      // Any authenticated user can create a user document (their own).
-      allow create: if request.auth != null;
-
-      // Complex update logic for roles
-      allow update: if request.auth != null && (
-        // A user can update their own document
-        request.auth.uid == userId ||
-        // An ADMIN can update any user document
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
-        // A MANAGER can update a MEMBER's document
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'MANAGER' && resource.data.role == 'MEMBER')
-      );
+      // Allow ADMIN to update any user's role
+      // Allow MANAGER to update role of users who are MEMBERs (but not other ADMINs/MANAGERs)
+      allow update: if request.auth != null && 
+                      (isOneOfRoles(['ADMIN']) || 
+                      (isOneOfRoles(['MANAGER']) && resource.data.role == 'MEMBER'));
+                      
+      // Allow only ADMIN to delete users (and not themselves)
+      allow delete: if request.auth != null && isOneOfRoles(['ADMIN']) && request.auth.uid != userId;
     }
   }
 }
-
-    
