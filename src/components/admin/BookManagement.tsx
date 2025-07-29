@@ -26,7 +26,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -530,8 +529,12 @@ export function BookManagement() {
       switch(sortOption) {
         case 'title_asc':
           return a.title.localeCompare(b.title);
+        case 'title_desc':
+            return b.title.localeCompare(a.title);
         case 'publication_date_desc':
           return new Date(b.publicationDate).getTime() - new Date(a.publicationDate).getTime();
+        case 'publication_date_asc':
+            return new Date(a.publicationDate).getTime() - new Date(b.publicationDate).getTime();
         case 'date_added_desc':
         default:
           return (b.createdAt || 0) - (a.createdAt || 0);
@@ -634,7 +637,9 @@ export function BookManagement() {
                 <SelectContent>
                   <SelectItem value="date_added_desc">Mới nhất</SelectItem>
                   <SelectItem value="title_asc">Tên sách (A-Z)</SelectItem>
+                  <SelectItem value="title_desc">Tên sách (Z-A)</SelectItem>
                   <SelectItem value="publication_date_desc">Ngày phát hành (Mới nhất)</SelectItem>
+                  <SelectItem value="publication_date_asc">Ngày phát hành (Cũ nhất)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -861,3 +866,5 @@ export function BookManagement() {
     </>
   );
 }
+
+    
