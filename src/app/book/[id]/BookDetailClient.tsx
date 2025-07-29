@@ -84,7 +84,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
         if (!isOpen) {
             // Stop video by removing src
             if (iframeRef.current) {
-                iframeRef.current.src = '';
+                iframeRef.current.src = 'about:blank';
             }
             setSelectedYoutubeLink(null); 
             setChapters([]);
@@ -197,7 +197,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                                             ref={iframeRef}
                                             key={selectedYoutubeLink?.url} // Change key to force re-render
                                             className="w-full h-full rounded-lg"
-                                            src={selectedYoutubeLink ? `${convertYoutubeUrlToEmbed(selectedYoutubeLink.url)}?enablejsapi=1` : ''}
+                                            src={selectedYoutubeLink ? `${convertYoutubeUrlToEmbed(selectedYoutubeLink.url)}?enablejsapi=1` : undefined}
                                             title={`YouTube video player for ${book.title}`}
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                             allowFullScreen
