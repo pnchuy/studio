@@ -22,8 +22,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import type { Book, Author, Genre, Series, CoverImages, YoutubeLink } from "@/types";
-import { convertYoutubeUrlToEmbed } from "@/lib/utils";
-import { PlusCircle, Trash2, X, Loader2 } from "lucide-react";
+import { convertYoutubeUrlToEmbed, cn } from "@/lib/utils";
+import { PlusCircle, Trash2, X, Loader2, UploadCloud } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { RichTextEditor } from "../ui/rich-text-editor";
@@ -105,6 +105,8 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
   const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
   const [imagePreview, setImagePreview] = useState<string | null>(bookToEdit.coverImages.size480);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [genreInputValue, setGenreInputValue] = useState("");
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
@@ -154,21 +156,29 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
   }, [bookToEdit.coverImages.size480]);
 
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setIsProcessingImage(true);
-      form.setValue('coverImages', { size250: '', size360: '', size480: '' }); // Clear preview
-      try {
+  const processFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+        toast({ variant: "destructive", title: "Invalid File Type", description: "Please upload an image file (png, jpg, webp)." });
+        return;
+    }
+    setIsProcessingImage(true);
+    form.setValue('coverImages', { size250: '', size360: '', size480: '' }); // Clear preview
+    try {
         const resizedDataUrls = await processImageFromBlob(file);
         form.setValue('coverImages', resizedDataUrls, { shouldValidate: true });
         toast({ title: "Success", description: "Image processed and ready to be saved." });
-      } catch (error) {
+    } catch (error) {
         console.error("Failed to resize image", error);
         toast({ variant: "destructive", title: "Error", description: "Could not process image file." });
-      } finally {
+    } finally {
         setIsProcessingImage(false);
-      }
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
     }
   };
 
@@ -188,6 +198,20 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
       }, { shouldValidate: true });
     }
   }
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        if (e.dataTransfer.files.length > 1) {
+            toast({ variant: "destructive", title: "Chỉ một ảnh", description: "Vui lòng chỉ kéo thả một ảnh bìa." });
+        } else {
+            processFile(e.dataTransfer.files[0]);
+        }
+        e.dataTransfer.clearData();
+    }
+  };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const updatedBookData: Book = {
@@ -444,24 +468,6 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
                 <CardDescription>Tải ảnh bìa lên từ máy hoặc dùng link ngoài.</CardDescription>
             </CardHeader>
             <CardContent className="grid sm:grid-cols-3 gap-6">
-                <div className="col-span-1">
-                     <div className="relative w-full max-w-[200px] mx-auto">
-                        <p className="text-center text-sm font-medium mb-2">Ảnh bìa xem trước</p>
-                        {isProcessingImage && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10 rounded-md">
-                                <Loader2 className="h-8 w-8 animate-spin" />
-                            </div>
-                        )}
-                        <Image
-                            src={imagePreview || "https://placehold.co/250x375.png"}
-                            alt="Xem trước ảnh bìa"
-                            width={250}
-                            height={375}
-                            className="rounded-md object-cover aspect-[2/3]"
-                            data-ai-hint="book cover"
-                        />
-                    </div>
-                </div>
                  <div className="sm:col-span-2 space-y-4">
                     <FormField
                     control={form.control}
@@ -496,14 +502,32 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
                                         onBlur={handleUrlChange}
                                     />
                                 ) : (
-                                    <Input
-                                        key="edit-cover-image-file"
-                                        type="file"
-                                        disabled={isProcessingImage}
-                                        accept="image/png, image/jpeg, image/webp"
-                                        onChange={handleFileChange}
-                                        className="pt-2 h-11"
-                                    />
+                                    <div
+                                        className={cn(
+                                            "relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted transition-colors",
+                                            isDragging && "border-primary bg-accent"
+                                        )}
+                                        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                                        onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                                        onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
+                                        onDrop={handleDrop}
+                                        onClick={() => fileInputRef.current?.click()}
+                                    >
+                                        <UploadCloud className="w-8 h-8 text-muted-foreground" />
+                                        <p className="mt-2 text-sm text-muted-foreground">
+                                            <span className="font-semibold">Nhấn để tải lên</span> hoặc kéo thả
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">Chỉ chấp nhận một ảnh</p>
+                                        <Input
+                                            ref={fileInputRef}
+                                            id="dropzone-file"
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/png, image/jpeg, image/webp"
+                                            disabled={isProcessingImage}
+                                            onChange={handleFileChange}
+                                        />
+                                    </div>
                                 )}
                                 </div>
                             </FormControl>
@@ -512,6 +536,24 @@ export function EditBookForm({ bookToEdit, onBookUpdated, onFinished, authors, g
                     )}
                     />
                  </div>
+                 <div className="col-span-1">
+                     <div className="relative w-full max-w-[200px] mx-auto">
+                        <p className="text-center text-sm font-medium mb-2">Ảnh bìa xem trước</p>
+                        {isProcessingImage && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10 rounded-md">
+                                <Loader2 className="h-8 w-8 animate-spin" />
+                            </div>
+                        )}
+                        <Image
+                            src={imagePreview || "https://placehold.co/250x375.png"}
+                            alt="Xem trước ảnh bìa"
+                            width={250}
+                            height={375}
+                            className="rounded-md object-cover aspect-[2/3]"
+                            data-ai-hint="book cover"
+                        />
+                    </div>
+                </div>
             </CardContent>
         </Card>
         
