@@ -19,14 +19,15 @@ type ImportType = 'books' | 'authors' | 'genres' | 'series';
 
 // Schema for the books in the JSON file, matching the user's provided format.
 const importBookSchema = z.object({
-  title: z.string().min(2, "Tiêu đề phải có ít nhất 2 ký tự."),
+  title: z.string().min(1, "Tiêu đề là bắt buộc."),
   author: z.string().min(1, "Tên tác giả là bắt buộc."),
-  date: z.string(),
-  youtubeLinks: z.string().optional().default(""),
-  amazonLink: z.string().url().or(z.literal("")).optional().default(""),
-  genreIds: z.string().optional().default(""),
-  coverLink: z.string().url().or(z.literal("")).optional().default("https://placehold.co/400x600.png"),
+  date: z.string().min(1, "Ngày là bắt buộc."),
+  youtubeLinks: z.string().optional(),
+  amazonLink: z.string().url().or(z.literal("")).optional(),
+  genreIds: z.string().optional(),
+  coverLink: z.string().url().or(z.literal("")).optional(),
 });
+
 
 const importFileSchema = z.array(importBookSchema);
 export type ImportBook = Omit<Book, 'id' | 'docId'>;
@@ -147,23 +148,25 @@ export function ImportBooksDialog({
           const authorId = authorMap.get(rawBook.author.toLowerCase());
           
           if (!isTitleDuplicate && authorId) {
-            const genreIds = rawBook.genreIds.split(',')
+            const genreIds = rawBook.genreIds?.split(',')
                 .map(name => genreMap.get(name.trim().toLowerCase()))
-                .filter((id): id is string => !!id);
+                .filter((id): id is string => !!id) || [];
+            
+            const coverLink = rawBook.coverLink || "https://placehold.co/480x720.png";
 
             booksToImport.push({
                 id: generateId(),
                 title: rawBook.title,
                 authorId: authorId,
                 publicationDate: parseDate(rawBook.date),
-                youtubeLinks: rawBook.youtubeLinks.split('|').filter(Boolean).map(url => ({ url, chapters: '' })),
+                youtubeLinks: rawBook.youtubeLinks?.split('|').filter(Boolean).map(url => ({ url, chapters: '' })) || [],
                 amazonLink: rawBook.amazonLink || "",
                 shortDescription: "Sách được import từ file JSON.",
                 longDescription: "",
                 coverImages: {
-                    size250: rawBook.coverLink || "https://placehold.co/250x375.png",
-                    size360: rawBook.coverLink || "https://placehold.co/360x540.png",
-                    size480: rawBook.coverLink || "https://placehold.co/480x720.png",
+                    size250: coverLink,
+                    size360: coverLink,
+                    size480: coverLink,
                 },
                 series: null,
                 seriesOrder: null,
