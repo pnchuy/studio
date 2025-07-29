@@ -159,7 +159,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                             <TabsTrigger value="read" disabled={!book.longDescription}>Read</TabsTrigger>
                         </TabsList>
 
-                        <TabsContent value="listen" className="mt-4 data-[state=inactive]:hidden">
+                        <TabsContent forceMount value="listen" className="mt-4 data-[state=inactive]:hidden">
                              {hasYoutubeLinks ? (
                                 <div className="space-y-4">
                                     <div className="flex flex-wrap items-center gap-2">
@@ -211,7 +211,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                              )}
                         </TabsContent>
 
-                        <TabsContent value="read" className="data-[state=inactive]:hidden">
+                        <TabsContent forceMount value="read" className="data-[state=inactive]:hidden">
                              <ScrollArea className="h-[400px] w-full py-4">
                                 {book.longDescription ? (
                                     <div 
