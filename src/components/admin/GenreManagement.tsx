@@ -69,33 +69,54 @@ export function GenreManagement({ genres, books, isLoading, onGenreAdded, onGenr
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('name_asc');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const filteredGenres = useMemo(() => {
-    return genres.filter(genre =>
+  const filteredAndSortedGenres = useMemo(() => {
+     const genresWithBookCount = genres.map(genre => ({
+      ...genre,
+      bookCount: books.filter(b => b.genreIds.includes(genre.id)).length
+    }));
+
+    const filtered = genresWithBookCount.filter(genre =>
       genre.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     );
-  }, [genres, debouncedSearchTerm]);
+
+    return filtered.sort((a, b) => {
+        switch (sortOption) {
+            case 'name_asc':
+                return a.name.localeCompare(b.name);
+            case 'name_desc':
+                return b.name.localeCompare(a.name);
+            case 'book_count_desc':
+                return b.bookCount - a.bookCount;
+            case 'book_count_asc':
+                return a.bookCount - b.bookCount;
+            default:
+                return a.name.localeCompare(b.name);
+        }
+    });
+  }, [genres, books, debouncedSearchTerm, sortOption]);
 
 
-  const totalPages = Math.ceil(filteredGenres.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredAndSortedGenres.length / itemsPerPage);
   const paginatedGenres = useMemo(() => {
-    return filteredGenres.slice(
+    return filteredAndSortedGenres.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
-  }, [filteredGenres, currentPage, itemsPerPage]);
+  }, [filteredAndSortedGenres, currentPage, itemsPerPage]);
 
   useEffect(() => {
-    const newTotalPages = Math.ceil(filteredGenres.length / itemsPerPage);
+    const newTotalPages = Math.ceil(filteredAndSortedGenres.length / itemsPerPage);
     if (currentPage > newTotalPages) {
       setCurrentPage(Math.max(1, newTotalPages));
     }
-  }, [filteredGenres.length, currentPage, itemsPerPage]);
+  }, [filteredAndSortedGenres.length, currentPage, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [itemsPerPage, debouncedSearchTerm]);
+  }, [itemsPerPage, debouncedSearchTerm, sortOption]);
 
   const handleGenreAdded = (newGenreData: Omit<Genre, 'id'>) => {
     onGenreAdded(newGenreData);
@@ -150,16 +171,30 @@ export function GenreManagement({ genres, books, isLoading, onGenreAdded, onGenr
         </Dialog>
       </div>
       
-      <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Tìm kiếm thể loại..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full"
-          />
-        </div>
+      <div className="flex items-center gap-4">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+                type="search"
+                placeholder="Tìm kiếm thể loại..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-full"
+            />
+          </div>
+          <Select value={sortOption} onValueChange={setSortOption}>
+              <SelectTrigger className="w-[240px]">
+                <SelectValue placeholder="Sắp xếp theo..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name_asc">Tên (A-Z)</SelectItem>
+                <SelectItem value="name_desc">Tên (Z-A)</SelectItem>
+                <SelectItem value="book_count_desc">Số lượng sách (Nhiều nhất)</SelectItem>
+                <SelectItem value="book_count_asc">Số lượng sách (Ít nhất)</SelectItem>
+              </SelectContent>
+          </Select>
+      </div>
+
 
       <div>
          {isLoading ? (
@@ -183,7 +218,7 @@ export function GenreManagement({ genres, books, isLoading, onGenreAdded, onGenr
                     {paginatedGenres.map((genre) => (
                     <TableRow key={genre.id}>
                         <TableCell className="font-medium">{genre.name}</TableCell>
-                        <TableCell>{books.filter(b => b.genreIds.includes(genre.id)).length}</TableCell>
+                        <TableCell>{genre.bookCount}</TableCell>
                         <TableCell className="text-right">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -228,7 +263,7 @@ export function GenreManagement({ genres, books, isLoading, onGenreAdded, onGenr
                             ))}
                         </SelectContent>
                     </Select>
-                    <p className="text-sm text-muted-foreground">kết quả trong tổng số {filteredGenres.length}</p>
+                    <p className="text-sm text-muted-foreground">kết quả trong tổng số {filteredAndSortedGenres.length}</p>
                 </div>
                 {totalPages > 1 && (
                     <div className="flex items-center justify-end space-x-2">

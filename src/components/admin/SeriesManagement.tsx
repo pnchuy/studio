@@ -68,34 +68,54 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('name_asc');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const filteredSeries = useMemo(() => {
-    const sorted = [...series].sort((a, b) => a.name.localeCompare(b.name));
-    return sorted.filter(s =>
+  const filteredAndSortedSeries = useMemo(() => {
+    const seriesWithBookCount = series.map(s => ({
+      ...s,
+      bookCount: books.filter(b => b.series === s.name).length
+    }));
+
+    const filtered = seriesWithBookCount.filter(s =>
       s.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     );
-  }, [series, debouncedSearchTerm]);
+
+    return filtered.sort((a, b) => {
+        switch (sortOption) {
+            case 'name_asc':
+                return a.name.localeCompare(b.name);
+            case 'name_desc':
+                return b.name.localeCompare(a.name);
+            case 'book_count_desc':
+                return b.bookCount - a.bookCount;
+            case 'book_count_asc':
+                return a.bookCount - b.bookCount;
+            default:
+                return a.name.localeCompare(b.name);
+        }
+    });
+  }, [series, books, debouncedSearchTerm, sortOption]);
 
 
-  const totalPages = Math.ceil(filteredSeries.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredAndSortedSeries.length / itemsPerPage);
   const paginatedSeries = useMemo(() => {
-    return filteredSeries.slice(
+    return filteredAndSortedSeries.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
-  }, [filteredSeries, currentPage, itemsPerPage]);
+  }, [filteredAndSortedSeries, currentPage, itemsPerPage]);
 
   useEffect(() => {
-    const newTotalPages = Math.ceil(filteredSeries.length / itemsPerPage);
+    const newTotalPages = Math.ceil(filteredAndSortedSeries.length / itemsPerPage);
     if (currentPage > newTotalPages) {
       setCurrentPage(Math.max(1, newTotalPages));
     }
-  }, [filteredSeries.length, currentPage, itemsPerPage]);
+  }, [filteredAndSortedSeries.length, currentPage, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [itemsPerPage, debouncedSearchTerm]);
+  }, [itemsPerPage, debouncedSearchTerm, sortOption]);
   
   const handleEditClick = (seriesItem: Series) => {
     setEditingSeries(seriesItem);
@@ -130,15 +150,28 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
           </Dialog>
         </div>
         
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Tìm kiếm series..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full"
-          />
+        <div className="flex items-center gap-4">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Tìm kiếm series..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-full"
+            />
+          </div>
+          <Select value={sortOption} onValueChange={setSortOption}>
+              <SelectTrigger className="w-[240px]">
+                <SelectValue placeholder="Sắp xếp theo..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name_asc">Tên (A-Z)</SelectItem>
+                <SelectItem value="name_desc">Tên (Z-A)</SelectItem>
+                <SelectItem value="book_count_desc">Số lượng sách (Nhiều nhất)</SelectItem>
+                <SelectItem value="book_count_asc">Số lượng sách (Ít nhất)</SelectItem>
+              </SelectContent>
+            </Select>
         </div>
 
         <div>
@@ -171,9 +204,7 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
                     {paginatedSeries.map((s) => (
                       <TableRow key={s.id}>
                         <TableCell className="font-medium">{s.name}</TableCell>
-                        <TableCell>
-                            {books.filter(b => b.series === s.name).length}
-                        </TableCell>
+                        <TableCell>{s.bookCount}</TableCell>
                         <TableCell className="text-right">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -218,7 +249,7 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
                               ))}
                           </SelectContent>
                       </Select>
-                      <p className="text-sm text-muted-foreground">kết quả trong tổng số {filteredSeries.length}</p>
+                      <p className="text-sm text-muted-foreground">kết quả trong tổng số {filteredAndSortedSeries.length}</p>
                   </div>
                   {totalPages > 1 && (
                       <div className="flex items-center justify-end space-x-2">

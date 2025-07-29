@@ -69,33 +69,54 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('name_asc');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const filteredAuthors = useMemo(() => {
-    return authors.filter(author =>
+  const filteredAndSortedAuthors = useMemo(() => {
+    const authorsWithBookCount = authors.map(author => ({
+      ...author,
+      bookCount: books.filter(b => b.authorId === author.id).length
+    }));
+
+    const filtered = authorsWithBookCount.filter(author =>
       author.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     );
-  }, [authors, debouncedSearchTerm]);
+
+    return filtered.sort((a, b) => {
+        switch (sortOption) {
+            case 'name_asc':
+                return a.name.localeCompare(b.name);
+            case 'name_desc':
+                return b.name.localeCompare(a.name);
+            case 'book_count_desc':
+                return b.bookCount - a.bookCount;
+            case 'book_count_asc':
+                return a.bookCount - b.bookCount;
+            default:
+                return a.name.localeCompare(b.name);
+        }
+    });
+  }, [authors, books, debouncedSearchTerm, sortOption]);
 
 
-  const totalPages = Math.ceil(filteredAuthors.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredAndSortedAuthors.length / itemsPerPage);
   const paginatedAuthors = useMemo(() => {
-    return filteredAuthors.slice(
+    return filteredAndSortedAuthors.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
-  }, [filteredAuthors, currentPage, itemsPerPage]);
+  }, [filteredAndSortedAuthors, currentPage, itemsPerPage]);
 
   useEffect(() => {
-    const newTotalPages = Math.ceil(filteredAuthors.length / itemsPerPage);
+    const newTotalPages = Math.ceil(filteredAndSortedAuthors.length / itemsPerPage);
     if (currentPage > newTotalPages) {
       setCurrentPage(Math.max(1, newTotalPages));
     }
-  }, [filteredAuthors.length, currentPage, itemsPerPage]);
+  }, [filteredAndSortedAuthors.length, currentPage, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [itemsPerPage, debouncedSearchTerm]);
+  }, [itemsPerPage, debouncedSearchTerm, sortOption]);
   
   const handleAuthorAdded = (newAuthorData: Omit<Author, 'id'>) => {
     onAuthorAdded(newAuthorData);
@@ -150,15 +171,28 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
         </Dialog>
       </div>
       
-       <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Tìm kiếm tác giả..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 w-full"
-          />
+       <div className="flex items-center gap-4">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+                type="search"
+                placeholder="Tìm kiếm tác giả..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-full"
+            />
+          </div>
+           <Select value={sortOption} onValueChange={setSortOption}>
+                <SelectTrigger className="w-[240px]">
+                  <SelectValue placeholder="Sắp xếp theo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name_asc">Tên (A-Z)</SelectItem>
+                  <SelectItem value="name_desc">Tên (Z-A)</SelectItem>
+                  <SelectItem value="book_count_desc">Số lượng sách (Nhiều nhất)</SelectItem>
+                  <SelectItem value="book_count_asc">Số lượng sách (Ít nhất)</SelectItem>
+                </SelectContent>
+              </Select>
         </div>
 
       <div>
@@ -183,7 +217,7 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
                     {paginatedAuthors.map((author) => (
                     <TableRow key={author.id}>
                         <TableCell className="font-medium">{author.name}</TableCell>
-                        <TableCell>{books.filter(b => b.authorId === author.id).length}</TableCell>
+                        <TableCell>{author.bookCount}</TableCell>
                         <TableCell className="text-right">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -228,7 +262,7 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
                             ))}
                         </SelectContent>
                     </Select>
-                    <p className="text-sm text-muted-foreground">kết quả trong tổng số {filteredAuthors.length}</p>
+                    <p className="text-sm text-muted-foreground">kết quả trong tổng số {filteredAndSortedAuthors.length}</p>
                 </div>
                 {totalPages > 1 && (
                     <div className="flex items-center justify-end space-x-2">
