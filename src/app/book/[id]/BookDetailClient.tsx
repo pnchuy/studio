@@ -162,17 +162,6 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                         <TabsContent value="listen" className="mt-4">
                              {hasYoutubeLinks ? (
                                 <div className="space-y-4">
-                                    <div className="aspect-video w-full">
-                                        <iframe
-                                            ref={iframeRef}
-                                            key={selectedYoutubeLink?.url} // Change key to force re-render
-                                            className="w-full h-full rounded-lg"
-                                            src={selectedYoutubeLink ? `${convertYoutubeUrlToEmbed(selectedYoutubeLink.url)}?enablejsapi=1` : ''}
-                                            title={`YouTube video player for ${book.title}`}
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                            allowFullScreen
-                                        ></iframe>
-                                    </div>
                                     <div className="flex flex-wrap items-center gap-2">
                                         {book.youtubeLinks.map((link, index) => (
                                             <Button
@@ -202,6 +191,17 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         )}
+                                    </div>
+                                    <div className="aspect-video w-full">
+                                        <iframe
+                                            ref={iframeRef}
+                                            key={selectedYoutubeLink?.url} // Change key to force re-render
+                                            className="w-full h-full rounded-lg"
+                                            src={selectedYoutubeLink ? `${convertYoutubeUrlToEmbed(selectedYoutubeLink.url)}?enablejsapi=1` : ''}
+                                            title={`YouTube video player for ${book.title}`}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                            allowFullScreen
+                                        ></iframe>
                                     </div>
                                 </div>
                              ) : (
@@ -240,4 +240,6 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
         </div>
     );
 
+    
+}
     
