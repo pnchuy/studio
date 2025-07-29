@@ -20,7 +20,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, Pencil, Trash2, Upload, Eye } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Pencil, Trash2, Upload, Eye, Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -68,6 +68,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Input } from '@/components/ui/input';
+import { useDebounce } from '@/hooks/use-debounce';
 
 
 export function BookManagement() {
@@ -86,6 +88,10 @@ export function BookManagement() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [booksPerPage, setBooksPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('date_added_desc');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -102,7 +108,7 @@ export function BookManagement() {
             fetchAllGenres(),
             fetchAllSeries()
         ]);
-        setBooks(initialBooks);
+        setBooks(initialBooks.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)));
         setAuthors(initialAuthors);
         setGenres(initialGenres);
         setSeries(initialSeries);
@@ -125,13 +131,13 @@ export function BookManagement() {
         let bookToSave: Omit<Book, 'docId'> = { 
             ...newBookData, 
             id: newId,
+            createdAt: Date.now()
         };
         
         const docRef = await addDoc(collection(db, "books"), bookToSave);
         const newBook: Book = { ...bookToSave, docId: docRef.id };
-        const updatedBooks = [newBook, ...books].sort((a, b) => a.title.localeCompare(b.title));
-
-        setBooks(updatedBooks);
+        
+        setBooks(prev => [newBook, ...prev].sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)));
 
         if (newBook.series && !series.some(s => s.name === newBook.series)) {
             handleSeriesAdded({ name: newBook.series }, false);
@@ -161,18 +167,14 @@ export function BookManagement() {
             const { ...rest } = book;
             return {
                 ...rest,
-                coverImages: {
-                    size250: "https://placehold.co/250x375.png",
-                    size360: "https://placehold.co/360x540.png",
-                    size480: "https://placehold.co/480x720.png",
-                }
+                createdAt: Date.now(),
             };
         });
 
         await Promise.all(booksForFirestore.map(book => addDoc(collection(db, "books"), book)));
         
         const freshBooks = await fetchAllBooks();
-        setBooks(freshBooks);
+        setBooks(freshBooks.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)));
 
         const importedSeriesNames = new Set(newBooks.map(b => b.series).filter((s): s is string => !!s));
         const existingSeriesNames = new Set(series.map(s => s.name));
@@ -518,23 +520,42 @@ export function BookManagement() {
     return genreIds.map(id => genres.find(g => g.id === id)).filter((g): g is Genre => !!g);
   };
 
+  const filteredAndSortedBooks = useMemo(() => {
+    const filtered = books.filter(book => 
+      book.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      getAuthorName(book.authorId).toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+
+    return filtered.sort((a, b) => {
+      switch(sortOption) {
+        case 'title_asc':
+          return a.title.localeCompare(b.title);
+        case 'publication_date_desc':
+          return new Date(b.publicationDate).getTime() - new Date(a.publicationDate).getTime();
+        case 'date_added_desc':
+        default:
+          return (b.createdAt || 0) - (a.createdAt || 0);
+      }
+    });
+  }, [books, debouncedSearchTerm, sortOption, authors]);
+
   // Pagination logic
-  const totalPages = Math.ceil(books.length / booksPerPage);
-  const paginatedBooks = books.slice(
+  const totalPages = Math.ceil(filteredAndSortedBooks.length / booksPerPage);
+  const paginatedBooks = filteredAndSortedBooks.slice(
     (currentPage - 1) * booksPerPage,
     currentPage * booksPerPage
   );
 
   useEffect(() => {
-    const newTotalPages = Math.ceil(books.length / booksPerPage);
+    const newTotalPages = Math.ceil(filteredAndSortedBooks.length / booksPerPage);
     if (currentPage > newTotalPages) {
       setCurrentPage(Math.max(1, newTotalPages));
     }
-  }, [books, currentPage, booksPerPage]);
+  }, [filteredAndSortedBooks, currentPage, booksPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [booksPerPage]);
+  }, [booksPerPage, searchTerm, sortOption]);
 
 
   return (
@@ -595,6 +616,28 @@ export function BookManagement() {
             <TabsTrigger value="series">Series</TabsTrigger>
         </TabsList>
         <TabsContent value="books" className="mt-4">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Tìm kiếm sách hoặc tác giả..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-full"
+                />
+              </div>
+              <Select value={sortOption} onValueChange={setSortOption}>
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue placeholder="Sắp xếp theo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date_added_desc">Mới nhất</SelectItem>
+                  <SelectItem value="title_asc">Tên sách (A-Z)</SelectItem>
+                  <SelectItem value="publication_date_desc">Ngày phát hành (Mới nhất)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {isLoading ? (
             <div className="space-y-4">
                 <Skeleton className="h-10 w-full" />
@@ -709,7 +752,7 @@ export function BookManagement() {
                                 ))}
                             </SelectContent>
                         </Select>
-                        <p className="text-sm text-muted-foreground">kết quả trong tổng số {books.length}</p>
+                        <p className="text-sm text-muted-foreground">kết quả trong tổng số {filteredAndSortedBooks.length}</p>
                     </div>
                     {totalPages > 1 && (
                         <div className="flex items-center justify-end space-x-2">
@@ -818,7 +861,3 @@ export function BookManagement() {
     </>
   );
 }
-
-    
-
-    

@@ -12,7 +12,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, Trash2, Pencil } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Trash2, Pencil, Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from '@/components/ui/input';
+import { useDebounce } from '@/hooks/use-debounce';
 
 interface AuthorManagementProps {
     authors: Author[];
@@ -66,25 +68,34 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const totalPages = Math.ceil(authors.length / itemsPerPage);
+  const filteredAuthors = useMemo(() => {
+    return authors.filter(author =>
+      author.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [authors, debouncedSearchTerm]);
+
+
+  const totalPages = Math.ceil(filteredAuthors.length / itemsPerPage);
   const paginatedAuthors = useMemo(() => {
-    return authors.slice(
+    return filteredAuthors.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
-  }, [authors, currentPage, itemsPerPage]);
+  }, [filteredAuthors, currentPage, itemsPerPage]);
 
   useEffect(() => {
-    const newTotalPages = Math.ceil(authors.length / itemsPerPage);
+    const newTotalPages = Math.ceil(filteredAuthors.length / itemsPerPage);
     if (currentPage > newTotalPages) {
       setCurrentPage(Math.max(1, newTotalPages));
     }
-  }, [authors.length, currentPage, itemsPerPage]);
+  }, [filteredAuthors.length, currentPage, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [itemsPerPage]);
+  }, [itemsPerPage, debouncedSearchTerm]);
   
   const handleAuthorAdded = (newAuthorData: Omit<Author, 'id'>) => {
     onAuthorAdded(newAuthorData);
@@ -114,7 +125,7 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
   return (
     <>
     <div className="space-y-6">
-      <div className="flex flex-row items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
             <h3 className="text-xl font-semibold tracking-tight">Quản lý tác giả</h3>
             <p className="text-sm text-muted-foreground mt-1">Thêm, xóa tác giả trong hệ thống.</p>
@@ -138,6 +149,18 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
             </DialogContent>
         </Dialog>
       </div>
+      
+       <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Tìm kiếm tác giả..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-full"
+          />
+        </div>
+
       <div>
          {isLoading ? (
           <div className="space-y-4">
@@ -205,7 +228,7 @@ export function AuthorManagement({ authors, books, isLoading, onAuthorAdded, onA
                             ))}
                         </SelectContent>
                     </Select>
-                    <p className="text-sm text-muted-foreground">kết quả trong tổng số {authors.length}</p>
+                    <p className="text-sm text-muted-foreground">kết quả trong tổng số {filteredAuthors.length}</p>
                 </div>
                 {totalPages > 1 && (
                     <div className="flex items-center justify-end space-x-2">

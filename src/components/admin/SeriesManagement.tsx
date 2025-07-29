@@ -12,7 +12,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, Trash2, Pencil, Book as BookIcon } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Trash2, Pencil, Book as BookIcon, Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from '@/components/ui/input';
+import { useDebounce } from '@/hooks/use-debounce';
 
 interface SeriesManagementProps {
   series: Series[];
@@ -62,32 +64,38 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
   const [isEditSeriesOpen, setIsEditSeriesOpen] = useState(false);
   const [editingSeries, setEditingSeries] = useState<Series | null>(null);
   const [seriesToDelete, setSeriesToDelete] = useState<Series | null>(null);
-
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const sortedSeries = useMemo(() => {
-    return [...series].sort((a, b) => a.name.localeCompare(b.name));
-  }, [series]);
+  const filteredSeries = useMemo(() => {
+    const sorted = [...series].sort((a, b) => a.name.localeCompare(b.name));
+    return sorted.filter(s =>
+      s.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [series, debouncedSearchTerm]);
 
-  const totalPages = Math.ceil(sortedSeries.length / itemsPerPage);
+
+  const totalPages = Math.ceil(filteredSeries.length / itemsPerPage);
   const paginatedSeries = useMemo(() => {
-    return sortedSeries.slice(
+    return filteredSeries.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
-  }, [sortedSeries, currentPage, itemsPerPage]);
+  }, [filteredSeries, currentPage, itemsPerPage]);
 
   useEffect(() => {
-    const newTotalPages = Math.ceil(sortedSeries.length / itemsPerPage);
+    const newTotalPages = Math.ceil(filteredSeries.length / itemsPerPage);
     if (currentPage > newTotalPages) {
       setCurrentPage(Math.max(1, newTotalPages));
     }
-  }, [sortedSeries.length, currentPage, itemsPerPage]);
+  }, [filteredSeries.length, currentPage, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [itemsPerPage]);
+  }, [itemsPerPage, debouncedSearchTerm]);
   
   const handleEditClick = (seriesItem: Series) => {
     setEditingSeries(seriesItem);
@@ -97,7 +105,7 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
   return (
     <>
       <div className="space-y-6">
-        <div className="flex flex-row items-center justify-between">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
               <h3 className="text-xl font-semibold tracking-tight">Quản lý Series</h3>
               <p className="text-sm text-muted-foreground mt-1">Thêm, sửa, xóa series sách trong hệ thống.</p>
@@ -121,6 +129,18 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
               </DialogContent>
           </Dialog>
         </div>
+        
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Tìm kiếm series..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-full"
+          />
+        </div>
+
         <div>
           {isLoading ? (
               <div className="space-y-4">
@@ -198,7 +218,7 @@ export function SeriesManagement({ series, books, isLoading, onSeriesAdded, onSe
                               ))}
                           </SelectContent>
                       </Select>
-                      <p className="text-sm text-muted-foreground">kết quả trong tổng số {series.length}</p>
+                      <p className="text-sm text-muted-foreground">kết quả trong tổng số {filteredSeries.length}</p>
                   </div>
                   {totalPages > 1 && (
                       <div className="flex items-center justify-end space-x-2">

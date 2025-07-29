@@ -12,7 +12,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, Trash2, Pencil } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Trash2, Pencil, Search } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from '@/components/ui/input';
+import { useDebounce } from '@/hooks/use-debounce';
 
 interface GenreManagementProps {
     genres: Genre[];
@@ -66,25 +68,34 @@ export function GenreManagement({ genres, books, isLoading, onGenreAdded, onGenr
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const totalPages = Math.ceil(genres.length / itemsPerPage);
+  const filteredGenres = useMemo(() => {
+    return genres.filter(genre =>
+      genre.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [genres, debouncedSearchTerm]);
+
+
+  const totalPages = Math.ceil(filteredGenres.length / itemsPerPage);
   const paginatedGenres = useMemo(() => {
-    return genres.slice(
+    return filteredGenres.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
-  }, [genres, currentPage, itemsPerPage]);
+  }, [filteredGenres, currentPage, itemsPerPage]);
 
   useEffect(() => {
-    const newTotalPages = Math.ceil(genres.length / itemsPerPage);
+    const newTotalPages = Math.ceil(filteredGenres.length / itemsPerPage);
     if (currentPage > newTotalPages) {
       setCurrentPage(Math.max(1, newTotalPages));
     }
-  }, [genres.length, currentPage, itemsPerPage]);
+  }, [filteredGenres.length, currentPage, itemsPerPage]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [itemsPerPage]);
+  }, [itemsPerPage, debouncedSearchTerm]);
 
   const handleGenreAdded = (newGenreData: Omit<Genre, 'id'>) => {
     onGenreAdded(newGenreData);
@@ -114,7 +125,7 @@ export function GenreManagement({ genres, books, isLoading, onGenreAdded, onGenr
   return (
     <>
     <div className="space-y-6">
-      <div className="flex flex-row items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
             <h3 className="text-xl font-semibold tracking-tight">Quản lý thể loại</h3>
             <p className="text-sm text-muted-foreground mt-1">Thêm, xóa thể loại sách.</p>
@@ -138,6 +149,18 @@ export function GenreManagement({ genres, books, isLoading, onGenreAdded, onGenr
             </DialogContent>
         </Dialog>
       </div>
+      
+      <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Tìm kiếm thể loại..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-full"
+          />
+        </div>
+
       <div>
          {isLoading ? (
           <div className="space-y-4">
@@ -205,7 +228,7 @@ export function GenreManagement({ genres, books, isLoading, onGenreAdded, onGenr
                             ))}
                         </SelectContent>
                     </Select>
-                    <p className="text-sm text-muted-foreground">kết quả trong tổng số {genres.length}</p>
+                    <p className="text-sm text-muted-foreground">kết quả trong tổng số {filteredGenres.length}</p>
                 </div>
                 {totalPages > 1 && (
                     <div className="flex items-center justify-end space-x-2">

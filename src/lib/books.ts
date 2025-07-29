@@ -31,6 +31,7 @@ export async function getAllBooks(): Promise<Book[]> {
             youtubeLinks,
             shortDescription: data.shortDescription || data.summary || '',
             longDescription: data.longDescription || '',
+            createdAt: data.createdAt || new Date(data.publicationDate).getTime() // Fallback to publication date for old data
         } as Book;
     }).filter(book => book.id);
   } catch (error) {
@@ -82,6 +83,7 @@ export async function getBookById(id: string): Promise<Book | null> {
         youtubeLinks,
         shortDescription: data.shortDescription || data.summary || '',
         longDescription: data.longDescription || '',
+        createdAt: data.createdAt || new Date(data.publicationDate).getTime()
     } as Book;
 
   } catch (error) {

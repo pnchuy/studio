@@ -38,6 +38,7 @@ export type Book = {
   genreIds: string[];
   youtubeLinks: YoutubeLink[];
   amazonLink: string;
+  createdAt?: number; // Timestamp
 };
 
 export type BookWithDetails = Book & {
