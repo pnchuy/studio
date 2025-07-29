@@ -13,29 +13,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { generateId } from "@/lib/utils";
 
 type ImportType = 'books' | 'authors' | 'genres' | 'series';
 
-// Schema for the books in the JSON file
+// Schema for the books in the JSON file, matching the user's provided format.
 const importBookSchema = z.object({
-  id: z.string().min(1, "ID sách là bắt buộc."),
   title: z.string().min(2, "Tiêu đề phải có ít nhất 2 ký tự."),
-  authorId: z.string().min(1, "ID tác giả là bắt buộc."),
-  publicationDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: "Ngày xuất bản không hợp lệ.",
-  }),
-  youtubeLink: z.array(z.string().url()).optional().default([]),
+  author: z.string().min(1, "Tên tác giả là bắt buộc."),
+  date: z.string(),
+  youtubeLinks: z.string().optional().default(""),
   amazonLink: z.string().url().or(z.literal("")).optional().default(""),
-  shortDescription: z.string().optional().default("Sách được import từ file JSON."),
-  longDescription: z.string().optional().default(""),
-  coverImage: z.string().url().optional().default("https://placehold.co/400x600.png"),
-  series: z.string().nullable().optional().default(null),
-  seriesOrder: z.number().nullable().optional().default(null),
-  genreIds: z.array(z.string()).optional().default([]),
+  genreIds: z.string().optional().default(""),
+  coverLink: z.string().url().or(z.literal("")).optional().default("https://placehold.co/400x600.png"),
 });
 
 const importFileSchema = z.array(importBookSchema);
-export type ImportBook = z.infer<typeof importBookSchema>;
+export type ImportBook = Omit<Book, 'id' | 'docId'>;
+type RawImportBook = z.infer<typeof importBookSchema>;
+
 
 interface ImportBooksDialogProps {
   existingBooks: Book[];
@@ -109,6 +105,16 @@ export function ImportBooksDialog({
     }
   }
 
+  const parseDate = (dateStr: string): string => {
+      // Handles "May 14th 2019" -> "2019-05-14"
+      const cleanedDateStr = dateStr.replace(/(st|nd|rd|th)/, '');
+      const date = new Date(cleanedDateStr);
+      if (isNaN(date.getTime())) {
+          return new Date().toISOString().split('T')[0]; // fallback
+      }
+      return date.toISOString().split('T')[0];
+  };
+
   const handleBookFileValidation = () => {
     if (!selectedFile) {
       setError("Vui lòng chọn một tệp để import.");
@@ -125,23 +131,44 @@ export function ImportBooksDialog({
         const validationResult = importFileSchema.safeParse(jsonData);
         if (!validationResult.success) {
           const firstError = validationResult.error.issues[0];
-          setError(`Cấu trúc file JSON không hợp lệ. Lỗi tại [sách ${firstError.path[0]}]: ${firstError.message}`);
+          setError(`Cấu trúc file JSON không hợp lệ. Lỗi tại [sách ${firstError.path[0]} -> ${firstError.path[1]}]: ${firstError.message}`);
           setIsLoading(false);
           return;
         }
 
         const existingTitles = new Set(existingBooks.map(b => b.title.toLowerCase()));
-        const existingIds = new Set(existingBooks.map(b => b.id));
-        const existingAuthorIds = new Set(existingAuthors.map(a => a.id));
+        const authorMap = new Map(existingAuthors.map(a => [a.name.toLowerCase(), a.id]));
+        const genreMap = new Map(existingGenres.map(g => [g.name.toLowerCase(), g.id]));
+
         const booksToImport: ImportBook[] = [];
 
-        for (const book of validationResult.data) {
-          const isTitleDuplicate = existingTitles.has(book.title.toLowerCase());
-          const isIdDuplicate = existingIds.has(book.id);
-          const isAuthorValid = existingAuthorIds.has(book.authorId);
+        for (const rawBook of validationResult.data) {
+          const isTitleDuplicate = existingTitles.has(rawBook.title.toLowerCase());
+          const authorId = authorMap.get(rawBook.author.toLowerCase());
           
-          if (!isTitleDuplicate && !isIdDuplicate && isAuthorValid) {
-            booksToImport.push(book);
+          if (!isTitleDuplicate && authorId) {
+            const genreIds = rawBook.genreIds.split(',')
+                .map(name => genreMap.get(name.trim().toLowerCase()))
+                .filter((id): id is string => !!id);
+
+            booksToImport.push({
+                id: generateId(),
+                title: rawBook.title,
+                authorId: authorId,
+                publicationDate: parseDate(rawBook.date),
+                youtubeLinks: rawBook.youtubeLinks.split('|').filter(Boolean).map(url => ({ url, chapters: '' })),
+                amazonLink: rawBook.amazonLink || "",
+                shortDescription: "Sách được import từ file JSON.",
+                longDescription: "",
+                coverImages: {
+                    size250: rawBook.coverLink || "https://placehold.co/250x375.png",
+                    size360: rawBook.coverLink || "https://placehold.co/360x540.png",
+                    size480: rawBook.coverLink || "https://placehold.co/480x720.png",
+                },
+                series: null,
+                seriesOrder: null,
+                genreIds: genreIds,
+            });
           }
         }
         
@@ -150,6 +177,7 @@ export function ImportBooksDialog({
         setStep('preview');
         setError(null);
       } catch (err) {
+        console.log(err);
         setError("Không thể đọc hoặc phân tích tệp JSON. Vui lòng đảm bảo tệp không bị lỗi.");
       } finally {
         setIsLoading(false);
@@ -221,7 +249,7 @@ export function ImportBooksDialog({
         <Code className="h-4 w-4" />
         <AlertTitle>Định dạng yêu cầu</AlertTitle>
         <AlertDescription>
-          Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `id`, `title`, `authorId`, `publicationDate`.
+          Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `title`, `author`, `date`. Các trường khác là tùy chọn.
         </AlertDescription>
       </Alert>
 
@@ -356,7 +384,7 @@ export function ImportBooksDialog({
         <AlertTitle>Xem trước kết quả Import</AlertTitle>
         <AlertDescription>
           {hasItemsToImport ? `Tìm thấy ${itemsFound} mục hợp lệ để thêm.` : `Không có mục nào hợp lệ để thêm.`}
-          {skippedCount > 0 && ` Đã bỏ qua ${skippedCount} mục do bị trùng lặp.`}
+          {skippedCount > 0 && ` Đã bỏ qua ${skippedCount} mục do bị trùng lặp hoặc không tìm thấy tác giả.`}
         </AlertDescription>
       </Alert>
       
