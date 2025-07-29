@@ -162,7 +162,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="secondary" className="flex items-center gap-2">
-                                                <span>Select Part</span>
+                                                <span>Select Chapter</span>
                                                 <ChevronDown className="h-4 w-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
@@ -170,7 +170,7 @@ export default function BookDetailClient({ book }: BookDetailClientProps) {
                                             <ScrollArea className="h-48">
                                                 {chapters.map((time, index) => (
                                                     <DropdownMenuItem key={index} onSelect={() => seekTo(time)} className="cursor-pointer">
-                                                        Part {chapterNumberingOffset + index + 1}
+                                                        Chapter {chapterNumberingOffset + index + 1}
                                                     </DropdownMenuItem>
                                                 ))}
                                             </ScrollArea>
