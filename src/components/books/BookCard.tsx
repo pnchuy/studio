@@ -38,7 +38,12 @@ export function BookCard({ book }: BookCardProps) {
             {book.title}
           </CardTitle>
           <p className="mt-1 text-sm text-muted-foreground truncate">{book.author?.name || 'Unknown Author'}</p>
-          {book.series && <Badge variant="secondary" className="mt-2">{book.series}</Badge>}
+          {book.series && (
+            <Badge variant="secondary" className="mt-2">
+                {book.series}
+                {book.seriesOrder !== null ? ` #${book.seriesOrder}` : ''}
+            </Badge>
+          )}
         </CardContent>
       </Card>
     </Link>
