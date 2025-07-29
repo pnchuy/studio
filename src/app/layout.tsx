@@ -32,7 +32,7 @@ export default function RootLayout({
       </head>
       <body
         className={cn(
-          'min-h-screen bg-background font-body antialiased'
+          'min-h-screen bg-muted font-body antialiased'
         )}
       >
         <ThemeProvider
@@ -44,7 +44,7 @@ export default function RootLayout({
           <AuthProvider>
             <div className="relative flex min-h-screen flex-col">
               <SiteHeader />
-              <main className="flex-1 py-8">
+              <main className="flex-1 bg-background py-8">
                 <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                   {children}
                 </div>
