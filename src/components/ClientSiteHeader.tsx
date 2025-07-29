@@ -44,7 +44,7 @@ export function ClientSiteHeader() {
           ) : (
             <BookOpen className="h-6 w-6 text-primary" />
           )}
-          <span className="font-bold font-headline text-lg">Listen and Read</span>
+          <span className="hidden md:inline font-bold font-headline text-lg">Listen and Read</span>
         </Link>
         <div className="flex items-center space-x-2">
           <ThemeToggle />
