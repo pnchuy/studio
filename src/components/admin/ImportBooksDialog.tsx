@@ -26,6 +26,8 @@ const importBookSchema = z.object({
   amazonLink: z.string().url().or(z.literal("")).optional(),
   genreIds: z.string().optional(),
   coverLink: z.string().url().or(z.literal("")).optional(),
+  series: z.string().optional(),
+  order: z.union([z.string(), z.number()]).optional(),
 });
 
 
@@ -140,6 +142,7 @@ export function ImportBooksDialog({
         const existingTitles = new Set(existingBooks.map(b => b.title.toLowerCase()));
         const authorMap = new Map(existingAuthors.map(a => [a.name.toLowerCase(), a.id]));
         const genreMap = new Map(existingGenres.map(g => [g.name.toLowerCase(), g.id]));
+        const seriesSet = new Set(existingSeries.map(s => s.name.toLowerCase()));
 
         const booksToImport: ImportBook[] = [];
 
@@ -153,6 +156,10 @@ export function ImportBooksDialog({
                 .filter((id): id is string => !!id) || [];
             
             const coverLink = rawBook.coverLink || "https://placehold.co/480x720.png";
+            
+            const bookSeries = rawBook.series && seriesSet.has(rawBook.series.toLowerCase()) ? rawBook.series : null;
+            const seriesOrder = rawBook.order ? Number(rawBook.order) : null;
+
 
             booksToImport.push({
                 id: generateId(),
@@ -168,8 +175,8 @@ export function ImportBooksDialog({
                     size360: coverLink,
                     size480: coverLink,
                 },
-                series: null,
-                seriesOrder: null,
+                series: bookSeries,
+                seriesOrder: seriesOrder,
                 genreIds: genreIds,
             });
           }
@@ -333,6 +340,7 @@ export function ImportBooksDialog({
                     <TableRow>
                         <TableHead>Tiêu đề</TableHead>
                         <TableHead>Tác giả</TableHead>
+                        <TableHead>Series</TableHead>
                         <TableHead>Ngày XB</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -341,6 +349,7 @@ export function ImportBooksDialog({
                         <TableRow key={index}>
                             <TableCell className="font-medium">{book.title}</TableCell>
                             <TableCell>{getAuthorName(book.authorId)}</TableCell>
+                            <TableCell>{book.series ? `${book.series} #${book.seriesOrder}` : 'N/A'}</TableCell>
                             <TableCell>{new Date(book.publicationDate).toLocaleDateString()}</TableCell>
                         </TableRow>
                     ))}
