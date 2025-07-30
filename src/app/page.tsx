@@ -8,7 +8,7 @@ export default async function Home() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold tracking-tight font-headline">Explore Our Collection</h1>
+      <h1 className="text-3xl font-bold font-headline">Explore Our Collection</h1>
       <p className="text-muted-foreground mt-2">
         Find your next favorite book.
       </p>

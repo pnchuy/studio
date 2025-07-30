@@ -1,21 +1,12 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import type { BookWithDetails } from '@/types';
 import { BookCard } from './BookCard';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Search } from 'lucide-react';
-import { useSearchHistory } from '@/hooks/use-search-history';
 import { useDebounce } from '@/hooks/use-debounce';
-import { useSearchParams } from 'next/navigation';
 
 interface BookListProps {
   books: BookWithDetails[];
@@ -23,18 +14,8 @@ interface BookListProps {
 }
 
 export function BookList({ books, isSearchPage = false }: BookListProps) {
-  const searchParams = useSearchParams();
-  const queryFromUrl = searchParams.get('q') || '';
-
-  const [searchTerm, setSearchTerm] = useState(queryFromUrl);
-  const { addSearchTerm } = useSearchHistory();
+  const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    if (queryFromUrl) {
-      setSearchTerm(queryFromUrl);
-    }
-  }, [queryFromUrl]);
 
   const filteredBooks = useMemo(() => {
     if (isSearchPage && debouncedSearchTerm) {
@@ -47,12 +28,6 @@ export function BookList({ books, isSearchPage = false }: BookListProps) {
     return books;
   }, [books, isSearchPage, debouncedSearchTerm]);
 
-
-  useEffect(() => {
-    if (debouncedSearchTerm && isSearchPage) {
-      addSearchTerm(debouncedSearchTerm);
-    }
-  }, [debouncedSearchTerm, addSearchTerm, isSearchPage]);
 
   return (
     <div className="mt-8 space-y-8">
