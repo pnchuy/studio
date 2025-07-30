@@ -14,7 +14,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { generateId } from "@/lib/utils";
-import { JSDOM } from "jsdom";
 
 type ImportType = 'books' | 'authors' | 'genres' | 'series';
 
@@ -56,7 +55,8 @@ const processImageFromBase64 = (base64Data: string): Promise<CoverImages> => {
         return Promise.reject(new Error("processImageFromBase64 can only be run on the server."));
     }
     
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+        const { JSDOM } = await import('jsdom');
         const { window } = new JSDOM();
         const { Image, Canvas } = window;
         
@@ -162,6 +162,10 @@ export function ImportBooksDialog({
   };
 
   const handleBookFileValidation = () => {
+    if (typeof window === 'undefined') {
+        // This function is client-side only because it uses FileReader
+        return;
+    }
     if (!selectedFile) {
       setError("Vui lòng chọn một tệp để import.");
       return;
@@ -198,25 +202,14 @@ export function ImportBooksDialog({
                 .map(name => genreMap.get(name.trim().toLowerCase()))
                 .filter((id): id is string => !!id) || [];
             
-            let coverImages: CoverImages;
-            if (rawBook.base64 && rawBook.base64.length > 50) {
-              try {
-                // This will fail in a client-only environment, but the webpack config should prevent the build from failing.
-                // The logic here is now more of a progressive enhancement. If it fails, it falls back.
-                coverImages = await processImageFromBase64(rawBook.base64);
-              } catch (imgError) {
-                console.error(`Skipping book "${rawBook.title}" due to image processing error. This is expected on the client.`, imgError);
-                const coverLink = rawBook.coverLink || "https://placehold.co/480x720.png";
-                coverImages = { size250: coverLink, size360: coverLink, size480: coverLink };
-              }
-            } else {
-              const coverLink = rawBook.coverLink || "https://placehold.co/480x720.png";
-              coverImages = {
-                  size250: coverLink,
-                  size360: coverLink,
-                  size480: coverLink,
-              };
-            }
+            // For now, we are skipping base64 processing on the client as it requires Node.js APIs.
+            // A more advanced implementation would involve a serverless function.
+            const coverLink = rawBook.coverLink || "https://placehold.co/480x720.png";
+            const coverImages: CoverImages = {
+                size250: coverLink,
+                size360: coverLink,
+                size480: coverLink,
+            };
             
             const bookSeries = rawBook.series && seriesSet.has(rawBook.series.toLowerCase()) ? rawBook.series : null;
             const seriesOrder = rawBook.order ? Number(rawBook.order) : null;
@@ -316,7 +309,7 @@ export function ImportBooksDialog({
         <Code className="h-4 w-4" />
         <AlertTitle>Định dạng yêu cầu</AlertTitle>
         <AlertDescription>
-          Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `title`, `author`, `date`. Các trường khác (`base64`, `coverLink`, etc.) là tùy chọn.
+          Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `title`, `author`, `date`. Các trường khác (`coverLink`, etc.) là tùy chọn. Chức năng import `base64` đang được bảo trì.
         </AlertDescription>
       </Alert>
 

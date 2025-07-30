@@ -9,8 +9,6 @@ import { Calendar, Book as BookIcon, Hash, User as UserIcon } from 'lucide-react
 import BookDetailClient from './BookDetailClient';
 import { CommentSection } from '@/components/comments/CommentSection';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import DOMPurify from 'dompurify';
-import { JSDOM } from 'jsdom';
 import Link from 'next/link';
 import { slugify } from '@/lib/utils';
 
@@ -36,11 +34,15 @@ export async function generateMetadata({ params: { id } }: BookPageProps) {
     }
 }
 
-// We need to use JSDOM on the server to allow DOMPurify to work.
-let purify: DOMPurify.DOMPurifyI;
-if (typeof window === 'undefined') {
-  const domWindow = new JSDOM('').window;
-  purify = DOMPurify(domWindow as unknown as Window);
+async function getSanitizedDescription(description: string | undefined) {
+    if (typeof window !== 'undefined' || !description) {
+        return description || '';
+    }
+    const { JSDOM } = await import('jsdom');
+    const DOMPurify = (await import('dompurify')).default;
+    const domWindow = new JSDOM('').window;
+    const purify = DOMPurify(domWindow as unknown as Window);
+    return purify.sanitize(description);
 }
 
 
@@ -55,7 +57,7 @@ export default async function BookPage({ params: { id } }: BookPageProps) {
   const author = await getAuthorById(book.authorId);
   const genres = await getGenresByIds(book.genreIds);
   
-  const sanitizedLongDescription = book.longDescription && purify ? purify.sanitize(book.longDescription) : '';
+  const sanitizedLongDescription = await getSanitizedDescription(book.longDescription);
 
   return (
     <article>
