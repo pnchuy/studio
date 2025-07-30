@@ -15,7 +15,7 @@ export default async function Home() {
       
       <TopDiscussedBooks allBooks={allBooks} />
 
-      <h2 className="text-2xl font-bold font-headline mt-12 mb-4">Recently Added Books</h2>
+      <h2 className="text-2xl font-bold font-headline mt-12 mb-4">All books</h2>
       <BookList 
         books={allBooks}
         isSearchPage={false}
