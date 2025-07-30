@@ -1,6 +1,6 @@
 import type { Book, BookWithDetails, YoutubeLink } from '@/types';
 import { db, isFirebaseConfigured } from './firebase';
-import { collection, getDocs, doc, getDoc, query, orderBy, limit as firestoreLimit, startAfter, documentId, where, limit, getDocFromCache } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, orderBy, limit as firestoreLimit, startAfter, documentId, where, limit } from 'firebase/firestore';
 import { getAllAuthors } from './authors';
 import { getAllGenres } from './genres';
 
@@ -53,15 +53,21 @@ export async function getBookById(id: string): Promise<Book | null> {
     if (!querySnapshot.empty) {
       docToProcess = querySnapshot.docs[0];
     } else {
-        const bookDocRef = doc(db, 'books', id);
-        const bookDoc = await getDoc(bookDocRef);
-        if (bookDoc.exists()) {
-            docToProcess = bookDoc;
-        } else {
-            return null;
+        try {
+            const bookDocRef = doc(db, 'books', id);
+            const bookDoc = await getDoc(bookDocRef);
+            if (bookDoc.exists()) {
+                docToProcess = bookDoc;
+            } else {
+                return null;
+            }
+        } catch (e) {
+             return null;
         }
     }
     
+    if (!docToProcess) return null;
+
     const data = docToProcess.data();
 
     // Backward compatibility for old youtubeLink structure
@@ -93,7 +99,7 @@ export async function getBookById(id: string): Promise<Book | null> {
   }
 }
 
-export async function getPaginatedBooksWithDetails({ page = 1, limit = 10, lastBookId }: { page?: number; limit?: number, lastBookId?: string | null }) {
+export async function getPaginatedBooksWithDetails({ page = 1, limit: queryLimit = 20, lastBookId }: { page?: number; limit?: number, lastBookId?: string | null }) {
   if (!isFirebaseConfigured || !db) {
     return { books: [], hasMore: false };
   }
@@ -102,12 +108,12 @@ export async function getPaginatedBooksWithDetails({ page = 1, limit = 10, lastB
   const allGenres = await getAllGenres();
 
   const booksRef = collection(db, "books");
-  let q = query(booksRef, orderBy("createdAt", "desc"), firestoreLimit(limit));
+  let q = query(booksRef, orderBy("createdAt", "desc"), firestoreLimit(queryLimit));
 
   if (lastBookId) {
     const lastVisibleDoc = await getDoc(doc(db, "books", lastBookId));
     if(lastVisibleDoc.exists()){
-        q = query(booksRef, orderBy("createdAt", "desc"), startAfter(lastVisibleDoc), firestoreLimit(limit));
+        q = query(booksRef, orderBy("createdAt", "desc"), startAfter(lastVisibleDoc), firestoreLimit(queryLimit));
     }
   }
 
@@ -121,7 +127,7 @@ export async function getPaginatedBooksWithDetails({ page = 1, limit = 10, lastB
       ...bookData,
       id: docSnap.data().id || docSnap.id,
       docId: docSnap.id,
-      author,
+      author: author, // Can be undefined, will be handled in the component
       genres,
       coverImages: {
         size250: bookData.coverImages?.size250?.trim() || "https://placehold.co/250x375.png",
@@ -131,7 +137,7 @@ export async function getPaginatedBooksWithDetails({ page = 1, limit = 10, lastB
     } as BookWithDetails;
   });
 
-  const hasMore = books.length === limit;
+  const hasMore = books.length === queryLimit;
   
   return {
     books,
