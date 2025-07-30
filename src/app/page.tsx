@@ -1,12 +1,11 @@
 import { getPaginatedBooksWithDetails } from '@/lib/books';
 import { BookList } from '@/components/books/BookList';
-import { getAllBooks } from '@/lib/books';
-import BookRecommender from '@/components/books/BookRecommender';
+import { TopDiscussedBooks } from '@/components/books/TopDiscussedBooks';
 
 export default async function Home() {
   const [{ books: initialBooks, hasMore: initialHasMore }, allBooks] = await Promise.all([
-    getPaginatedBooksWithDetails({ page: 1 }),
-    getPaginatedBooksWithDetails({ limit: 1000 }).then(res => res.books) // Fetch more for recommender
+    getPaginatedBooksWithDetails({ page: 1, limit: 20 }),
+    getPaginatedBooksWithDetails({ limit: 1000 }).then(res => res.books)
   ]);
 
   return (
@@ -15,7 +14,9 @@ export default async function Home() {
       <p className="text-muted-foreground mt-2">
         Find your next favorite book.
       </p>
-      <BookRecommender allBooks={allBooks} />
+      
+      <TopDiscussedBooks allBooks={allBooks} />
+
       <BookList 
         initialBooks={initialBooks}
         initialHasMore={initialHasMore}
