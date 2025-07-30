@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import type { Book, Author, Genre, Series } from '@/types';
-import { getAllBooks as fetchAllBooks } from '@/lib/books';
+import { getPaginatedBooksWithDetails } from '@/lib/books';
 import { getAllAuthors as fetchAllAuthors } from '@/lib/authors';
 import { getAllGenres as fetchAllGenres } from '@/lib/genres';
 import { getAllSeries as fetchAllSeries } from '@/lib/series';
@@ -102,13 +102,13 @@ export function BookManagement() {
       }
       setIsLoading(true);
       try {
-        const [initialBooks, initialAuthors, initialGenres, initialSeries] = await Promise.all([
-            fetchAllBooks(),
+        const [booksResult, initialAuthors, initialGenres, initialSeries] = await Promise.all([
+            getPaginatedBooksWithDetails({ limit: 1000 }), // Fetch all books
             fetchAllAuthors(),
             fetchAllGenres(),
             fetchAllSeries()
         ]);
-        setBooks(initialBooks); // Data is now pre-sorted from fetchAllBooks
+        setBooks(booksResult.books);
         setAuthors(initialAuthors);
         setGenres(initialGenres);
         setSeries(initialSeries);
@@ -173,8 +173,8 @@ export function BookManagement() {
 
         await Promise.all(booksForFirestore.map(book => addDoc(collection(db, "books"), book)));
         
-        const freshBooks = await fetchAllBooks();
-        setBooks(freshBooks);
+        const freshBooksResult = await getPaginatedBooksWithDetails({ limit: 1000 });
+        setBooks(freshBooksResult.books);
 
         const importedSeriesNames = new Set(newBooks.map(b => b.series).filter((s): s is string => !!s));
         const existingSeriesNames = new Set(series.map(s => s.name));
@@ -867,6 +867,8 @@ export function BookManagement() {
     </>
   );
 }
+
+    
 
     
 
