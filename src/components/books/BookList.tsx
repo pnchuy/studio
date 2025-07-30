@@ -25,6 +25,7 @@ export function BookList({ books, isSearchPage = false }: BookListProps) {
                 (book.author?.name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase())
         );
     }
+    // For the main page, or search page without a term, show all books passed in
     return books;
   }, [books, isSearchPage, debouncedSearchTerm]);
 
@@ -55,7 +56,7 @@ export function BookList({ books, isSearchPage = false }: BookListProps) {
       ) : (
         <div className="text-center py-16">
             <p className="text-lg font-medium">No books found.</p>
-            <p className="text-muted-foreground">Try adjusting your search or sort parameters.</p>
+            <p className="text-muted-foreground">Try adjusting your search parameters.</p>
         </div>
       )}
     </div>
