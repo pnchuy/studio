@@ -10,8 +10,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { BookWithDetails } from '@/types';
 import { cn, slugify } from '@/lib/utils';
 import { useDebounce } from '@/hooks/use-debounce';
-import { getAllBooks } from '@/lib/books';
-import { getAllAuthors } from '@/lib/authors';
+import { getPaginatedBooksWithDetails } from '@/lib/books';
 
 import {
   CommandDialog,
@@ -56,18 +55,9 @@ export function GlobalSearch() {
 
     const fetchData = async () => {
       setLoading(true);
-      const [allBooks, allAuthors] = await Promise.all([
-          getAllBooks(),
-          getAllAuthors(),
-      ]);
-
-      const booksWithAuthors: BookWithDetails[] = allBooks.map(book => ({
-          ...book,
-          author: allAuthors.find(a => a.id === book.authorId),
-          genres: [] // Not needed for search suggestions
-      }));
-
-      const filteredData = booksWithAuthors.filter(book => 
+      const { books: allBooks } = await getPaginatedBooksWithDetails({ limit: 1000 });
+      
+      const filteredData = allBooks.filter(book => 
           book.title.toLowerCase().includes(debouncedQuery.toLowerCase()) || 
           book.author?.name.toLowerCase().includes(debouncedQuery.toLowerCase())
       );

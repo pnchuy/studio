@@ -31,7 +31,6 @@ export function BookList({ initialBooks, isSearchPage = false }: BookListProps) 
   const { addSearchTerm } = useSearchHistory();
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   
-  // The list of all books is now managed internally by this component
   const [books, setBooks] = useState<BookWithDetails[]>(initialBooks);
 
   useEffect(() => {
