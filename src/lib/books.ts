@@ -93,9 +93,7 @@ export async function getBookById(id: string): Promise<Book | null> {
   }
 }
 
-const BOOKS_PER_PAGE = 10;
-
-export async function getPaginatedBooksWithDetails({ page = 1, limit = BOOKS_PER_PAGE }: { page?: number; limit?: number }) {
+export async function getPaginatedBooksWithDetails({ page = 1, limit = 20 }: { page?: number; limit?: number }) {
   // Data from getAllBooks is now pre-sorted by createdAt descending
   const allBooks = await getAllBooks(); 
   const allAuthors = await getAllAuthors();
