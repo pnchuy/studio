@@ -37,8 +37,12 @@ export async function generateMetadata({ params: { id } }: BookPageProps) {
 }
 
 // We need to use JSDOM on the server to allow DOMPurify to work.
-const window = new JSDOM('').window;
-const purify = DOMPurify(window as any);
+let purify: DOMPurify.DOMPurifyI;
+if (typeof window === 'undefined') {
+  const domWindow = new JSDOM('').window;
+  purify = DOMPurify(domWindow as unknown as Window);
+}
+
 
 export default async function BookPage({ params: { id } }: BookPageProps) {
   const bookId = id.split('-')[0];
@@ -51,7 +55,7 @@ export default async function BookPage({ params: { id } }: BookPageProps) {
   const author = await getAuthorById(book.authorId);
   const genres = await getGenresByIds(book.genreIds);
   
-  const sanitizedLongDescription = book.longDescription ? purify.sanitize(book.longDescription) : '';
+  const sanitizedLongDescription = book.longDescription && purify ? purify.sanitize(book.longDescription) : '';
 
   return (
     <article>
