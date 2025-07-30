@@ -1,3 +1,4 @@
+
 import { getPaginatedBooksWithDetails } from '@/lib/books';
 import { BookList } from '@/components/books/BookList';
 import { TopDiscussedBooks } from '@/components/books/TopDiscussedBooks';
@@ -17,6 +18,7 @@ export default async function Home() {
       
       <TopDiscussedBooks allBooks={allBooks} />
 
+      <h2 className="text-2xl font-bold font-headline mt-12 mb-4">Recently Added Books</h2>
       <BookList 
         initialBooks={initialBooks}
         initialHasMore={initialHasMore}
