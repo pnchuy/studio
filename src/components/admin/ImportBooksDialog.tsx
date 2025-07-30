@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { z } from "zod";
-import type { Book, Author, Genre, Series } from "@/types";
+import type { Book, Author, Genre, Series, CoverImages } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { generateId } from "@/lib/utils";
+import { JSDOM } from "jsdom";
 
 type ImportType = 'books' | 'authors' | 'genres' | 'series';
 
@@ -28,6 +29,7 @@ const importBookSchema = z.object({
   coverLink: z.string().url().or(z.literal("")).optional(),
   series: z.string().optional(),
   order: z.union([z.string(), z.number()]).optional(),
+  base64: z.string().optional(),
 });
 
 
@@ -47,6 +49,44 @@ interface ImportBooksDialogProps {
   onSeriesImported: (names: string[]) => void;
   onFinished: () => void;
 }
+
+const processImageFromBase64 = (base64Data: string): Promise<CoverImages> => {
+  return new Promise((resolve, reject) => {
+    // JSDOM is needed for server-side canvas operations
+    const { window } = new JSDOM();
+    const { Image, Canvas } = window;
+    
+    const img = new Image();
+    // Ensure the base64 string has the correct data URI prefix
+    img.src = base64Data.startsWith('data:image') ? base64Data : `data:image/jpeg;base64,${base64Data}`;
+    
+    img.onload = async () => {
+      const sizes = [250, 360, 480];
+      const encodedImages: Partial<CoverImages> = {};
+
+      for (const width of sizes) {
+        const canvas = new Canvas(0,0);
+        const scaleFactor = width / img.width;
+        canvas.width = width;
+        canvas.height = img.height * scaleFactor;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          return reject(new Error('Could not get canvas context'));
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/webp', 0.8);
+        encodedImages[`size${width}` as keyof CoverImages] = dataUrl;
+      }
+      
+      resolve(encodedImages as CoverImages);
+    };
+    img.onerror = (error) => {
+      console.error("Image loading error from base64", error);
+      reject(new Error("Image could not be loaded from base64 data."));
+    };
+  });
+};
+
 
 export function ImportBooksDialog({ 
     existingBooks, 
@@ -126,7 +166,7 @@ export function ImportBooksDialog({
     setIsLoading(true);
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const content = e.target?.result as string;
         const jsonData = JSON.parse(content);
@@ -155,7 +195,22 @@ export function ImportBooksDialog({
                 .map(name => genreMap.get(name.trim().toLowerCase()))
                 .filter((id): id is string => !!id) || [];
             
-            const coverLink = rawBook.coverLink || "https://placehold.co/480x720.png";
+            let coverImages: CoverImages;
+            if (rawBook.base64 && rawBook.base64.length > 50) {
+              try {
+                coverImages = await processImageFromBase64(rawBook.base64);
+              } catch (imgError) {
+                console.error(`Skipping book "${rawBook.title}" due to image processing error:`, imgError);
+                continue; // Skip this book if image processing fails
+              }
+            } else {
+              const coverLink = rawBook.coverLink || "https://placehold.co/480x720.png";
+              coverImages = {
+                  size250: coverLink,
+                  size360: coverLink,
+                  size480: coverLink,
+              };
+            }
             
             const bookSeries = rawBook.series && seriesSet.has(rawBook.series.toLowerCase()) ? rawBook.series : null;
             const seriesOrder = rawBook.order ? Number(rawBook.order) : null;
@@ -170,11 +225,7 @@ export function ImportBooksDialog({
                 amazonLink: rawBook.amazonLink || "",
                 shortDescription: "Sách được import từ file JSON.",
                 longDescription: "",
-                coverImages: {
-                    size250: coverLink,
-                    size360: coverLink,
-                    size480: coverLink,
-                },
+                coverImages: coverImages,
                 series: bookSeries,
                 seriesOrder: seriesOrder,
                 genreIds: genreIds,
@@ -259,7 +310,7 @@ export function ImportBooksDialog({
         <Code className="h-4 w-4" />
         <AlertTitle>Định dạng yêu cầu</AlertTitle>
         <AlertDescription>
-          Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `title`, `author`, `date`. Các trường khác là tùy chọn.
+          Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `title`, `author`, `date`. Các trường khác (`base64`, `coverLink`, etc.) là tùy chọn.
         </AlertDescription>
       </Alert>
 
