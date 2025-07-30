@@ -1,12 +1,11 @@
 
 "use client";
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import type { Book, Author, Genre, Series } from '@/types';
-import { getPaginatedBooksWithDetails } from '@/lib/books';
+import { collection, addDoc, doc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
+import type { Book, Author, Genre, Series, BookWithDetails } from '@/types';
 import { getAllAuthors as fetchAllAuthors } from '@/lib/authors';
 import { getAllGenres as fetchAllGenres } from '@/lib/genres';
 import { getAllSeries as fetchAllSeries } from '@/lib/series';
@@ -95,41 +94,46 @@ export function BookManagement() {
 
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!isFirebaseConfigured) {
-          setIsLoading(false);
-          return;
-      }
-      setIsLoading(true);
-      try {
-        const [booksResult, initialAuthors, initialGenres, initialSeries] = await Promise.all([
-            getPaginatedBooksWithDetails({ limit: 1000 }), // Fetch all books
-            fetchAllAuthors(),
-            fetchAllGenres(),
-            fetchAllSeries()
-        ]);
-        setBooks(booksResult.books);
-        setAuthors(initialAuthors);
-        setGenres(initialGenres);
-        setSeries(initialSeries);
-        
-      } catch (error) {
-        console.error("Failed to load data from Firebase", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not load data from the database."});
-      } finally {
+  const fetchData = useCallback(async () => {
+    if (!isFirebaseConfigured) {
         setIsLoading(false);
-      }
-    };
-    fetchData();
+        return;
+    }
+    setIsLoading(true);
+    try {
+      const [initialAuthors, initialGenres, initialSeries] = await Promise.all([
+          fetchAllAuthors(),
+          fetchAllGenres(),
+          fetchAllSeries()
+      ]);
+      setAuthors(initialAuthors);
+      setGenres(initialGenres);
+      setSeries(initialSeries);
+
+      // Fetch all books without pagination for the initial load
+      const booksRef = collection(db, "books");
+      const bookSnapshot = await getDocs(booksRef);
+      const allBooks = bookSnapshot.docs.map(doc => ({ ...doc.data(), docId: doc.id } as Book));
+      setBooks(allBooks);
+      
+    } catch (error) {
+      console.error("Failed to load data from Firebase", error);
+      toast({ variant: "destructive", title: "Error", description: "Could not load data from the database."});
+    } finally {
+      setIsLoading(false);
+    }
   }, [toast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
   
   const handleBookAdded = async (newBookData: Omit<Book, 'id' | 'docId'>) => {
     if (!db) return;
     const newId = generateId(6);
 
     try {
-        let bookToSave: Omit<Book, 'docId'> = { 
+        const bookToSave = { 
             ...newBookData, 
             id: newId,
             createdAt: Date.now()
@@ -138,7 +142,7 @@ export function BookManagement() {
         const docRef = await addDoc(collection(db, "books"), bookToSave);
         const newBook: Book = { ...bookToSave, docId: docRef.id };
         
-        setBooks(prev => [newBook, ...prev]);
+        setBooks(prev => [newBook, ...prev].sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)));
 
         if (newBook.series && !series.some(s => s.name === newBook.series)) {
             handleSeriesAdded({ name: newBook.series }, false);
@@ -174,18 +178,8 @@ export function BookManagement() {
 
         await Promise.all(booksForFirestore.map(book => addDoc(collection(db, "books"), book)));
         
-        const freshBooksResult = await getPaginatedBooksWithDetails({ limit: 1000 });
-        setBooks(freshBooksResult.books);
-
-        const importedSeriesNames = new Set(newBooks.map(b => b.series).filter((s): s is string => !!s));
-        const existingSeriesNames = new Set(series.map(s => s.name));
-        const newSeriesToCreate = [...importedSeriesNames].filter(name => !existingSeriesNames.has(name));
-
-        if (newSeriesToCreate.length > 0) {
-           await Promise.all(newSeriesToCreate.map(name => addDoc(collection(db, "series"), { name })));
-           const freshSeries = await fetchAllSeries();
-           setSeries(freshSeries);
-        }
+        // Refetch all data to be consistent
+        await fetchData();
 
         toast({
             title: "Import thành công",
@@ -262,8 +256,7 @@ export function BookManagement() {
         const { docId, ...bookData } = updatedBook;
         await updateDoc(bookRef, bookData);
 
-        const updatedBooks = books.map(book => book.docId === updatedBook.docId ? updatedBook : book);
-        setBooks(updatedBooks);
+        setBooks(prev => prev.map(book => book.docId === updatedBook.docId ? updatedBook : book));
         
         if (updatedBook.series && !series.some(s => s.name === updatedBook.series)) {
             handleSeriesAdded({ name: updatedBook.series }, false);
@@ -283,8 +276,7 @@ export function BookManagement() {
     
     try {
         await deleteDoc(doc(db, "books", bookToDelete.docId));
-        const updatedBooks = books.filter(book => book.docId !== bookToDelete.docId);
-        setBooks(updatedBooks);
+        setBooks(prev => prev.filter(book => book.docId !== bookToDelete.docId));
         toast({
             variant: "destructive",
             title: "Đã xóa sách",
@@ -300,8 +292,7 @@ export function BookManagement() {
     if (!db) return;
     try {
         const docRef = await addDoc(collection(db, "authors"), newAuthorData);
-        const updatedAuthors = [{ ...newAuthorData, id: docRef.id }, ...authors];
-        setAuthors(updatedAuthors);
+        setAuthors(prev => [{ ...newAuthorData, id: docRef.id }, ...prev]);
         toast({
             title: "Thêm tác giả thành công",
             description: `Tác giả "${newAuthorData.name}" đã được thêm.`,
@@ -335,8 +326,7 @@ export function BookManagement() {
     if (!authorToDelete) return;
     try {
         await deleteDoc(doc(db, "authors", authorId));
-        const updatedAuthors = authors.filter(author => author.id !== authorId);
-        setAuthors(updatedAuthors);
+        setAuthors(prev => prev.filter(author => author.id !== authorId));
         toast({
             variant: "destructive",
             title: "Đã xóa tác giả",
@@ -352,8 +342,7 @@ export function BookManagement() {
     if (!db) return;
     try {
         const docRef = await addDoc(collection(db, "genres"), newGenreData);
-        const updatedGenres = [{ ...newGenreData, id: docRef.id }, ...genres];
-        setGenres(updatedGenres);
+        setGenres(prev => [{ ...newGenreData, id: docRef.id }, ...prev]);
         toast({
           title: "Thêm thể loại thành công",
           description: `Thể loại "${newGenreData.name}" đã được thêm.`,
@@ -388,8 +377,7 @@ export function BookManagement() {
 
     try {
         await deleteDoc(doc(db, "genres", genreId));
-        const updatedGenres = genres.filter(genre => genre.id !== genreId);
-        setGenres(updatedGenres);
+        setGenres(prev => prev.filter(genre => genre.id !== genreId));
         toast({
             variant: "destructive",
             title: "Đã xóa thể loại",
@@ -487,16 +475,9 @@ export function BookManagement() {
 
         await Promise.all(updatePromises);
         
-        const freshSeries = await fetchAllSeries();
-        setSeries(freshSeries);
+        // Refetch all data to be consistent
+        await fetchData();
 
-        const updatedBooks = books.map(book => {
-            if (book.series === oldName) {
-                return { ...book, series: newName };
-            }
-            return book;
-        });
-        setBooks(updatedBooks);
         toast({
             title: "Cập nhật Series thành công",
             description: `Series "${oldName}" đã được đổi tên thành "${newName}".`,
@@ -554,8 +535,10 @@ export function BookManagement() {
 
   useEffect(() => {
     const newTotalPages = Math.ceil(filteredAndSortedBooks.length / itemsPerPage);
-    if (currentPage > newTotalPages) {
-      setCurrentPage(Math.max(1, newTotalPages));
+    if (currentPage > newTotalPages && newTotalPages > 0) {
+      setCurrentPage(newTotalPages);
+    } else if (newTotalPages === 0) {
+      setCurrentPage(1);
     }
   }, [filteredAndSortedBooks.length, currentPage, itemsPerPage]);
 

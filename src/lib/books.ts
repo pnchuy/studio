@@ -1,7 +1,7 @@
 
 import type { Book, BookWithDetails, YoutubeLink } from '@/types';
 import { db, isFirebaseConfigured } from './firebase';
-import { collection, getDocs, doc, getDoc, query, orderBy, limit as firestoreLimit, startAfter } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, orderBy, limit as firestoreLimit, startAfter, where } from 'firebase/firestore';
 import { getAllAuthors } from './authors';
 import { getAllGenres } from './genres';
 
@@ -22,8 +22,8 @@ export async function getAllBooks(): Promise<BookWithDetails[]> {
   ]);
 
   const booksRef = collection(db, "books");
-  const q = query(booksRef, orderBy("createdAt", "desc"));
-  const documentSnapshots = await getDocs(q);
+  // No orderBy here to get ALL documents regardless of createdAt field existence
+  const documentSnapshots = await getDocs(booksRef);
   
   const books: BookWithDetails[] = documentSnapshots.docs.map(docSnap => {
     const bookData = docSnap.data();
@@ -52,7 +52,8 @@ export async function getAllBooks(): Promise<BookWithDetails[]> {
     } as BookWithDetails;
   });
 
-  return books;
+  // Sort on the client-side after fetching all books
+  return books.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 }
 
 
@@ -62,7 +63,7 @@ export async function getBookById(id: string): Promise<Book | null> {
     const booksRef = collection(db, 'books');
     let docToProcess: any = null;
 
-    const q = query(booksRef, where("id", "==", id), limit(1));
+    const q = query(booksRef, where("id", "==", id), firestoreLimit(1));
     const querySnapshot = await getDocs(q);
 
     if (!querySnapshot.empty) {
@@ -124,37 +125,20 @@ export async function getPaginatedBooksWithDetails({ limit: queryLimit = 10, las
   ]);
 
   const booksRef = collection(db, "books");
-  let q;
-
-  if (lastBookId) {
-    try {
-        const lastVisibleDoc = await getDoc(doc(db, "books", lastBookId));
-        if (lastVisibleDoc.exists()) {
-            q = query(booksRef, orderBy("createdAt", "desc"), startAfter(lastVisibleDoc), firestoreLimit(queryLimit));
-        } else {
-            q = query(booksRef, orderBy("createdAt", "desc"), firestoreLimit(queryLimit));
-        }
-    } catch(e) {
-        console.error("Error fetching last visible document:", e);
-        q = query(booksRef, orderBy("createdAt", "desc"), firestoreLimit(queryLimit));
-    }
-  } else {
-    q = query(booksRef, orderBy("createdAt", "desc"), firestoreLimit(queryLimit));
-  }
+  
+  // A robust query that doesn't rely on `createdAt` for filtering, only for sorting.
+  const q = query(booksRef, orderBy("publicationDate", "desc"), firestoreLimit(queryLimit * 5)); // Fetch more to sort in memory
   
   const documentSnapshots = await getDocs(q);
   
-  const books: BookWithDetails[] = documentSnapshots.docs.map(docSnap => {
+  let books: BookWithDetails[] = documentSnapshots.docs.map(docSnap => {
     const bookData = docSnap.data();
     const author = allAuthors.find(a => a.id === bookData.authorId);
     const genres = allGenres.filter(g => bookData.genreIds && bookData.genreIds.includes(g.id));
     
-    const youtubeLinks = (bookData.youtubeLinks || (bookData.youtubeLink || [])).map((link: string | YoutubeLink) => {
-        if (typeof link === 'string') {
-          return { url: link, chapters: '' };
-        }
-        return link;
-      });
+    const youtubeLinks = (bookData.youtubeLinks || []).map((link: string | YoutubeLink) => 
+      typeof link === 'string' ? { url: link, chapters: '' } : link
+    );
 
     return {
       ...bookData,
@@ -174,10 +158,23 @@ export async function getPaginatedBooksWithDetails({ limit: queryLimit = 10, las
     } as BookWithDetails;
   });
 
-  const hasMore = documentSnapshots.docs.length === queryLimit;
+  // Sort client-side to handle documents that might be missing the 'createdAt' field
+  books.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+  // Now apply pagination logic on the full sorted list
+  let paginatedBooks = books;
+  if(lastBookId){
+    const lastBookIndex = books.findIndex(b => b.docId === lastBookId);
+    if(lastBookIndex !== -1){
+        paginatedBooks = books.slice(lastBookIndex + 1);
+    }
+  }
+
+  const hasMore = paginatedBooks.length > queryLimit;
+  paginatedBooks = paginatedBooks.slice(0, queryLimit);
   
   return {
-    books,
+    books: paginatedBooks,
     hasMore,
   };
 }
