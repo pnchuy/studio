@@ -34,7 +34,6 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
   const { addSearchTerm } = useSearchHistory();
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  // State for infinite scroll
   const [books, setBooks] = useState<BookWithDetails[]>(initialBooks);
   const [page, setPage] = useState(2);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -84,7 +83,7 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
 
 
   const loadMoreItems = useCallback(async () => {
-    if (isLoadingMore || !hasMore || debouncedSearchTerm) return;
+    if (isLoadingMore || !hasMore) return;
 
     setIsLoadingMore(true);
     const lastBookId = books.length > 0 ? books[books.length - 1].docId : null;
@@ -93,7 +92,7 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
     setHasMore(newHasMore);
     setPage((prevPage) => prevPage + 1);
     setIsLoadingMore(false);
-  }, [isLoadingMore, hasMore, page, debouncedSearchTerm, books]);
+  }, [isLoadingMore, hasMore, page, books]);
 
   useEffect(() => {
     if (debouncedSearchTerm) {
@@ -139,7 +138,7 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
             ))}
           </div>
           <div className="flex justify-center">
-            {hasMore && !debouncedSearchTerm && (
+            {hasMore && (
                 <Button onClick={loadMoreItems} disabled={isLoadingMore} variant="outline" size="lg">
                     {isLoadingMore ? (
                         <>

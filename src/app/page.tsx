@@ -4,10 +4,9 @@ import { BookList } from '@/components/books/BookList';
 import { TopDiscussedBooks } from '@/components/books/TopDiscussedBooks';
 
 export default async function Home() {
-  const [{ books: initialBooks, hasMore: initialHasMore }, allBooks] = await Promise.all([
-    getPaginatedBooksWithDetails({ page: 1, limit: 10 }),
-    getPaginatedBooksWithDetails({ limit: 1000 }).then(res => res.books)
-  ]);
+  // Fetch all books by setting a high limit. This is simpler than creating a new function.
+  const allBooksResult = await getPaginatedBooksWithDetails({ limit: 1000 });
+  const allBooks = allBooksResult.books;
 
   return (
     <div>
@@ -20,8 +19,8 @@ export default async function Home() {
 
       <h2 className="text-2xl font-bold font-headline mt-12 mb-4">Recently Added Books</h2>
       <BookList 
-        initialBooks={initialBooks}
-        initialHasMore={initialHasMore}
+        initialBooks={allBooks}
+        initialHasMore={false} // Since we've loaded all books, there are no more to load.
       />
     </div>
   );
