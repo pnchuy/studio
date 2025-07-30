@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { BookWithDetails } from '@/types';
 import { BookCard } from './BookCard';
 import { Input } from '@/components/ui/input';
@@ -12,20 +12,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Loader2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useSearchHistory } from '@/hooks/use-search-history';
 import { useDebounce } from '@/hooks/use-debounce';
-import { fetchMoreBooks } from '@/app/actions';
 import { useSearchParams } from 'next/navigation';
-import { Button } from '../ui/button';
 
 interface BookListProps {
   initialBooks: BookWithDetails[];
-  initialHasMore: boolean;
   isSearchPage?: boolean;
 }
 
-export function BookList({ initialBooks, initialHasMore, isSearchPage = false }: BookListProps) {
+export function BookList({ initialBooks, isSearchPage = false }: BookListProps) {
   const searchParams = useSearchParams();
   const queryFromUrl = searchParams.get('q') || '';
 
@@ -33,11 +30,13 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
   const [sortOrder, setSortOrder] = useState('title_asc');
   const { addSearchTerm } = useSearchHistory();
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
+  
+  // The list of all books is now managed internally by this component
   const [books, setBooks] = useState<BookWithDetails[]>(initialBooks);
-  const [page, setPage] = useState(2);
-  const [hasMore, setHasMore] = useState(initialHasMore);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  useEffect(() => {
+    setBooks(initialBooks);
+  }, [initialBooks]);
 
   useEffect(() => {
     if (queryFromUrl) {
@@ -45,23 +44,18 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
     }
   }, [queryFromUrl]);
 
-  useEffect(() => {
-    setBooks(initialBooks);
-    setHasMore(initialHasMore);
-    setPage(2);
-  }, [initialBooks, initialHasMore]);
-
   const filteredAndSortedBooks = useMemo(() => {
-    let filtered = books;
-    if (debouncedSearchTerm) {
-        filtered = books.filter(
+    let listToProcess = books;
+
+    if (isSearchPage && debouncedSearchTerm) {
+        listToProcess = books.filter(
             (book) =>
                 book.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                 (book.author?.name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase())
         );
     }
 
-    return filtered.sort((a, b) => {
+    return [...listToProcess].sort((a, b) => {
       switch (sortOrder) {
         case 'title_asc':
           return a.title.localeCompare(b.title);
@@ -79,26 +73,14 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
           return 0;
       }
     });
-  }, [books, debouncedSearchTerm, sortOrder]);
+  }, [books, isSearchPage, debouncedSearchTerm, sortOrder]);
 
-
-  const loadMoreItems = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return;
-
-    setIsLoadingMore(true);
-    const lastBookId = books.length > 0 ? books[books.length - 1].docId : null;
-    const { books: newBooks, hasMore: newHasMore } = await fetchMoreBooks(page, lastBookId);
-    setBooks((prevBooks) => [...prevBooks, ...newBooks]);
-    setHasMore(newHasMore);
-    setPage((prevPage) => prevPage + 1);
-    setIsLoadingMore(false);
-  }, [isLoadingMore, hasMore, page, books]);
 
   useEffect(() => {
-    if (debouncedSearchTerm) {
+    if (debouncedSearchTerm && isSearchPage) {
       addSearchTerm(debouncedSearchTerm);
     }
-  }, [debouncedSearchTerm, addSearchTerm]);
+  }, [debouncedSearchTerm, addSearchTerm, isSearchPage]);
 
   return (
     <div className="mt-8 space-y-8">
@@ -131,27 +113,11 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
       )}
 
       {filteredAndSortedBooks.length > 0 ? (
-        <>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {filteredAndSortedBooks.map((book) => (
-              <BookCard key={`${book.id}-${book.docId}`} book={book} />
-            ))}
-          </div>
-          <div className="flex justify-center">
-            {hasMore && (
-                <Button onClick={loadMoreItems} disabled={isLoadingMore} variant="outline" size="lg">
-                    {isLoadingMore ? (
-                        <>
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            Đang tải...
-                        </>
-                    ) : (
-                        'Tải thêm sách'
-                    )}
-                </Button>
-            )}
-            </div>
-        </>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {filteredAndSortedBooks.map((book) => (
+            <BookCard key={`${book.id}-${book.docId}`} book={book} />
+          ))}
+        </div>
       ) : (
         <div className="text-center py-16">
             <p className="text-lg font-medium">No books found.</p>

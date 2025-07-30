@@ -5,7 +5,7 @@ import { BookList } from '@/components/books/BookList';
 export default async function SearchPage() {
   // The BookList component now contains all the logic for searching and sorting.
   // We can pass the full initial list to it.
-  const { books: initialBooks, hasMore: initialHasMore } = await getPaginatedBooksWithDetails({ limit: 50 });
+  const { books: initialBooks } = await getPaginatedBooksWithDetails({ limit: 1000 });
 
   return (
     <div>
@@ -15,7 +15,6 @@ export default async function SearchPage() {
       </p>
       <BookList 
         initialBooks={initialBooks}
-        initialHasMore={initialHasMore}
         isSearchPage={true}
       />
     </div>

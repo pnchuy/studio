@@ -20,7 +20,7 @@ export default async function Home() {
       <h2 className="text-2xl font-bold font-headline mt-12 mb-4">Recently Added Books</h2>
       <BookList 
         initialBooks={allBooks}
-        initialHasMore={false} // Since we've loaded all books, there are no more to load.
+        isSearchPage={false}
       />
     </div>
   );
