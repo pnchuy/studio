@@ -1,9 +1,10 @@
 
 import type { Book, BookWithDetails, YoutubeLink } from '@/types';
 import { db, isFirebaseConfigured } from './firebase';
-import { collection, getDocs, doc, getDoc, query, orderBy, limit as firestoreLimit, where, limit, startAfter } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, orderBy, limit as firestoreLimit, startAfter } from 'firebase/firestore';
 import { getAllAuthors } from './authors';
 import { getAllGenres } from './genres';
+
 
 /**
  * Fetches all books from the Firestore database and enriches them with author and genre details.
@@ -123,19 +124,24 @@ export async function getPaginatedBooksWithDetails({ limit: queryLimit = 10, las
   ]);
 
   const booksRef = collection(db, "books");
-  let q = query(booksRef, orderBy("createdAt", "desc"), firestoreLimit(queryLimit));
+  let q;
 
   if (lastBookId) {
     try {
         const lastVisibleDoc = await getDoc(doc(db, "books", lastBookId));
         if (lastVisibleDoc.exists()) {
             q = query(booksRef, orderBy("createdAt", "desc"), startAfter(lastVisibleDoc), firestoreLimit(queryLimit));
+        } else {
+            q = query(booksRef, orderBy("createdAt", "desc"), firestoreLimit(queryLimit));
         }
     } catch(e) {
         console.error("Error fetching last visible document:", e);
+        q = query(booksRef, orderBy("createdAt", "desc"), firestoreLimit(queryLimit));
     }
+  } else {
+    q = query(booksRef, orderBy("createdAt", "desc"), firestoreLimit(queryLimit));
   }
-
+  
   const documentSnapshots = await getDocs(q);
   
   const books: BookWithDetails[] = documentSnapshots.docs.map(docSnap => {
