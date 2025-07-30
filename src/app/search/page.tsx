@@ -12,7 +12,7 @@ export default async function SearchPage() {
         Find any book in our collection by title or author.
       </p>
       <BookList 
-        initialBooks={initialBooks}
+        books={initialBooks}
         isSearchPage={true}
       />
     </div>
