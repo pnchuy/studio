@@ -24,10 +24,10 @@ export async function getAllBooks(): Promise<Book[]> {
             ...data,
             id: data.id || doc.id,
             docId: doc.id,
-            coverImages: data.coverImages || {
-                size250: "https://placehold.co/250x375.png",
-                size360: "https://placehold.co/360x540.png",
-                size480: "https://placehold.co/480x720.png",
+            coverImages: {
+                size250: data.coverImages?.size250?.trim() || "https://placehold.co/250x375.png",
+                size360: data.coverImages?.size360?.trim() || "https://placehold.co/360x540.png",
+                size480: data.coverImages?.size480?.trim() || "https://placehold.co/480x720.png",
             },
             youtubeLinks,
             shortDescription: data.shortDescription || data.summary || '',
@@ -76,10 +76,10 @@ export async function getBookById(id: string): Promise<Book | null> {
         ...data,
         id: data.id || docToProcess.id,
         docId: docToProcess.id,
-        coverImages: data.coverImages || {
-          size250: "https://placehold.co/250x375.png",
-          size360: "https://placehold.co/360x540.png",
-          size480: "https://placehold.co/480x720.png",
+        coverImages: {
+            size250: data.coverImages?.size250?.trim() || "https://placehold.co/250x375.png",
+            size360: data.coverImages?.size360?.trim() || "https://placehold.co/360x540.png",
+            size480: data.coverImages?.size480?.trim() || "https://placehold.co/480x720.png",
         },
         youtubeLinks,
         shortDescription: data.shortDescription || data.summary || '',
@@ -93,7 +93,7 @@ export async function getBookById(id: string): Promise<Book | null> {
   }
 }
 
-export async function getPaginatedBooksWithDetails({ page = 1, limit = 20, lastBookId }: { page?: number; limit?: number, lastBookId?: string | null }) {
+export async function getPaginatedBooksWithDetails({ page = 1, limit = 10, lastBookId }: { page?: number; limit?: number, lastBookId?: string | null }) {
   if (!isFirebaseConfigured || !db) {
     return { books: [], hasMore: false };
   }
@@ -123,6 +123,11 @@ export async function getPaginatedBooksWithDetails({ page = 1, limit = 20, lastB
       docId: docSnap.id,
       author,
       genres,
+      coverImages: {
+        size250: bookData.coverImages?.size250?.trim() || "https://placehold.co/250x375.png",
+        size360: bookData.coverImages?.size360?.trim() || "https://placehold.co/360x540.png",
+        size480: bookData.coverImages?.size480?.trim() || "https://placehold.co/480x720.png",
+      }
     } as BookWithDetails;
   });
 

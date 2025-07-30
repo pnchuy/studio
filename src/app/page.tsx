@@ -5,7 +5,7 @@ import { TopDiscussedBooks } from '@/components/books/TopDiscussedBooks';
 
 export default async function Home() {
   const [{ books: initialBooks, hasMore: initialHasMore }, allBooks] = await Promise.all([
-    getPaginatedBooksWithDetails({ page: 1, limit: 20 }),
+    getPaginatedBooksWithDetails({ page: 1, limit: 10 }),
     getPaginatedBooksWithDetails({ limit: 1000 }).then(res => res.books)
   ]);
 

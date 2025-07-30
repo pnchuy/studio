@@ -12,14 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { useSearchHistory } from '@/hooks/use-search-history';
 import { useDebounce } from '@/hooks/use-debounce';
-import { useResponsiveColumns } from '@/hooks/use-responsive-columns';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
 import { fetchMoreBooks } from '@/app/actions';
 import { useSearchParams } from 'next/navigation';
+import { Button } from '../ui/button';
 
 interface BookListProps {
   initialBooks: BookWithDetails[];
@@ -41,11 +39,7 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
   const [page, setPage] = useState(2);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const loadMoreRef = useRef(null);
 
-  const columns = useResponsiveColumns();
-
-  // Reset list when filters change, but not on initial render for search page
   useEffect(() => {
     if (queryFromUrl) {
       setSearchTerm(queryFromUrl);
@@ -90,7 +84,7 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
 
 
   const loadMoreItems = useCallback(async () => {
-    if (isLoadingMore || !hasMore || debouncedSearchTerm) return; // Don't load more if searching client-side
+    if (isLoadingMore || !hasMore || debouncedSearchTerm) return;
 
     setIsLoadingMore(true);
     const lastBookId = books.length > 0 ? books[books.length - 1].docId : null;
@@ -101,29 +95,6 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
     setIsLoadingMore(false);
   }, [isLoadingMore, hasMore, page, debouncedSearchTerm, books]);
 
-
-  useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-        const [target] = entries;
-        if (target.isIntersecting) {
-            loadMoreItems();
-        }
-    }, {
-        rootMargin: '400px',
-    });
-
-    const currentRef = loadMoreRef.current;
-    if (currentRef) {
-        observer.observe(currentRef);
-    }
-
-    return () => {
-        if (currentRef) {
-            observer.unobserve(currentRef);
-        }
-    };
-  }, [loadMoreItems]);
-
   useEffect(() => {
     if (debouncedSearchTerm) {
       addSearchTerm(debouncedSearchTerm);
@@ -133,55 +104,54 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
   return (
     <div className="mt-8 space-y-8">
       {isSearchPage && (
-        <Card>
-            <CardContent className="p-6">
-            <div className="flex flex-col gap-4 md:flex-row">
-                <div className="relative flex-grow">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                    type="search"
-                    placeholder="Search by title or author..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-full"
-                />
-                </div>
-                <Select value={sortOrder} onValueChange={setSortOrder}>
-                <SelectTrigger className="w-full md:w-[240px]">
-                    <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="title_asc">Title (A-Z)</SelectItem>
-                    <SelectItem value="title_desc">Title (Z-A)</SelectItem>
-                    <SelectItem value="author_asc">Author (A-Z)</SelectItem>
-                    <SelectItem value="author_desc">Author (Z-A)</SelectItem>
-                    <SelectItem value="date_newest">Publication Date (Newest)</SelectItem>
-                    <SelectItem value="date_oldest">Publication Date (Oldest)</SelectItem>
-                </SelectContent>
-                </Select>
+        <div className="flex flex-col gap-4 md:flex-row">
+            <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+                type="search"
+                placeholder="Search by title or author..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 w-full"
+            />
             </div>
-            </CardContent>
-        </Card>
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+            <SelectTrigger className="w-full md:w-[240px]">
+                <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="title_asc">Title (A-Z)</SelectItem>
+                <SelectItem value="title_desc">Title (Z-A)</SelectItem>
+                <SelectItem value="author_asc">Author (A-Z)</SelectItem>
+                <SelectItem value="author_desc">Author (Z-A)</SelectItem>
+                <SelectItem value="date_newest">Publication Date (Newest)</SelectItem>
+                <SelectItem value="date_oldest">Publication Date (Oldest)</SelectItem>
+            </SelectContent>
+            </Select>
+        </div>
       )}
 
       {filteredAndSortedBooks.length > 0 ? (
         <>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-          {filteredAndSortedBooks.map((book) => (
-            <BookCard key={`${book.id}-${sortOrder}`} book={book} />
-          ))}
-        </div>
-         {(hasMore || isLoadingMore) && !debouncedSearchTerm && (
-            <div ref={loadMoreRef} className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 h-20">
-              {Array.from({ length: columns }).map((_, i) => (
-                <div key={i} className="space-y-2">
-                   <Skeleton className="aspect-[2/3] w-full" />
-                   <Skeleton className="h-6 w-3/4" />
-                   <Skeleton className="h-4 w-1/2" />
-               </div>
-              ))}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {filteredAndSortedBooks.map((book) => (
+              <BookCard key={`${book.id}-${book.docId}`} book={book} />
+            ))}
+          </div>
+          <div className="flex justify-center">
+            {hasMore && !debouncedSearchTerm && (
+                <Button onClick={loadMoreItems} disabled={isLoadingMore} variant="outline" size="lg">
+                    {isLoadingMore ? (
+                        <>
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            Đang tải...
+                        </>
+                    ) : (
+                        'Tải thêm sách'
+                    )}
+                </Button>
+            )}
             </div>
-          )}
         </>
       ) : (
         <div className="text-center py-16">

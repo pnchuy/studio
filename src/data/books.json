@@ -111,7 +111,7 @@
     "youtubeLinks": [{"url": "https://www.youtube.com/embed/kxi3n42kIqI", "chapters": ""}],
     "amazonLink": ""
   },
-    {
+  {
     "id": "Z2aB3cD",
     "title": "A Wizard of Earthsea",
     "authorId": "author-6",
@@ -171,7 +171,7 @@
     "authorId": "author-8",
     "publicationDate": "1989-05-26",
     "coverImages": {
-        "size250": "https://images.gr-assets.com/books/15 Hyperion 35234580l/77566.jpg",
+        "size250": "https://images.gr-assets.com/books/1535234580l/77566.jpg",
         "size360": "https://images.gr-assets.com/books/1535234580l/77566.jpg",
         "size480": "https://images.gr-assets.com/books/1535234580l/77566.jpg"
     },
