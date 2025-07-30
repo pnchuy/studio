@@ -1,3 +1,4 @@
+
 import type { Book, BookWithDetails, YoutubeLink } from '@/types';
 import { db, isFirebaseConfigured } from './firebase';
 import { collection, getDocs, doc, getDoc, query, orderBy, limit as firestoreLimit, startAfter, documentId, where, limit } from 'firebase/firestore';
@@ -22,7 +23,7 @@ export async function getAllBooks(): Promise<Book[]> {
 
         return {
             ...data,
-            id: data.id || doc.id,
+            id: data.id || doc.id, // Use Firestore doc ID as fallback for id
             docId: doc.id,
             coverImages: {
                 size250: data.coverImages?.size250?.trim() || "https://placehold.co/250x375.png",
@@ -99,13 +100,15 @@ export async function getBookById(id: string): Promise<Book | null> {
   }
 }
 
-export async function getPaginatedBooksWithDetails({ page = 1, limit: queryLimit = 20, lastBookId }: { page?: number; limit?: number, lastBookId?: string | null }) {
+export async function getPaginatedBooksWithDetails({ page = 1, limit: queryLimit = 10, lastBookId }: { page?: number; limit?: number, lastBookId?: string | null }) {
   if (!isFirebaseConfigured || !db) {
     return { books: [], hasMore: false };
   }
   
-  const allAuthors = await getAllAuthors();
-  const allGenres = await getAllGenres();
+  const [allAuthors, allGenres] = await Promise.all([
+    getAllAuthors(),
+    getAllGenres(),
+  ]);
 
   const booksRef = collection(db, "books");
   let q = query(booksRef, orderBy("createdAt", "desc"), firestoreLimit(queryLimit));
@@ -118,16 +121,17 @@ export async function getPaginatedBooksWithDetails({ page = 1, limit: queryLimit
   }
 
   const documentSnapshots = await getDocs(q);
+  
   const books: BookWithDetails[] = documentSnapshots.docs.map(docSnap => {
-    const bookData = docSnap.data() as Omit<Book, 'id'|'docId'>;
+    const bookData = docSnap.data();
     const author = allAuthors.find(a => a.id === bookData.authorId);
     const genres = allGenres.filter(g => bookData.genreIds && bookData.genreIds.includes(g.id));
     
     return {
       ...bookData,
-      id: docSnap.data().id || docSnap.id,
+      id: bookData.id || docSnap.id,
       docId: docSnap.id,
-      author: author, // Can be undefined, will be handled in the component
+      author: author,
       genres,
       coverImages: {
         size250: bookData.coverImages?.size250?.trim() || "https://placehold.co/250x375.png",
