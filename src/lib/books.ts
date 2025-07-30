@@ -1,13 +1,12 @@
 
 import type { Book, BookWithDetails, YoutubeLink } from '@/types';
 import { db, isFirebaseConfigured } from './firebase';
-import { collection, getDocs, doc, getDoc, query, orderBy, limit as firestoreLimit, where, limit } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, orderBy, limit as firestoreLimit, where, limit, startAfter } from 'firebase/firestore';
 import { getAllAuthors } from './authors';
 import { getAllGenres } from './genres';
 
 /**
  * Fetches all books from the Firestore database and enriches them with author and genre details.
- * This function replaces the previous paginated and more complex versions to ensure all books are loaded reliably.
  *
  * @returns A promise that resolves to an array of all books with their full details.
  */
