@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { BookOpen, LogIn, LogOut, UserPlus, Shield, UserCog } from 'lucide-react';
+import { BookOpen, LogIn, LogOut, UserPlus, Shield, UserCog, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import {
@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { Skeleton } from './ui/skeleton';
+import { GlobalSearch } from './search/GlobalSearch';
 
 const LOGO_STORAGE_KEY = 'bibliophile-logo';
 
@@ -38,17 +39,23 @@ export function ClientSiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full bg-background/95 backdrop-blur-sm shadow-sm">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center space-x-2">
-          {logoUrl ? (
-            <Image src={logoUrl} alt="Logo" width={24} height={24} className="h-6 w-auto" />
-          ) : (
-            <BookOpen className="h-6 w-6 text-primary" />
-          )}
-          <span className="hidden md:inline font-bold font-headline text-lg">Listen and Read</span>
-        </Link>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
+          <Link href="/" className="flex items-center space-x-2">
+            {logoUrl ? (
+              <Image src={logoUrl} alt="Logo" width={24} height={24} className="h-6 w-auto" />
+            ) : (
+              <BookOpen className="h-6 w-6 text-primary" />
+            )}
+            <span className="hidden md:inline font-bold font-headline text-lg">Listen and Read</span>
+          </Link>
+        </div>
+
+        <div className="flex flex-1 items-center justify-end space-x-2">
+           <div className="w-full flex-1 md:w-auto md:flex-none">
+             <GlobalSearch />
+           </div>
           <ThemeToggle />
-          <nav className="flex items-center space-x-2">
+          <nav className="flex items-center">
             {isLoading ? (
               <Skeleton className="h-9 w-9 rounded-full" />
             ) : isLoggedIn && user ? (
@@ -94,7 +101,7 @@ export function ClientSiteHeader() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <>
+              <div className="hidden md:flex items-center space-x-2">
                 <Button asChild variant="ghost">
                   <Link href="/login">
                     <LogIn className="mr-2 h-4 w-4" />
@@ -107,7 +114,7 @@ export function ClientSiteHeader() {
                     Sign Up
                   </Link>
                 </Button>
-              </>
+              </div>
             )}
           </nav>
         </div>

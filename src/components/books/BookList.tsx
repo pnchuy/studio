@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
@@ -18,14 +19,19 @@ import { useResponsiveColumns } from '@/hooks/use-responsive-columns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { fetchMoreBooks } from '@/app/actions';
+import { useSearchParams } from 'next/navigation';
 
 interface BookListProps {
   initialBooks: BookWithDetails[];
   initialHasMore: boolean;
+  isSearchPage?: boolean;
 }
 
-export function BookList({ initialBooks, initialHasMore }: BookListProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+export function BookList({ initialBooks, initialHasMore, isSearchPage = false }: BookListProps) {
+  const searchParams = useSearchParams();
+  const queryFromUrl = searchParams.get('q') || '';
+
+  const [searchTerm, setSearchTerm] = useState(queryFromUrl);
   const [sortOrder, setSortOrder] = useState('title_asc');
   const { addSearchTerm } = useSearchHistory();
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -39,24 +45,22 @@ export function BookList({ initialBooks, initialHasMore }: BookListProps) {
 
   const columns = useResponsiveColumns();
 
-  // Reset list when filters change
+  // Reset list when filters change, but not on initial render for search page
   useEffect(() => {
-    // This effect should only run for client-side filtering after initial load.
-    // The initial data is already provided.
-    // For a full implementation, filtering would also be a server action.
-    setBooks(initialBooks);
-    setPage(2);
-    setHasMore(initialHasMore);
-  }, [searchTerm, sortOrder, initialBooks, initialHasMore]);
-
+    if (queryFromUrl) {
+      setSearchTerm(queryFromUrl);
+    }
+  }, [queryFromUrl]);
 
   const filteredAndSortedBooks = useMemo(() => {
-    // Note: This filtering is client-side. For large datasets, this should be moved to the server action.
-    let filtered = books.filter(
-      (book) =>
-        book.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        (book.author?.name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-    );
+    let filtered = books;
+    if (debouncedSearchTerm) {
+        filtered = books.filter(
+            (book) =>
+                book.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                (book.author?.name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+        );
+    }
 
     return filtered.sort((a, b) => {
       switch (sortOrder) {
@@ -121,35 +125,37 @@ export function BookList({ initialBooks, initialHasMore }: BookListProps) {
 
   return (
     <div className="mt-8 space-y-8">
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-4 md:flex-row">
-            <div className="relative flex-grow">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search by title or author..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-full"
-              />
+      {isSearchPage && (
+        <Card>
+            <CardContent className="p-6">
+            <div className="flex flex-col gap-4 md:flex-row">
+                <div className="relative flex-grow">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                    type="search"
+                    placeholder="Search by title or author..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-full"
+                />
+                </div>
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="w-full md:w-[240px]">
+                    <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="title_asc">Title (A-Z)</SelectItem>
+                    <SelectItem value="title_desc">Title (Z-A)</SelectItem>
+                    <SelectItem value="author_asc">Author (A-Z)</SelectItem>
+                    <SelectItem value="author_desc">Author (Z-A)</SelectItem>
+                    <SelectItem value="date_newest">Publication Date (Newest)</SelectItem>
+                    <SelectItem value="date_oldest">Publication Date (Oldest)</SelectItem>
+                </SelectContent>
+                </Select>
             </div>
-            <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger className="w-full md:w-[240px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="title_asc">Title (A-Z)</SelectItem>
-                <SelectItem value="title_desc">Title (Z-A)</SelectItem>
-                <SelectItem value="author_asc">Author (A-Z)</SelectItem>
-                <SelectItem value="author_desc">Author (Z-A)</SelectItem>
-                <SelectItem value="date_newest">Publication Date (Newest)</SelectItem>
-                <SelectItem value="date_oldest">Publication Date (Oldest)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+        </Card>
+      )}
 
       {filteredAndSortedBooks.length > 0 ? (
         <>
