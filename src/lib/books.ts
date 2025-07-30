@@ -8,7 +8,8 @@ export async function getAllBooks(): Promise<Book[]> {
   if (!isFirebaseConfigured || !db) return [];
   try {
     const booksCol = collection(db, 'books');
-    const bookSnapshot = await getDocs(booksCol);
+    const q = query(booksCol, orderBy("createdAt", "desc"));
+    const bookSnapshot = await getDocs(q);
     return bookSnapshot.docs.map(doc => {
         const data = doc.data();
         // Backward compatibility for old youtubeLink structure
@@ -95,7 +96,8 @@ export async function getBookById(id: string): Promise<Book | null> {
 const BOOKS_PER_PAGE = 10;
 
 export async function getPaginatedBooksWithDetails({ page = 1, limit = BOOKS_PER_PAGE }: { page?: number; limit?: number }) {
-  const allBooks = await getAllBooks();
+  // Data from getAllBooks is now pre-sorted by createdAt descending
+  const allBooks = await getAllBooks(); 
   const allAuthors = await getAllAuthors();
   const allGenres = await getAllGenres();
   

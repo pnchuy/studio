@@ -108,7 +108,7 @@ export function BookManagement() {
             fetchAllGenres(),
             fetchAllSeries()
         ]);
-        setBooks(initialBooks.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)));
+        setBooks(initialBooks); // Data is now pre-sorted from fetchAllBooks
         setAuthors(initialAuthors);
         setGenres(initialGenres);
         setSeries(initialSeries);
@@ -137,7 +137,7 @@ export function BookManagement() {
         const docRef = await addDoc(collection(db, "books"), bookToSave);
         const newBook: Book = { ...bookToSave, docId: docRef.id };
         
-        setBooks(prev => [newBook, ...prev].sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)));
+        setBooks(prev => [newBook, ...prev]);
 
         if (newBook.series && !series.some(s => s.name === newBook.series)) {
             handleSeriesAdded({ name: newBook.series }, false);
@@ -174,7 +174,7 @@ export function BookManagement() {
         await Promise.all(booksForFirestore.map(book => addDoc(collection(db, "books"), book)));
         
         const freshBooks = await fetchAllBooks();
-        setBooks(freshBooks.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)));
+        setBooks(freshBooks);
 
         const importedSeriesNames = new Set(newBooks.map(b => b.series).filter((s): s is string => !!s));
         const existingSeriesNames = new Set(series.map(s => s.name));
