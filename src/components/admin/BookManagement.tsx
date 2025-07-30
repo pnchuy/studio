@@ -90,6 +90,9 @@ export function BookManagement() {
   const [sortOption, setSortOption] = useState('date_added_desc');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -541,6 +544,25 @@ export function BookManagement() {
     });
   }, [books, debouncedSearchTerm, sortOption, authors]);
 
+  const totalPages = Math.ceil(filteredAndSortedBooks.length / itemsPerPage);
+  const paginatedBooks = useMemo(() => {
+    return filteredAndSortedBooks.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+  }, [filteredAndSortedBooks, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    const newTotalPages = Math.ceil(filteredAndSortedBooks.length / itemsPerPage);
+    if (currentPage > newTotalPages) {
+      setCurrentPage(Math.max(1, newTotalPages));
+    }
+  }, [filteredAndSortedBooks.length, currentPage, itemsPerPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [itemsPerPage, debouncedSearchTerm, sortOption]);
+
   return (
     <>
       <div className="flex items-center justify-end gap-2 mb-4">
@@ -645,7 +667,7 @@ export function BookManagement() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredAndSortedBooks.map((book) => {
+                        {paginatedBooks.map((book) => {
                             const bookGenres = getBookGenres(book.genreIds);
                             const displayedGenres = bookGenres.slice(0, 3);
                             const remainingCount = bookGenres.length - displayedGenres.length;
@@ -717,10 +739,51 @@ export function BookManagement() {
                     </TableBody>
                     </Table>
                 </div>
-                <div className="flex items-center justify-between py-4">
-                    <div className="text-sm text-muted-foreground">
-                        Tổng cộng {filteredAndSortedBooks.length} quyển sách.
+                 <div className="flex items-center justify-between py-4">
+                    <div className="flex items-center space-x-2">
+                        <p className="text-sm text-muted-foreground">Hiển thị</p>
+                        <Select
+                            value={`${itemsPerPage}`}
+                            onValueChange={(value) => {
+                                setItemsPerPage(Number(value));
+                            }}
+                        >
+                            <SelectTrigger className="h-8 w-[70px]">
+                                <SelectValue placeholder={`${itemsPerPage}`} />
+                            </SelectTrigger>
+                            <SelectContent side="top">
+                                {[10, 20, 50].map((pageSize) => (
+                                <SelectItem key={pageSize} value={`${pageSize}`}>
+                                    {pageSize}
+                                </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-sm text-muted-foreground">kết quả trong tổng số {filteredAndSortedBooks.length}</p>
                     </div>
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-end space-x-2">
+                            <span className="text-sm text-muted-foreground">
+                                Trang {currentPage} / {totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                            >
+                                Trước
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                            >
+                                Sau
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </>
             )}
