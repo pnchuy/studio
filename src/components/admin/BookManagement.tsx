@@ -674,7 +674,7 @@ export function BookManagement() {
                             <TableRow key={book.docId || book.id}>
                                 <TableCell>
                                     <Image
-                                        src={book.coverImages.size250}
+                                        src={book.coverImages.size250.trim()}
                                         alt={`Bìa sách ${book.title}`}
                                         width={40}
                                         height={60}

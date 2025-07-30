@@ -135,7 +135,7 @@ export function GlobalSearch() {
                 >
                   <div className="flex items-center gap-3">
                     <Image
-                        src={book.coverImages.size250}
+                        src={book.coverImages.size250.trim()}
                         alt={`Bìa sách ${book.title}`}
                         width={40}
                         height={60}

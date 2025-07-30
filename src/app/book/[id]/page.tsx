@@ -11,6 +11,8 @@ import { CommentSection } from '@/components/comments/CommentSection';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 import { slugify } from '@/lib/utils';
+import { JSDOM } from 'jsdom';
+import DOMPurify from 'dompurify';
 
 type BookPageProps = {
   params: {
@@ -35,11 +37,9 @@ export async function generateMetadata({ params: { id } }: BookPageProps) {
 }
 
 async function getSanitizedDescription(description: string | undefined) {
-    if (typeof window !== 'undefined' || !description) {
-        return description || '';
+    if (!description) {
+        return '';
     }
-    const { JSDOM } = await import('jsdom');
-    const DOMPurify = (await import('dompurify')).default;
     const domWindow = new JSDOM('').window;
     const purify = DOMPurify(domWindow as unknown as Window);
     return purify.sanitize(description);
@@ -65,7 +65,7 @@ export default async function BookPage({ params: { id } }: BookPageProps) {
             <div className="md:col-span-1">
                 <div className="relative aspect-[2/3] w-full max-w-sm mx-auto shadow-xl rounded-lg overflow-hidden">
                     <Image
-                    src={book.coverImages.size480}
+                    src={book.coverImages.size480.trim()}
                     alt={`Cover of ${book.title}`}
                     fill
                     className="object-cover"
