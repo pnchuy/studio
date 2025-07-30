@@ -30,12 +30,6 @@ export function BookList({ initialBooks, isSearchPage = false }: BookListProps) 
   const [sortOrder, setSortOrder] = useState('title_asc');
   const { addSearchTerm } = useSearchHistory();
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
-  
-  const [books, setBooks] = useState<BookWithDetails[]>(initialBooks);
-
-  useEffect(() => {
-    setBooks(initialBooks);
-  }, [initialBooks]);
 
   useEffect(() => {
     if (queryFromUrl) {
@@ -44,10 +38,10 @@ export function BookList({ initialBooks, isSearchPage = false }: BookListProps) 
   }, [queryFromUrl]);
 
   const filteredAndSortedBooks = useMemo(() => {
-    let listToProcess = books;
+    let listToProcess = initialBooks;
 
     if (isSearchPage && debouncedSearchTerm) {
-        listToProcess = books.filter(
+        listToProcess = initialBooks.filter(
             (book) =>
                 book.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                 (book.author?.name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase())
@@ -65,14 +59,14 @@ export function BookList({ initialBooks, isSearchPage = false }: BookListProps) 
         case 'author_desc':
           return (b.author?.name || '').localeCompare(a.author?.name || '');
         case 'date_newest':
-          return new Date(b.publicationDate).getTime() - new Date(a.publicationDate).getTime();
+          return new Date(b.publicationDate).getTime() - new Date(b.publicationDate).getTime();
         case 'date_oldest':
           return new Date(a.publicationDate).getTime() - new Date(b.publicationDate).getTime();
         default:
           return 0;
       }
     });
-  }, [books, isSearchPage, debouncedSearchTerm, sortOrder]);
+  }, [initialBooks, isSearchPage, debouncedSearchTerm, sortOrder]);
 
 
   useEffect(() => {

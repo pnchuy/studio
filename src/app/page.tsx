@@ -1,12 +1,10 @@
 
-import { getPaginatedBooksWithDetails } from '@/lib/books';
+import { getAllBooks } from '@/lib/books';
 import { BookList } from '@/components/books/BookList';
 import { TopDiscussedBooks } from '@/components/books/TopDiscussedBooks';
 
 export default async function Home() {
-  // Fetch all books by setting a high limit. This is simpler than creating a new function.
-  const allBooksResult = await getPaginatedBooksWithDetails({ limit: 1000 });
-  const allBooks = allBooksResult.books;
+  const allBooks = await getAllBooks();
 
   return (
     <div>
