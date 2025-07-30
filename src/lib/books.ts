@@ -1,6 +1,6 @@
 import type { Book, BookWithDetails, YoutubeLink } from '@/types';
 import { db, isFirebaseConfigured } from './firebase';
-import { collection, getDocs, doc, getDoc, query, orderBy, limit as firestoreLimit, startAfter, documentId, where, limit } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, orderBy, limit as firestoreLimit, startAfter, documentId, where, limit, getDocFromCache } from 'firebase/firestore';
 import { getAllAuthors } from './authors';
 import { getAllGenres } from './genres';
 
@@ -34,7 +34,7 @@ export async function getAllBooks(): Promise<Book[]> {
             longDescription: data.longDescription || '',
             createdAt: data.createdAt || new Date(data.publicationDate).getTime() // Fallback to publication date for old data
         } as Book;
-    }).filter(book => book.id);
+    }).filter(book => book.id && book.title); // Ensure book has an id and a title
   } catch (error) {
     console.error("Error fetching all books:", error);
     return [];
@@ -93,32 +93,43 @@ export async function getBookById(id: string): Promise<Book | null> {
   }
 }
 
-export async function getPaginatedBooksWithDetails({ page = 1, limit = 20 }: { page?: number; limit?: number }) {
-  // Data from getAllBooks is now pre-sorted by createdAt descending
-  const allBooks = await getAllBooks(); 
+export async function getPaginatedBooksWithDetails({ page = 1, limit = 20, lastBookId }: { page?: number; limit?: number, lastBookId?: string | null }) {
+  if (!isFirebaseConfigured || !db) {
+    return { books: [], hasMore: false };
+  }
+  
   const allAuthors = await getAllAuthors();
   const allGenres = await getAllGenres();
-  
-  const totalBooks = allBooks.length;
-  const totalPages = Math.ceil(totalBooks / limit);
-  const offset = (page - 1) * limit;
 
-  const paginatedBooks = allBooks.slice(offset, offset + limit);
+  const booksRef = collection(db, "books");
+  let q = query(booksRef, orderBy("createdAt", "desc"), firestoreLimit(limit));
 
-  const booksWithDetails: BookWithDetails[] = paginatedBooks.map(book => {
-    const author = allAuthors.find(a => a.id === book.authorId);
-    const genres = allGenres.filter(g => book.genreIds && book.genreIds.includes(g.id));
+  if (lastBookId) {
+    const lastVisibleDoc = await getDoc(doc(db, "books", lastBookId));
+    if(lastVisibleDoc.exists()){
+        q = query(booksRef, orderBy("createdAt", "desc"), startAfter(lastVisibleDoc), firestoreLimit(limit));
+    }
+  }
+
+  const documentSnapshots = await getDocs(q);
+  const books: BookWithDetails[] = documentSnapshots.docs.map(docSnap => {
+    const bookData = docSnap.data() as Omit<Book, 'id'|'docId'>;
+    const author = allAuthors.find(a => a.id === bookData.authorId);
+    const genres = allGenres.filter(g => bookData.genreIds && bookData.genreIds.includes(g.id));
+    
     return {
-      ...book,
+      ...bookData,
+      id: docSnap.data().id || docSnap.id,
+      docId: docSnap.id,
       author,
       genres,
-    };
+    } as BookWithDetails;
   });
 
+  const hasMore = books.length === limit;
+  
   return {
-    books: booksWithDetails,
-    hasMore: page < totalPages,
-    totalPages,
-    totalBooks,
+    books,
+    hasMore,
   };
 }

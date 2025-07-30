@@ -2,8 +2,7 @@
 
 import { getPaginatedBooksWithDetails } from '@/lib/books';
 
-export async function fetchMoreBooks(page: number) {
-  // You can add more parameters here like searchTerm, sortOrder for server-side filtering
-  const { books, hasMore } = await getPaginatedBooksWithDetails({ page, limit: 20 });
+export async function fetchMoreBooks(page: number, lastBookId: string | null) {
+  const { books, hasMore } = await getPaginatedBooksWithDetails({ page, limit: 20, lastBookId });
   return { books, hasMore };
 }

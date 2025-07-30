@@ -52,6 +52,12 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
     }
   }, [queryFromUrl]);
 
+  useEffect(() => {
+    setBooks(initialBooks);
+    setHasMore(initialHasMore);
+    setPage(2);
+  }, [initialBooks, initialHasMore]);
+
   const filteredAndSortedBooks = useMemo(() => {
     let filtered = books;
     if (debouncedSearchTerm) {
@@ -87,12 +93,13 @@ export function BookList({ initialBooks, initialHasMore, isSearchPage = false }:
     if (isLoadingMore || !hasMore || debouncedSearchTerm) return; // Don't load more if searching client-side
 
     setIsLoadingMore(true);
-    const { books: newBooks, hasMore: newHasMore } = await fetchMoreBooks(page);
+    const lastBookId = books.length > 0 ? books[books.length - 1].docId : null;
+    const { books: newBooks, hasMore: newHasMore } = await fetchMoreBooks(page, lastBookId);
     setBooks((prevBooks) => [...prevBooks, ...newBooks]);
     setHasMore(newHasMore);
     setPage((prevPage) => prevPage + 1);
     setIsLoadingMore(false);
-  }, [isLoadingMore, hasMore, page, debouncedSearchTerm]);
+  }, [isLoadingMore, hasMore, page, debouncedSearchTerm, books]);
 
 
   useEffect(() => {
