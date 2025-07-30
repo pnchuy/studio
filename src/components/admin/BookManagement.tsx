@@ -86,8 +86,6 @@ export function BookManagement() {
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [booksPerPage, setBooksPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('date_added_desc');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
@@ -543,25 +541,6 @@ export function BookManagement() {
     });
   }, [books, debouncedSearchTerm, sortOption, authors]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredAndSortedBooks.length / booksPerPage);
-  const paginatedBooks = filteredAndSortedBooks.slice(
-    (currentPage - 1) * booksPerPage,
-    currentPage * booksPerPage
-  );
-
-  useEffect(() => {
-    const newTotalPages = Math.ceil(filteredAndSortedBooks.length / booksPerPage);
-    if (currentPage > newTotalPages) {
-      setCurrentPage(Math.max(1, newTotalPages));
-    }
-  }, [filteredAndSortedBooks, currentPage, booksPerPage]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [booksPerPage, searchTerm, sortOption]);
-
-
   return (
     <>
       <div className="flex items-center justify-end gap-2 mb-4">
@@ -666,7 +645,7 @@ export function BookManagement() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {paginatedBooks.map((book) => {
+                        {filteredAndSortedBooks.map((book) => {
                             const bookGenres = getBookGenres(book.genreIds);
                             const displayedGenres = bookGenres.slice(0, 3);
                             const remainingCount = bookGenres.length - displayedGenres.length;
@@ -739,50 +718,9 @@ export function BookManagement() {
                     </Table>
                 </div>
                 <div className="flex items-center justify-between py-4">
-                    <div className="flex items-center space-x-2">
-                        <p className="text-sm text-muted-foreground">Hiển thị</p>
-                        <Select
-                            value={`${booksPerPage}`}
-                            onValueChange={(value) => {
-                                setBooksPerPage(Number(value));
-                            }}
-                        >
-                            <SelectTrigger className="h-8 w-[70px]">
-                                <SelectValue placeholder={`${booksPerPage}`} />
-                            </SelectTrigger>
-                            <SelectContent side="top">
-                                {[10, 20, 50].map((pageSize) => (
-                                <SelectItem key={pageSize} value={`${pageSize}`}>
-                                    {pageSize}
-                                </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <p className="text-sm text-muted-foreground">kết quả trong tổng số {filteredAndSortedBooks.length}</p>
+                    <div className="text-sm text-muted-foreground">
+                        Tổng cộng {filteredAndSortedBooks.length} quyển sách.
                     </div>
-                    {totalPages > 1 && (
-                        <div className="flex items-center justify-end space-x-2">
-                            <span className="text-sm text-muted-foreground">
-                                Trang {currentPage} / {totalPages}
-                            </span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                disabled={currentPage === 1}
-                            >
-                                Trước
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                disabled={currentPage === totalPages}
-                            >
-                                Sau
-                            </Button>
-                        </div>
-                    )}
                 </div>
             </>
             )}
@@ -867,9 +805,3 @@ export function BookManagement() {
     </>
   );
 }
-
-    
-
-    
-
-    
