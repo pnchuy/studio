@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type { BookWithDetails } from '@/types';
 import { BookCard } from './BookCard';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,8 @@ import { Search } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Button } from '@/components/ui/button';
 import { useResponsivePaging } from '@/hooks/use-responsive-paging';
+import { useResponsiveInitialLoad } from '@/hooks/use-responsive-initial-load';
+import { useInfiniteScroll } from '@/hooks/use-infinite-scroll';
 
 
 interface BookListProps {
@@ -19,8 +21,13 @@ interface BookListProps {
 export function BookList({ books, isSearchPage = false }: BookListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const booksPerPage = useResponsivePaging();
+  const { initialLoadCount, itemsPerRow } = useResponsiveInitialLoad();
+  
+  const [visibleCount, setVisibleCount] = useState(initialLoadCount);
+  const loadMoreRef = useRef(null);
 
   const filteredBooks = useMemo(() => {
     if (!debouncedSearchTerm) {
@@ -35,30 +42,34 @@ export function BookList({ books, isSearchPage = false }: BookListProps) {
   
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm, booksPerPage]);
-
+    setVisibleCount(initialLoadCount);
+  }, [debouncedSearchTerm, booksPerPage, initialLoadCount]);
+  
   const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
 
-  const paginatedBooks = useMemo(() => {
+  const currentVisibleBooks = useMemo(() => {
     const startIndex = (currentPage - 1) * booksPerPage;
-    const endIndex = startIndex + booksPerPage;
-    return filteredBooks.slice(startIndex, endIndex);
-  }, [filteredBooks, currentPage, booksPerPage]);
+    return filteredBooks.slice(startIndex, startIndex + visibleCount);
+  }, [filteredBooks, currentPage, booksPerPage, visibleCount]);
   
-  useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(totalPages);
+  const hasMoreToLoadOnPage = visibleCount < booksPerPage && currentVisibleBooks.length < filteredBooks.slice((currentPage - 1) * booksPerPage, currentPage * booksPerPage).length;
+
+  const loadMoreItems = () => {
+    if (hasMoreToLoadOnPage) {
+      setVisibleCount(prev => Math.min(prev + itemsPerRow, booksPerPage));
     }
-  }, [currentPage, totalPages]);
+  };
+
+  useInfiniteScroll(loadMoreRef, loadMoreItems, hasMoreToLoadOnPage);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
+      setVisibleCount(initialLoadCount); // Reset visible count for the new page
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-
-
+  
   return (
     <div className="mt-8 space-y-8">
       {isSearchPage && (
@@ -76,14 +87,17 @@ export function BookList({ books, isSearchPage = false }: BookListProps) {
         </div>
       )}
 
-      {paginatedBooks.length > 0 ? (
+      {currentVisibleBooks.length > 0 ? (
         <>
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-            {paginatedBooks.map((book) => (
+            {currentVisibleBooks.map((book) => (
               <BookCard key={`${book.id}-${book.docId}`} book={book} />
             ))}
           </div>
-           {totalPages > 1 && (
+
+          <div ref={loadMoreRef} />
+
+           {totalPages > 1 && !hasMoreToLoadOnPage && (
             <div className="flex items-center justify-center space-x-4 pt-4">
               <Button
                 onClick={() => handlePageChange(currentPage - 1)}
