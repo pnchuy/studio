@@ -1,25 +1,26 @@
 
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { BookWithDetails } from '@/types';
 import { BookCard } from './BookCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Button } from '@/components/ui/button';
+import { useResponsivePaging } from '@/hooks/use-responsive-paging';
+
 
 interface BookListProps {
   books: BookWithDetails[];
   isSearchPage?: boolean;
 }
 
-const BOOKS_PER_PAGE = 24;
-
 export function BookList({ books, isSearchPage = false }: BookListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [currentPage, setCurrentPage] = useState(1);
+  const booksPerPage = useResponsivePaging();
 
   const filteredBooks = useMemo(() => {
     if (!debouncedSearchTerm) {
@@ -31,14 +32,24 @@ export function BookList({ books, isSearchPage = false }: BookListProps) {
         (book.author?.name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     );
   }, [books, debouncedSearchTerm]);
+  
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, booksPerPage]);
 
-  const totalPages = Math.ceil(filteredBooks.length / BOOKS_PER_PAGE);
+  const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
 
   const paginatedBooks = useMemo(() => {
-    const startIndex = (currentPage - 1) * BOOKS_PER_PAGE;
-    const endIndex = startIndex + BOOKS_PER_PAGE;
+    const startIndex = (currentPage - 1) * booksPerPage;
+    const endIndex = startIndex + booksPerPage;
     return filteredBooks.slice(startIndex, endIndex);
-  }, [filteredBooks, currentPage]);
+  }, [filteredBooks, currentPage, booksPerPage]);
+  
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -72,7 +83,7 @@ export function BookList({ books, isSearchPage = false }: BookListProps) {
               <BookCard key={`${book.id}-${book.docId}`} book={book} />
             ))}
           </div>
-           {!isSearchPage && totalPages > 1 && (
+           {totalPages > 1 && (
             <div className="flex items-center justify-center space-x-4 pt-4">
               <Button
                 onClick={() => handlePageChange(currentPage - 1)}
