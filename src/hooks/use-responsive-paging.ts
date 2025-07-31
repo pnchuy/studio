@@ -4,17 +4,14 @@
 import { useState, useEffect } from 'react';
 
 function getBooksPerPage(width: number): number {
-    if (width < 768) { // 2 cols
-        return 20;
+    if (width < 1280) { // 2, 3, 4 cols
+        return 36;
     }
-    if (width < 1024) { // 3 cols
-        return 21;
+    if (width < 1536) { // 5 cols
+        return 35;
     }
-    if (width < 1280) { // 4 cols
-        return 20;
-    }
-    // 5 cols and up
-    return 20;
+    // 6 cols and up
+    return 36;
 }
 
 
@@ -30,7 +27,7 @@ function debounce(fn: () => void, ms: number) {
 
 
 export function useResponsivePaging() {
-    const [booksPerPage, setBooksPerPage] = useState(20);
+    const [booksPerPage, setBooksPerPage] = useState(36);
 
     useEffect(() => {
         const handleResize = () => {
