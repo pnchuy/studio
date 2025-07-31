@@ -7,15 +7,19 @@ import { BookCard } from './BookCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
+import { Button } from '@/components/ui/button';
 
 interface BookListProps {
   books: BookWithDetails[];
   isSearchPage?: boolean;
 }
 
+const BOOKS_PER_PAGE = 24;
+
 export function BookList({ books, isSearchPage = false }: BookListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filteredBooks = useMemo(() => {
     if (!debouncedSearchTerm) {
@@ -27,6 +31,21 @@ export function BookList({ books, isSearchPage = false }: BookListProps) {
         (book.author?.name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     );
   }, [books, debouncedSearchTerm]);
+
+  const totalPages = Math.ceil(filteredBooks.length / BOOKS_PER_PAGE);
+
+  const paginatedBooks = useMemo(() => {
+    const startIndex = (currentPage - 1) * BOOKS_PER_PAGE;
+    const endIndex = startIndex + BOOKS_PER_PAGE;
+    return filteredBooks.slice(startIndex, endIndex);
+  }, [filteredBooks, currentPage]);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
 
   return (
@@ -46,12 +65,35 @@ export function BookList({ books, isSearchPage = false }: BookListProps) {
         </div>
       )}
 
-      {filteredBooks.length > 0 ? (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-          {filteredBooks.map((book) => (
-            <BookCard key={`${book.id}-${book.docId}`} book={book} />
-          ))}
-        </div>
+      {paginatedBooks.length > 0 ? (
+        <>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            {paginatedBooks.map((book) => (
+              <BookCard key={`${book.id}-${book.docId}`} book={book} />
+            ))}
+          </div>
+           {!isSearchPage && totalPages > 1 && (
+            <div className="flex items-center justify-center space-x-4 pt-4">
+              <Button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                variant="outline"
+              >
+                Trang trước
+              </Button>
+              <span className="text-sm font-medium">
+                Trang {currentPage} / {totalPages}
+              </span>
+              <Button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                variant="outline"
+              >
+                Trang sau
+              </Button>
+            </div>
+          )}
+        </>
       ) : (
         <div className="text-center py-16">
             <p className="text-lg font-medium">No books found.</p>
