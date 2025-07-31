@@ -21,7 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import type { Book, Author, Genre, Series, YoutubeLink } from "@/types";
+import type { Book, Author, Genre, Series, YoutubeLink, CoverImages } from "@/types";
 import { convertYoutubeUrlToEmbed, cn } from "@/lib/utils";
 import { PlusCircle, Trash2, X, Loader2, UploadCloud } from "lucide-react";
 import { Badge } from "../ui/badge";
