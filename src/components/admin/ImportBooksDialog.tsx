@@ -49,43 +49,47 @@ interface ImportBooksDialogProps {
   onFinished: () => void;
 }
 
-const processImageFromBase64 = (base64Data: string): Promise<CoverImages> => {
-    // This function should only run in a Node.js environment.
-    if (typeof window !== 'undefined') {
-        return Promise.reject(new Error("processImageFromBase64 can only be run on the server."));
-    }
-    
-    return new Promise(async (resolve, reject) => {
-        const { JSDOM } = await import('jsdom');
-        const { window } = new JSDOM();
-        const { Image, Canvas } = window;
-        
-        const img = new Image();
-        img.src = base64Data.startsWith('data:image') ? base64Data : `data:image/jpeg;base64,${base64Data}`;
-        
-        img.onload = () => {
-            const sizes = [250, 360, 480];
-            const encodedImages: Partial<CoverImages> = {};
-            
-            for (const width of sizes) {
-                const canvas = new Canvas(0,0);
-                const scaleFactor = width / img.width;
-                canvas.width = width;
-                canvas.height = img.height * scaleFactor;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    return reject(new Error('Could not get canvas context'));
+const base64ToBlob = async (base64: string): Promise<Blob> => {
+    const response = await fetch(base64);
+    const blob = await response.blob();
+    return blob;
+};
+
+const processImageFromBlob = (blob: Blob): Promise<CoverImages> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onload = (event) => {
+            const img = document.createElement('img');
+            img.src = event.target?.result as string;
+            img.onload = async () => {
+                const sizes = [250, 360, 480];
+                const encodedImages: Partial<CoverImages> = {};
+
+                for (const width of sizes) {
+                    const canvas = document.createElement('canvas');
+                    const scaleFactor = width / img.width;
+                    canvas.width = width;
+                    canvas.height = img.height * scaleFactor;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) {
+                        return reject(new Error('Could not get canvas context'));
+                    }
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const dataUrl = canvas.toDataURL('image/webp', 0.8);
+                    encodedImages[`size${width}` as keyof CoverImages] = dataUrl;
                 }
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                const dataUrl = canvas.toDataURL('image/webp', 0.8);
-                encodedImages[`size${width}` as keyof CoverImages] = dataUrl;
-            }
-            
-            resolve(encodedImages as CoverImages);
+                
+                resolve(encodedImages as CoverImages);
+            };
+            img.onerror = (error) => {
+                console.error("Image loading error", error);
+                reject(new Error("Image could not be loaded from data URL."));
+            };
         };
-        img.onerror = (error) => {
-            console.error("Image loading error from base64", error);
-            reject(new Error("Image could not be loaded from base64 data."));
+        reader.onerror = (error) => {
+            console.error("FileReader error", error);
+            reject(new Error("Could not read image file."));
         };
     });
 };
@@ -202,14 +206,19 @@ export function ImportBooksDialog({
                 .map(name => genreMap.get(name.trim().toLowerCase()))
                 .filter((id): id is string => !!id) || [];
             
-            // For now, we are skipping base64 processing on the client as it requires Node.js APIs.
-            // A more advanced implementation would involve a serverless function.
-            const coverLink = rawBook.coverLink || "https://placehold.co/480x720.png";
-            const coverImages: CoverImages = {
-                size250: coverLink,
-                size360: coverLink,
-                size480: coverLink,
-            };
+            let coverImages: CoverImages;
+
+            if (rawBook.base64 && rawBook.base64.startsWith('data:image')) {
+                const blob = await base64ToBlob(rawBook.base64);
+                coverImages = await processImageFromBlob(blob);
+            } else {
+                const coverLink = rawBook.coverLink || "https://placehold.co/480x720.png";
+                coverImages = {
+                    size250: coverLink,
+                    size360: coverLink,
+                    size480: coverLink,
+                };
+            }
             
             const bookSeries = rawBook.series && seriesSet.has(rawBook.series.toLowerCase()) ? rawBook.series : null;
             const seriesOrder = rawBook.order ? Number(rawBook.order) : null;
@@ -309,7 +318,7 @@ export function ImportBooksDialog({
         <Code className="h-4 w-4" />
         <AlertTitle>Định dạng yêu cầu</AlertTitle>
         <AlertDescription>
-          Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `title`, `author`, `date`. Các trường khác (`coverLink`, etc.) là tùy chọn. Chức năng import `base64` đang được bảo trì.
+          Tệp JSON của bạn phải là một mảng (array) các đối tượng sách. Mỗi sách phải có các trường `title`, `author`, `date`. Các trường khác (`coverLink`, `base64`, etc.) là tùy chọn. Hệ thống sẽ ưu tiên `base64` hơn `coverLink` nếu cả hai đều tồn tại.
         </AlertDescription>
       </Alert>
 
