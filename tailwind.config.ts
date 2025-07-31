@@ -16,6 +16,9 @@ export default {
       },
     },
     extend: {
+      screens: {
+        '2xl': '1536px',
+      },
       fontFamily: {
         body: ['Mulish', 'sans-serif'],
         headline: ['Mulish', 'sans-serif'],

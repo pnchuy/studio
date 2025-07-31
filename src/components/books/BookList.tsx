@@ -18,16 +18,15 @@ export function BookList({ books, isSearchPage = false }: BookListProps) {
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const filteredBooks = useMemo(() => {
-    if (isSearchPage && debouncedSearchTerm) {
-        return books.filter(
-            (book) =>
-                book.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-                (book.author?.name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-        );
+    if (!debouncedSearchTerm) {
+      return books;
     }
-    // For the main page, or search page without a term, show all books passed in
-    return books;
-  }, [books, isSearchPage, debouncedSearchTerm]);
+    return books.filter(
+      (book) =>
+        book.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        (book.author?.name || '').toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [books, debouncedSearchTerm]);
 
 
   return (
@@ -48,7 +47,7 @@ export function BookList({ books, isSearchPage = false }: BookListProps) {
       )}
 
       {filteredBooks.length > 0 ? (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {filteredBooks.map((book) => (
             <BookCard key={`${book.id}-${book.docId}`} book={book} />
           ))}
