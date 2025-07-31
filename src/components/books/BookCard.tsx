@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import Image from 'next/image';
 import type { BookWithDetails } from '@/types';
@@ -9,6 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { slugify } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface BookCardProps {
   book: BookWithDetails;
@@ -17,12 +19,23 @@ interface BookCardProps {
 export function BookCard({ book }: BookCardProps) {
   const bookSlug = slugify(book.title);
   const bookUrl = `/book/${book.id}${bookSlug ? `-${bookSlug}` : ''}`;
+  const hasAudioContent = book.youtubeLinks && book.youtubeLinks.length > 0 && book.youtubeLinks.some(link => link.url.trim() !== '');
 
   return (
     <Link href={bookUrl} className="group block">
       <Card className="h-full overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1">
         <CardHeader className="p-0">
           <div className="relative aspect-[2/3] w-full">
+            {!hasAudioContent && (
+                <div 
+                    className={cn(
+                        "absolute top-2 left-2 z-10 rounded-sm bg-accent px-2 py-1 text-xs font-semibold text-accent-foreground shadow-md",
+                        "transition-transform duration-300 ease-in-out group-hover:scale-105"
+                    )}
+                >
+                    Coming Soon
+                </div>
+            )}
             <Image
               src={book.coverImages.size360.trim()}
               alt={`Cover of ${book.title}`}
