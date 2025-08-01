@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, createContext, useContext, typ
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, type User as FirebaseUser, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, getDoc, collection, query, limit, getDocs, where } from 'firebase/firestore';
-import { auth, db, isFirebaseConfigured } from '@/lib/firebase';
+import { auth, db, isFirebaseConfigured, firebaseConfig } from '@/lib/firebase';
 import type { User } from '@/types';
 import { useToast } from './use-toast';
 import { z } from 'zod';
@@ -238,9 +238,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const provider = new GoogleAuthProvider();
-    if(auth.config.authDomain) {
+    if(firebaseConfig.authDomain) {
       provider.setCustomParameters({
-          'auth_domain': auth.config.authDomain
+          'auth_domain': firebaseConfig.authDomain
       });
     }
 
@@ -284,23 +284,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return true;
 
     } catch (error: any) {
-      // Log the full error to see domain details
       console.error("Google sign-in error object:", error);
 
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
         return false;
       }
-      if (error.code === 'auth/account-exists-with-different-credential') {
-        toast({
-            variant: "destructive",
-            title: "Tài khoản đã tồn tại",
-            description: "Email này đã được đăng ký bằng một phương thức khác (ví dụ: mật khẩu). Vui lòng đăng nhập bằng phương thức ban đầu của bạn.",
-            duration: 8000
-        });
-        return false;
-      }
       
-      const detailedMessage = error.customData?._tokenResponse?.error_description || error.message;
+      let detailedMessage = error.message;
+      if (error.customData && error.customData.message) {
+        detailedMessage = error.customData.message;
+      } else if (error.customData && error.customData._tokenResponse && error.customData._tokenResponse.error_description) {
+        detailedMessage = error.customData._tokenResponse.error_description;
+      }
 
       toast({
         variant: "destructive",
