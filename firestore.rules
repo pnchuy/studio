@@ -1,38 +1,50 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Books, Authors, Genres, Series: Allow public read access
-    match /{collection}/{docId} where collection in ['books', 'authors', 'genres', 'series'] {
-      allow read: if true;
-      allow write: if false; // Deny all writes for now
+
+    // Helper functions
+    function isUserAuthenticated() {
+      return request.auth != null;
     }
 
-    // Users:
-    match /users/{userId} {
-      // Allow anyone to read user data (needed for username login check)
-      allow read: if true;
-
-      // Allow a user to create their own profile
-      // The username must not already exist
-      allow create: if request.auth != null
-                    && request.auth.uid == userId
-                    && !exists(/databases/$(database)/documents/users_by_username/$(request.resource.data.username));
-      
-      // Allow a user to update their own profile
-      allow update: if request.auth != null && request.auth.uid == userId;
-
-      // Prevent users from being deleted for now
-      allow delete: if false;
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
-    // Helper collection to enforce username uniqueness
-    match /users_by_username/{username} {
+    // Rules for collections
+    match /books/{bookId} {
       allow read: if true;
-      // Allow creation only if the user is creating their own entry
-      allow create: if request.auth.uid == request.resource.data.userId;
+      allow write: if false; // Protect books from being written to by clients
+    }
+
+    match /authors/{authorId} {
+      allow read: if true;
       allow write: if false;
+    }
+
+    match /genres/{genreId} {
+      allow read: if true;
+      allow write: if false;
+    }
+     
+    match /series/{seriesId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /users/{userId} {
+      // Any authenticated user can read the list of users
+      allow read: if isUserAuthenticated();
+      
+      // A user can create their own profile
+      allow create: if isOwner(userId);
+
+      // A user can only update their own profile
+      allow update: if isOwner(userId);
+
+      // Only an owner can delete their account (or an admin in the future)
+      allow delete: if isOwner(userId);
     }
   }
 }
