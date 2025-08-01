@@ -182,12 +182,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, message: msg};
     }
     
-    // Temporarily disable username check
-    // const usernameQuery = query(collection(db, "users"), where("username", "==", username.toLowerCase()), limit(1));
-    // const usernameSnapshot = await getDocs(usernameQuery);
-    // if (!usernameSnapshot.empty) {
-    //     return { success: false, message: "This username is already taken.", field: 'username' };
-    // }
+    const usernameQuery = query(collection(db, "users"), where("username", "==", username.toLowerCase()), limit(1));
+    const usernameSnapshot = await getDocs(usernameQuery);
+    if (!usernameSnapshot.empty) {
+        return { success: false, message: "This username is already taken.", field: 'username' };
+    }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
