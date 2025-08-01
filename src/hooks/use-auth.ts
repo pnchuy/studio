@@ -238,9 +238,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-        'auth_domain': process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-    });
+    if(auth.config.authDomain) {
+      provider.setCustomParameters({
+          'auth_domain': auth.config.authDomain
+      });
+    }
 
     try {
       const result = await signInWithPopup(auth, provider);
@@ -282,6 +284,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return true;
 
     } catch (error: any) {
+      // Log the full error to see domain details
+      console.error("Google sign-in error object:", error);
+
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
         return false;
       }
@@ -294,11 +299,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         return false;
       }
-      console.error("Google sign-in error:", error);
+      
+      const detailedMessage = error.customData?._tokenResponse?.error_description || error.message;
+
       toast({
         variant: "destructive",
-        title: "Google Sign-In Failed",
-        description: "An unexpected error occurred. Please try again.",
+        title: "Lỗi đăng nhập Google",
+        description: `Đã xảy ra lỗi: ${detailedMessage}. Vui lòng kiểm tra lại cài đặt tên miền được uỷ quyền trong Firebase và Google Cloud.`,
+        duration: 10000
       });
       return false;
     }
