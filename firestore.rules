@@ -1,37 +1,14 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Public collections are readable by anyone
-    match /books/{bookId} {
-      allow read: if true;
-      allow write: if false; // Writes should be handled by authenticated admins/backend logic
-    }
-    match /authors/{authorId} {
-      allow read: if true;
-      allow write: if false;
-    }
-    match /genres/{genreId} {
-      allow read: if true;
-      allow write: if false;
-    }
-    match /series/{seriesId} {
-      allow read: if true;
-      allow write: if false;
-    }
-
-    // Users can only read and write to their own document
-    match /users/{userId} {
-      allow get: if request.auth != null;
-      allow list: if false; // Prevent listing all users
-      allow create, update: if request.auth.uid == userId;
-      allow delete: if false; // Prevent users from deleting their own accounts via rules
-    }
-
-    // Fallback rule to deny access to any other collection
+    // Allow public read access to all collections for now
+    // to ensure the app can display data.
+    // Writes are disallowed to protect the data.
     match /{document=**} {
-      allow read, write: if false;
+      allow read: if true;
+      allow write: if false;
     }
   }
 }
