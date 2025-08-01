@@ -185,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const usernameQuery = query(collection(db, "users"), where("username", "==", username.toLowerCase()), limit(1));
     const usernameSnapshot = await getDocs(usernameQuery);
     if (!usernameSnapshot.empty) {
-        return { success: false, message: "This username is already taken.", field: 'username' };
+        return { success: false, message: "Username này đã có người sử dụng.", field: 'username' };
     }
 
     try {
@@ -221,10 +221,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return { success: false, message: msg, field: 'email' };
         }
         if (error.code === 'auth/email-already-in-use') {
-            return { success: false, message: "An account with this email already exists.", field: 'email' };
+            return { success: false, message: "Một tài khoản với email này đã tồn tại.", field: 'email' };
         }
         if (error.code === 'auth/weak-password') {
-            return { success: false, message: "Password must be at least 6 characters.", field: 'password' };
+            return { success: false, message: "Mật khẩu phải có ít nhất 6 ký tự.", field: 'password' };
         }
         console.error("Signup error:", error);
         return { success: false, message: `An unknown error occurred: ${error.message}` };
