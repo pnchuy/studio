@@ -2,44 +2,44 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isManagerOrAdmin() {
-      return request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
-    }
     
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    // Books, Authors, Genres, Series: Public read, restricted write
-    match /{collection}/{docId} where collection in ['books', 'authors', 'genres', 'series'] {
+    // Allow public read access to collections needed for browsing the library
+    match /books/{bookId} {
       allow read: if true;
-      allow write: if isManagerOrAdmin();
+      allow write: if false; // Disallow all writes by default
     }
 
-    // Users: Restricted access
-    match /users/{userId} {
-      // Allow users to create their own profile document.
-      // Disallow them from creating a profile for someone else or giving themselves a role.
-      allow create: if isOwner(userId) && !("role" in request.resource.data);
-      
-      // Managers/Admins can read all user profiles. Users can only read their own.
-      allow read: if isOwner(userId) || isManagerOrAdmin();
-      
-      // Users can update their own profile (but not their role).
-      // Admins/Managers can only update other users' roles.
-      allow update: if (isOwner(userId) && !("role" in request.resource.data)) ||
-                       (isManagerOrAdmin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role']));
-                       
-      // Admins/Managers can delete other users, but not themselves.
-      allow delete: if isManagerOrAdmin() && !isOwner(userId);
+    match /authors/{authorId} {
+      allow read: if true;
+      allow write: if false;
     }
-    
-    // Allow checking for username existence during signup
+
+    match /genres/{genreId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /series/{seriesId} {
+        allow read: if true;
+        allow write: if false;
+    }
+
+    // Secure the users collection
     match /users/{userId} {
-      // This is a special rule to allow list queries for username checks, but only if the query is very specific.
-      // This allows checking if a username exists without letting users list all other users.
-      allow list: if query.limit == 1 && "username" in query.wheres[0];
+      // Only the authenticated user can read their own document
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Creation is handled by backend logic (Cloud Functions or Admin SDK),
+      // so client-side creation is disallowed.
+      allow create: if request.auth != null;
+       // Only the authenticated user can update their own document, but not their role
+      allow update: if request.auth != null && request.auth.uid == userId && resource.data.role == request.resource.data.role;
+      // Disallow client-side deletion
+      allow delete: if false;
+    }
+
+    // Default deny for any other path
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
