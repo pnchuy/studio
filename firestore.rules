@@ -1,14 +1,39 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow public read access to all collections for now
-    // to ensure the app can display data.
-    // Writes are disallowed to protect the data.
-    match /{document=**} {
+
+    // Allow public read access to collections needed for browsing the site
+    match /books/{bookId} {
+      allow read: if true;
+      allow write: if false; 
+    }
+    match /authors/{authorId} {
+      allow read: if true;
+      allow write: if false; 
+    }
+    match /genres/{genreId} {
+      allow read: if true;
+      allow write: if false; 
+    }
+    match /series/{seriesId} {
       allow read: if true;
       allow write: if false;
+    }
+
+    // Rules for the 'users' collection
+    match /users/{userId} {
+      // Allow a user to create their own profile document.
+      // The `request.auth.uid` is available right after signup.
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // Allow a user to read their own document.
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Allow a user to update their own document, but not change their role.
+      allow update: if request.auth != null && request.auth.uid == userId && request.resource.data.role == resource.data.role;
+
+      // Only admins should be able to delete users (for now, disallow all deletion)
+      allow delete: if false;
     }
   }
 }
