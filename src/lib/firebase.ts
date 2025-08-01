@@ -4,6 +4,7 @@ import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
+// Hardcoded configuration for the PRODUCTION project: list-read
 const firebaseConfig = {
   apiKey: "AIzaSyCZsMhSDIcL2yV0GyY0uhPgCz4HypPmIbE",
   authDomain: "list-read.firebaseapp.com",
@@ -13,6 +14,7 @@ const firebaseConfig = {
   appId: "1:508306002133:web:69b85b5c1b3abb9cee125c",
   measurementId: "G-RGJY257P1Z"
 };
+
 
 // A flag to check if Firebase is configured
 export const isFirebaseConfigured = !!firebaseConfig.apiKey;

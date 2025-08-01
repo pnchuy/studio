@@ -285,22 +285,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     } catch (error: any) {
       console.error("Google sign-in error object:", error);
-
+      
+      let detailedMessage = "An unexpected error occurred. Please try again.";
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
         return false;
-      }
-      
-      let detailedMessage = error.message;
-      if (error.customData && error.customData.message) {
+      } else if(error.code === 'auth/unauthorized-domain') {
+        detailedMessage = `Firebase: Error (${error.code}).. Please check the authorized domains in Firebase and Google Cloud console.`;
+      } else if (error.customData && error.customData.message) {
         detailedMessage = error.customData.message;
       } else if (error.customData && error.customData._tokenResponse && error.customData._tokenResponse.error_description) {
         detailedMessage = error.customData._tokenResponse.error_description;
+      } else if (error.message) {
+        detailedMessage = error.message;
       }
 
       toast({
         variant: "destructive",
         title: "Lỗi đăng nhập Google",
-        description: `Đã xảy ra lỗi: ${detailedMessage}. Vui lòng kiểm tra lại cài đặt tên miền được uỷ quyền trong Firebase và Google Cloud.`,
+        description: detailedMessage,
         duration: 10000
       });
       return false;
