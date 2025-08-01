@@ -3,48 +3,33 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Allow public read access to collections needed for browsing the site
-    match /books/{bookId} {
+    match /books/{document=**} {
       allow read: if true;
-      allow write: if false; // Explicitly deny writes for safety
+      allow write: if request.auth != null && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER']);
     }
-
-    match /authors/{authorId} {
+    match /authors/{document=**} {
       allow read: if true;
-      allow write: if false;
+      allow write: if request.auth != null && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER']);
     }
-
-    match /genres/{genreId} {
+    match /genres/{document=**} {
       allow read: if true;
-      allow write: if false;
+      allow write: if request.auth != null && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER']);
     }
-
-    match /series/{seriesId} {
+    match /series/{document=**} {
       allow read: if true;
-      allow write: if false;
+      allow write: if request.auth != null && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER']);
     }
-
-    // User profiles
     match /users/{userId} {
-      // Allow any authenticated user to read user data (needed for admin checks etc.)
-      allow read: if request.auth != null;
-      
-      // Allow a user to create their own profile document upon signup
-      allow create: if request.auth != null && request.auth.uid == userId;
+      // Allow anyone to read user data. This is necessary for username login to work,
+      // as the app needs to query the users collection to find the email associated with a username.
+      allow read: if true;
 
-      // Allow an authenticated user to update their own profile (e.g. change name)
-      // For role changes, this should be restricted to admins in a real app
-      allow update: if request.auth != null && request.auth.uid == userId;
-      
-      // Prevent users from deleting their own accounts through this rule for safety
-      allow delete: if false; 
-    }
-    
-    // By default, no other documents can be read or written to.
-    // This is implicitly handled by not having a match block, but we can be explicit.
-    match /{document=**} {
-      allow read, write: if false;
+      // Allow users to create their own profile upon signup.
+      // Allow users to update their own profile.
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+
+      // Only ADMINs can delete users (for now, this is a restrictive rule).
+      allow delete: if request.auth != null && (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN');
     }
   }
 }
