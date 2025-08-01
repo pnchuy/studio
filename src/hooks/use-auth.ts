@@ -238,6 +238,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+        'auth_domain': process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    });
+
     try {
       const result = await signInWithPopup(auth, provider);
       const fbUser = result.user;
@@ -362,7 +366,3 @@ export function useAuth() {
   }
   return context;
 }
-
-    
-
-    
