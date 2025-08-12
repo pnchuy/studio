@@ -1,45 +1,58 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
   
-    // Function to check if the user is an Admin or Manager
+    // Helper function to check for admin or manager roles
     function isManagerOrAdmin() {
+      // Check if user is authenticated and if their role is ADMIN or MANAGER
       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
     }
 
-    // Books can be read by anyone, but only modified by admins/managers.
-    match /books/{bookId} {
+    match /users/{userId} {
+      // Allow anyone to read the users collection for login purposes.
       allow read: if true;
-      allow write: if isManagerOrAdmin();
+      // Allow users to create their own profile.
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Allow users to update their own profile information.
+      allow update: if request.auth != null && request.auth.uid == userId;
+       // Only admins can delete user profiles.
+      allow delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
     }
 
-    // Users can be read by any authenticated user.
-    // A user can create their own profile.
-    // A user can only update their own profile.
-    // Only Admins can change roles or delete users.
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth.uid == userId;
-      allow update: if request.auth.uid == userId;
-      allow delete: if isManagerOrAdmin();
+    match /books/{bookId} {
+      // Anyone can read books
+      allow read: if true;
+      // Only admins or managers can create or update books.
+      allow write: if isManagerOrAdmin();
     }
     
-    // Authors, Genres, and Series can only be managed by Admins or Managers.
     match /authors/{authorId} {
-      allow read: if true;
-      allow write: if isManagerOrAdmin();
+        // Anyone can read authors
+        allow read: if true;
+        // Only admins or managers can write authors.
+        allow write: if isManagerOrAdmin();
     }
-
+    
     match /genres/{genreId} {
-      allow read: if true;
-      allow write: if isManagerOrAdmin();
+        // Anyone can read genres
+        allow read: if true;
+        // Only admins or managers can write genres.
+        allow write: if isManagerOrAdmin();
     }
 
     match /series/{seriesId} {
-      allow read: if true;
-      allow write: if isManagerOrAdmin();
+        // Anyone can read series
+        allow read: if true;
+        // Only admins or managers can write series.
+        allow write: if isManagerOrAdmin();
+    }
+
+    match /system/{docId} {
+        // Anyone can read system settings like the logo
+        allow read: if true;
+        // Only admins or managers can change system settings.
+        allow write: if isManagerOrAdmin();
     }
   }
 }

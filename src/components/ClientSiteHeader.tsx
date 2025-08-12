@@ -21,19 +21,35 @@ import { getInitials } from '@/lib/utils';
 import { ThemeToggle } from './ThemeToggle';
 import { Skeleton } from './ui/skeleton';
 import { GlobalSearch } from './search/GlobalSearch';
+import { db, isFirebaseConfigured } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
-const LOGO_STORAGE_KEY = 'bibliophile-logo';
+const SETTINGS_DOC_PATH = 'system/settings';
 
 export function ClientSiteHeader() {
   const { user, isLoggedIn, logout, isLoading } = useAuth();
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [isLogoLoading, setIsLogoLoading] = useState(true);
 
   useEffect(() => {
-    // This effect runs only on the client, so it's safe to use localStorage.
-    const storedLogo = localStorage.getItem(LOGO_STORAGE_KEY);
-    if (storedLogo) {
-      setLogoUrl(storedLogo);
-    }
+    const fetchLogo = async () => {
+        if (!isFirebaseConfigured || !db) {
+            setIsLogoLoading(false);
+            return;
+        }
+        try {
+            const settingsDocRef = doc(db, SETTINGS_DOC_PATH);
+            const docSnap = await getDoc(settingsDocRef);
+            if (docSnap.exists() && docSnap.data().logoUrl) {
+                setLogoUrl(docSnap.data().logoUrl);
+            }
+        } catch (error) {
+            console.error("Error fetching logo from Firestore:", error);
+        } finally {
+            setIsLogoLoading(false);
+        }
+    };
+    fetchLogo();
   }, []);
 
   return (
@@ -41,7 +57,9 @@ export function ClientSiteHeader() {
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center space-x-4">
           <Link href="/" className="flex items-center space-x-2">
-            {logoUrl ? (
+            {isLogoLoading ? (
+                 <Skeleton className="h-6 w-6" />
+            ) : logoUrl ? (
               <Image src={logoUrl} alt="Logo" width={24} height={24} className="h-6 w-auto" />
             ) : (
               <BookOpen className="h-6 w-6 text-primary" />
