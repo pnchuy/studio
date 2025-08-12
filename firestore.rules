@@ -1,20 +1,32 @@
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check if a user is an Admin or Manager
+  
+    // Function to check if the user is an Admin or Manager
     function isManagerOrAdmin() {
       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
     }
 
-    // Allow public read access to books, authors, and genres for browsing.
+    // Books can be read by anyone, but only modified by admins/managers.
     match /books/{bookId} {
       allow read: if true;
-      // Allow create/update/delete only for Managers and Admins
       allow write: if isManagerOrAdmin();
     }
 
+    // Users can be read by any authenticated user.
+    // A user can create their own profile.
+    // A user can only update their own profile.
+    // Only Admins can change roles or delete users.
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth.uid == userId;
+      allow update: if request.auth.uid == userId;
+      allow delete: if isManagerOrAdmin();
+    }
+    
+    // Authors, Genres, and Series can only be managed by Admins or Managers.
     match /authors/{authorId} {
       allow read: if true;
       allow write: if isManagerOrAdmin();
@@ -24,24 +36,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isManagerOrAdmin();
     }
-    
+
     match /series/{seriesId} {
-        allow read: if true;
-        allow write: if isManagerOrAdmin();
-    }
-
-    match /users/{userId} {
-      // Anyone can read the user list to check for roles, usernames, etc.
       allow read: if true;
-      
-      // A new user can create their own profile document.
-      allow create: if request.auth.uid == userId;
-
-      // A user can only update their own profile information.
-      allow update: if request.auth.uid == userId;
-      
-      // Only Admins can delete users.
-      allow delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+      allow write: if isManagerOrAdmin();
     }
   }
 }
