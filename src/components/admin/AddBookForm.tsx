@@ -19,11 +19,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import type { Book, Author, Genre, Series, YoutubeLink, CoverImages } from "@/types";
-import { convertYoutubeUrlToEmbed, cn } from "@/lib/utils";
-import { PlusCircle, Trash2, X, Loader2, UploadCloud } from "lucide-react";
+import { convertYoutubeUrlToEmbed } from "@/lib/utils";
+import { PlusCircle, Trash2, X, Loader2 } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { RichTextEditor } from "../ui/rich-text-editor";
@@ -39,9 +37,9 @@ const formSchema = z.object({
   authorId: z.string({ required_error: "Vui lòng chọn một tác giả." }),
   publicationDate: z.string().min(1, { message: "Ngày xuất bản là bắt buộc." }).refine((val) => !isNaN(Date.parse(val)), { message: "Ngày xuất bản không hợp lệ." }),
   coverImages: z.object({
-    size250: z.string(),
-    size360: z.string(),
-    size480: z.string(),
+    size250: z.string().url({ message: "Link ảnh bìa không hợp lệ" }),
+    size360: z.string().url({ message: "Link ảnh bìa không hợp lệ" }),
+    size480: z.string().url({ message: "Link ảnh bìa không hợp lệ" }),
   }),
   shortDescription: z.string().optional(),
   longDescription: z.string().optional(),
@@ -61,52 +59,8 @@ interface AddBookFormProps {
     seriesList: Series[];
 }
 
-const processImageFromBlob = (blob: Blob): Promise<CoverImages> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onload = (event) => {
-            const img = document.createElement('img');
-            img.src = event.target?.result as string;
-            img.onload = async () => {
-                const sizes = [250, 360, 480];
-                const encodedImages: Partial<CoverImages> = {};
-
-                for (const width of sizes) {
-                    const canvas = document.createElement('canvas');
-                    const scaleFactor = width / img.width;
-                    canvas.width = width;
-                    canvas.height = img.height * scaleFactor;
-                    const ctx = canvas.getContext('2d');
-                    if (!ctx) {
-                        return reject(new Error('Could not get canvas context'));
-                    }
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    const dataUrl = canvas.toDataURL('image/webp', 0.8);
-                    encodedImages[`size${width}` as keyof CoverImages] = dataUrl;
-                }
-                
-                resolve(encodedImages as CoverImages);
-            };
-            img.onerror = (error) => {
-                console.error("Image loading error", error);
-                reject(new Error("Image could not be loaded from data URL."));
-            };
-        };
-        reader.onerror = (error) => {
-            console.error("FileReader error", error);
-            reject(new Error("Could not read image file."));
-        };
-    });
-};
-
-
 export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, seriesList }: AddBookFormProps) {
-  const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
   const [imagePreview, setImagePreview] = useState<string>("https://placehold.co/480x720.png");
-  const [isProcessingImage, setIsProcessingImage] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [genreInputValue, setGenreInputValue] = useState("");
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
@@ -120,9 +74,9 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
       authorId: undefined,
       publicationDate: "",
       coverImages: {
-        size250: "https://placehold.co/250x375.png",
-        size360: "https://placehold.co/360x540.png",
-        size480: "https://placehold.co/480x720.png",
+        size250: "",
+        size360: "",
+        size480: "",
       },
       shortDescription: "",
       longDescription: "",
@@ -143,38 +97,12 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
   const coverImagesValue = form.watch('coverImages');
   
   useEffect(() => {
-    if (coverImagesValue?.size480) {
+    if (coverImagesValue?.size480 && z.string().url().safeParse(coverImagesValue.size480).success) {
       setImagePreview(coverImagesValue.size480);
     } else {
       setImagePreview("https://placehold.co/480x720.png");
     }
   }, [coverImagesValue]);
-  
-  const processFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-        toast({ variant: "destructive", title: "Invalid File Type", description: "Please upload an image file (png, jpg, webp)." });
-        return;
-    }
-    setIsProcessingImage(true);
-    form.setValue('coverImages', { size250: '', size360: '', size480: '' }); // Clear preview
-    try {
-        const resizedDataUrls = await processImageFromBlob(file);
-        form.setValue('coverImages', resizedDataUrls, { shouldValidate: true });
-        toast({ title: "Success", description: "Image processed and ready to be saved." });
-    } catch (error) {
-        console.error("Failed to resize image", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not process image file." });
-    } finally {
-        setIsProcessingImage(false);
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      processFile(file);
-    }
-  };
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
@@ -186,27 +114,13 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
       }, { shouldValidate: true });
     } else {
        form.setValue('coverImages', {
-        size250: "https://placehold.co/250x375.png",
-        size360: "https://placehold.co/360x540.png",
-        size480: "https://placehold.co/480x720.png",
+        size250: "",
+        size360: "",
+        size480: "",
       }, { shouldValidate: true });
     }
   };
   
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        if (e.dataTransfer.files.length > 1) {
-            toast({ variant: "destructive", title: "Chỉ một ảnh", description: "Vui lòng chỉ kéo thả một ảnh bìa." });
-        } else {
-            processFile(e.dataTransfer.files[0]);
-        }
-        e.dataTransfer.clearData();
-    }
-  };
-
   function onSubmit(values: z.infer<typeof formSchema>) {
     const isDuplicate = books.some(
       (book) => book.title.toLowerCase() === values.title.toLowerCase()
@@ -471,70 +385,22 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
         <Card>
             <CardHeader>
                 <CardTitle>Ảnh bìa</CardTitle>
-                <CardDescription>Tải ảnh bìa lên từ máy hoặc dùng link ngoài.</CardDescription>
+                <CardDescription>Cung cấp link ảnh bìa từ một dịch vụ lưu trữ bên ngoài.</CardDescription>
             </CardHeader>
             <CardContent className="grid sm:grid-cols-3 gap-6">
                  <div className="sm:col-span-2 space-y-4">
                     <FormField
                         control={form.control}
-                        name="coverImages"
-                        render={() => (
-                            <FormItem>
+                        name="coverImages.size480"
+                        render={({ field }) => (
+                             <FormItem>
+                                <FormLabel>Link ảnh bìa</FormLabel>
                                 <FormControl>
-                                    <RadioGroup
-                                        value={uploadType}
-                                        className="flex space-x-4"
-                                        onValueChange={(value: 'url' | 'file') => setUploadType(value)}
-                                    >
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="url" id="r1" />
-                                            <Label htmlFor="r1">Từ URL</Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="file" id="r2" />
-                                            <Label htmlFor="r2">Tải lên từ máy</Label>
-                                        </div>
-                                    </RadioGroup>
-                                </FormControl>
-                                
-                                <FormControl>
-                                    <div>
-                                    {uploadType === 'url' ? (
-                                        <Input
-                                            key="cover-image-url"
-                                            placeholder="https://..."
-                                            disabled={isProcessingImage}
-                                            onBlur={handleUrlChange}
-                                        />
-                                    ) : (
-                                        <div
-                                            className={cn(
-                                                "relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted transition-colors",
-                                                isDragging && "border-primary bg-accent"
-                                            )}
-                                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
-                                            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
-                                            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
-                                            onDrop={handleDrop}
-                                            onClick={() => fileInputRef.current?.click()}
-                                        >
-                                            <UploadCloud className="w-8 h-8 text-muted-foreground" />
-                                            <p className="mt-2 text-sm text-muted-foreground">
-                                                <span className="font-semibold">Nhấn để tải lên</span> hoặc kéo thả
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">Chỉ chấp nhận một ảnh</p>
-                                            <Input
-                                                ref={fileInputRef}
-                                                id="dropzone-file"
-                                                type="file"
-                                                className="hidden"
-                                                accept="image/png, image/jpeg, image/webp"
-                                                disabled={isProcessingImage}
-                                                onChange={handleFileChange}
-                                            />
-                                        </div>
-                                    )}
-                                    </div>
+                                    <Input
+                                        placeholder="https://imgur.com/your-image.webp"
+                                        onBlur={handleUrlChange}
+                                        defaultValue={field.value}
+                                    />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -544,11 +410,6 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
                  <div className="col-span-1">
                     <div className="relative w-full max-w-[200px] mx-auto">
                         <p className="text-center text-sm font-medium mb-2">Ảnh bìa xem trước</p>
-                        {isProcessingImage && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10 rounded-md">
-                                <Loader2 className="h-8 w-8 animate-spin" />
-                            </div>
-                        )}
                         <Image
                             src={imagePreview || "https://placehold.co/250x375.png"}
                             alt="Xem trước ảnh bìa"
@@ -673,8 +534,7 @@ export function AddBookForm({ books, onBookAdded, onFinished, authors, genres, s
 
         <div className="flex justify-end gap-2 pt-4 sticky bottom-0 bg-background py-4">
             <Button type="button" variant="outline" onClick={onFinished}>Hủy</Button>
-            <Button type="submit" disabled={isProcessingImage}>
-                {isProcessingImage && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit">
                 Thêm sách
             </Button>
         </div>
