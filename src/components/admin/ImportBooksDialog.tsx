@@ -14,6 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { generateId } from "@/lib/utils";
+import { DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 
 type ImportType = 'books' | 'authors' | 'genres' | 'series';
 
@@ -293,22 +294,23 @@ export function ImportBooksDialog({
   }
 
   const handleConfirmImport = () => {
-    switch(importType) {
-        case 'books':
-            onBooksImported(previewBooks);
-            break;
-        case 'authors':
-            onAuthorsImported(previewItems);
-            break;
-        case 'genres':
-            onGenresImported(previewItems);
-            break;
-        case 'series':
-            onSeriesImported(previewItems);
-            break;
+    switch (importType) {
+      case 'books':
+        onBooksImported(previewBooks);
+        break;
+      case 'authors':
+        onAuthorsImported(previewItems);
+        break;
+      case 'genres':
+        onGenresImported(previewItems);
+        break;
+      case 'series':
+        onSeriesImported(previewItems);
+        break;
     }
     onFinished();
   };
+
 
   const getAuthorName = (authorId: string) => existingAuthors.find(a => a.id === authorId)?.name || <span className="text-destructive">Không tìm thấy</span>;
   
@@ -474,5 +476,19 @@ export function ImportBooksDialog({
     )
   };
 
-  return step === 'select' ? renderSelectStep() : renderPreviewStep();
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>Import dữ liệu</DialogTitle>
+        <DialogDescription>
+          {step === 'select'
+            ? 'Chọn loại dữ liệu và nguồn để import.'
+            : 'Kiểm tra dữ liệu trước khi import vào hệ thống.'}
+        </DialogDescription>
+      </DialogHeader>
+      {step === 'select' ? renderSelectStep() : renderPreviewStep()}
+    </>
+  );
 }
+
+    

@@ -557,9 +557,6 @@ export function BookManagement() {
                   </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                      <DialogTitle>Import dữ liệu</DialogTitle>
-                  </DialogHeader>
                   <ImportBooksDialog
                     existingBooks={books}
                     existingAuthors={authors}
@@ -851,3 +848,5 @@ export function BookManagement() {
     </>
   );
 }
+
+    
