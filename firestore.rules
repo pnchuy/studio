@@ -1,50 +1,47 @@
-rules_version = '2';
 
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isUserAuthenticated() {
-      return request.auth != null;
+    // Helper function to check if a user is an Admin or Manager
+    function isManagerOrAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
     }
 
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    // Rules for collections
+    // Allow public read access to books, authors, and genres for browsing.
     match /books/{bookId} {
       allow read: if true;
-      allow write: if false; // Protect books from being written to by clients
+      // Allow create/update/delete only for Managers and Admins
+      allow write: if isManagerOrAdmin();
     }
 
     match /authors/{authorId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isManagerOrAdmin();
     }
 
     match /genres/{genreId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isManagerOrAdmin();
     }
-     
+    
     match /series/{seriesId} {
-      allow read: if true;
-      allow write: if false;
+        allow read: if true;
+        allow write: if isManagerOrAdmin();
     }
 
     match /users/{userId} {
-      // Any authenticated user can read the list of users
-      allow read: if isUserAuthenticated();
+      // Anyone can read the user list to check for roles, usernames, etc.
+      allow read: if true;
       
-      // A user can create their own profile
-      allow create: if isOwner(userId);
+      // A new user can create their own profile document.
+      allow create: if request.auth.uid == userId;
 
-      // A user can only update their own profile
-      allow update: if isOwner(userId);
-
-      // Only an owner can delete their account (or an admin in the future)
-      allow delete: if isOwner(userId);
+      // A user can only update their own profile information.
+      allow update: if request.auth.uid == userId;
+      
+      // Only Admins can delete users.
+      allow delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
     }
   }
 }
