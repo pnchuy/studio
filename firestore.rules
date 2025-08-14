@@ -1,56 +1,43 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Returns true if the current user is an admin or a manager.
+
+    // Helper functions
     function isManagerOrAdmin() {
       let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-      return request.auth != null && userRole in ['ADMIN', 'MANAGER'];
+      return userRole == 'ADMIN' || userRole == 'MANAGER';
     }
-    
-    // Returns true if the current user is an admin.
+
     function isAdmin() {
-      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-      return request.auth != null && userRole == 'ADMIN';
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
     }
 
-    // Books, authors, genres, and series are public to read.
-    // Only managers and admins can write to them.
-    match /books/{bookId} {
+    // Public data collections (books, authors, etc.)
+    match /{collection}/{docId} where collection in ['books', 'authors', 'genres', 'series'] {
       allow read: if true;
-      allow write: if isManagerOrAdmin();
-    }
-
-    match /authors/{authorId} {
-      allow read: if true;
-      allow write: if isManagerOrAdmin();
-    }
-
-    match /genres/{genreId} {
-      allow read: if true;
-      allow write: if isManagerOrAdmin();
+      allow write: if request.auth != null && isManagerOrAdmin();
     }
     
-    match /series/{seriesId} {
-      allow read: if true;
-      allow write: if isManagerOrAdmin();
-    }
-
-    // User profiles can be created by anyone.
-    // Users can read/update their own profile.
-    // Managers/Admins can read/update any user profile (except an Admin's role).
+    // User profiles
     match /users/{userId} {
-      allow create: if true;
-      allow read: if request.auth.uid == userId || isManagerOrAdmin();
-      allow update: if request.auth.uid == userId || 
-                       (isManagerOrAdmin() && !(resource.data.role == 'ADMIN' && request.resource.data.role != 'ADMIN'));
-      allow delete: if isAdmin();
+      // Anyone can create their own user document
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Users can read their own profile. Managers/Admins can read any profile.
+      allow read: if request.auth != null && (request.auth.uid == userId || isManagerOrAdmin());
+      // Users can update their own profile.
+      allow update: if request.auth != null && request.auth.uid == userId;
+      // Only Admins can delete users.
+      allow delete: if request.auth != null && isAdmin();
     }
-    
-    // System settings are only accessible by Admins.
+
+    // System settings (e.g., logo)
     match /system/{docId} {
-        allow read, write: if isAdmin();
+      // Anyone can read system settings
+      allow read: if true;
+      // Only Admins can write to system settings
+      allow write: if request.auth != null && isAdmin();
     }
   }
 }
