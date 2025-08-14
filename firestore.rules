@@ -1,60 +1,47 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper function to check user roles
     function isManagerOrAdmin() {
       let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
       return request.auth != null && (userRole == 'ADMIN' || userRole == 'MANAGER');
     }
 
     function isAdmin() {
-      let userRole = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
-      return request.auth != null && userRole == 'ADMIN';
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
     }
 
-    // Books are public to read, but only specific roles can write.
-    match /books/{bookId} {
+    // Public data: readable by anyone, writable by managers/admins
+    match /{collection}/{docId} where collection in ['books', 'authors', 'genres', 'series'] {
       allow read: if true;
       allow write: if isManagerOrAdmin();
     }
 
-    // Authors are public to read, but only specific roles can write.
-    match /authors/{authorId} {
-      allow read: if true;
-      allow write: if isManagerOrAdmin();
+    // System settings: logo is public, but only admins can change it
+    match /system/{docId} {
+        allow read: if true;
+        allow write: if isAdmin();
     }
 
-    // Genres are public to read, but only specific roles can write.
-    match /genres/{genreId} {
-      allow read: if true;
-      allow write: if isManagerOrAdmin();
-    }
-
-    // Series are public to read, but only specific roles can write.
-    match /series/{seriesId} {
-      allow read: if true;
-      allow write: if isManagerOrAdmin();
-    }
-    
-    // System settings (like the logo) can be read by anyone, but only Admins can change them.
-    match /system/{settingId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // User profile data rules
+    // User profiles
     match /users/{userId} {
-      // Anyone can create a user profile (sign up)
-      allow create: if true;
-      // Users can read their own profile. Admins/Managers can read any profile.
-      allow read: if request.auth.uid == userId || isManagerOrAdmin();
-      // Users can update their own profile. Admins/Managers can update profiles based on roles.
-      allow update: if request.auth.uid == userId || isManagerOrAdmin();
-      // Only Admins can delete users.
-      allow delete: if isAdmin();
+      // Anyone can create their own user profile (on signup)
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // Users can read their own profile. Managers/Admins can read any profile.
+      allow read: if request.auth != null && (request.auth.uid == userId || isManagerOrAdmin());
+
+      // Users can update their own profile.
+      // Managers can update members.
+      // Admins can update anyone.
+      allow update: if request.auth != null && (
+                    (request.auth.uid == userId) ||
+                    (isAdmin()) ||
+                    (isManagerOrAdmin() && resource.data.role == 'MEMBER')
+                  );
+
+      // Only Admins can delete users, but not themselves.
+      allow delete: if isAdmin() && request.auth.uid != userId;
     }
   }
 }
