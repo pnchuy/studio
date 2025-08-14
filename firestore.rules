@@ -1,39 +1,61 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // Helper functions to check user roles
+
+    // Helper function to check if the user is a Manager or an Admin
     function isManagerOrAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
+    }
+
+    // Helper function to check if the user is an Admin
+    function isAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+    }
+
+    // Books are public to read, but only admins/managers can modify them.
+    match /books/{bookId} {
+      allow read: if true;
+      allow write: if isManagerOrAdmin();
+    }
+
+    // Authors are public to read, but only admins/managers can modify them.
+    match /authors/{authorId} {
+      allow read: if true;
+      allow write: if isManagerOrAdmin();
+    }
+
+    // Genres are public to read, but only admins/managers can modify them.
+    match /genres/{genreId} {
+      allow read: if true;
+      allow write: if isManagerOrAdmin();
     }
     
-    function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
-    }
-
-    // Public collections: anyone can read, only managers/admins can write.
-    match /{collection}/{docId} where collection in ['books', 'authors', 'genres', 'series'] {
+    // Series are public to read, but only admins/managers can modify them.
+    match /series/{seriesId} {
       allow read: if true;
-      allow write: if request.auth != null && isManagerOrAdmin();
+      allow write: if isManagerOrAdmin();
     }
 
-    // User profiles
+    // Rules for user profiles
     match /users/{userId} {
-      allow read: if true;
-      
+      // Anyone can create their own user profile document.
       allow create: if request.auth.uid == userId;
-      
-      allow update: if (request.auth.uid == userId) || 
-                       (isManagerOrAdmin() && resource.data.role == 'MEMBER') ||
-                       (isAdmin() && resource.data.role in ['MEMBER', 'MANAGER']);
-                       
+
+      // Users can read their own profile. Admins/Managers can read any profile.
+      allow read: if request.auth.uid == userId || isManagerOrAdmin();
+
+      // Users can update their own profile. Admins/Managers can update profiles based on role.
+      allow update: if request.auth.uid == userId || 
+                      (isAdmin() && resource.data.role != 'ADMIN') || 
+                      (isManagerOrAdmin() && resource.data.role == 'MEMBER');
+
+      // Only Admins can delete users, and they cannot delete themselves or other Admins.
       allow delete: if isAdmin() && resource.data.role != 'ADMIN';
     }
 
-    // System settings - only admins can access
-    match /system/{docId} {
-      allow read, write: if request.auth != null && isAdmin();
+    // System settings are only accessible by Admins
+    match /system/{settingId} {
+      allow read, write: if isAdmin();
     }
   }
 }
