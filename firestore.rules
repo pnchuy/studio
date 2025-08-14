@@ -2,34 +2,53 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    function isManagerOrAdmin() {
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
-    }
     
-    function isAdmin() {
-       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+    // Function to check if a user is an Admin
+    function isAdmin(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role == 'ADMIN';
     }
 
-    match /{collection}/{docId} 
-      where collection in ['books', 'authors', 'genres', 'series'] {
-      allow read: if true;
-      allow write: if isManagerOrAdmin();
+    // Function to check if a user is a Manager or an Admin
+    function isManagerOrAdmin(userId) {
+      let userRole = get(/databases/$(database)/documents/users/$(userId)).data.role;
+      return userRole == 'MANAGER' || userRole == 'ADMIN';
     }
-    
+
+    // Public collections can be read by anyone, but only written to by managers/admins
+    match /{collection}/{docId} where collection in ['books', 'authors', 'genres', 'series'] {
+      allow read: if true;
+      allow write: if request.auth != null && isManagerOrAdmin(request.auth.uid);
+    }
+
+    // System settings can be read by anyone, but only written to by admins
     match /system/{docId} {
-      allow read: if true;
-      allow write: if isAdmin();
+       allow read: if true;
+       allow write: if request.auth != null && isAdmin(request.auth.uid);
     }
     
+    // User profiles
     match /users/{userId} {
-      allow read: if request.auth.uid == userId || isManagerOrAdmin();
-      allow create: if true;
-      allow update(newData): if request.auth.uid == userId 
-          // Make sure user cannot change their own role
-          && newData.role == resource.data.role;
-      allow update: if isManagerOrAdmin(); 
-      allow delete: if isManagerOrAdmin();
+      // Anyone can create their own account
+      allow create: if request.auth != null;
+
+      // Users can read their own profile. Admins/Managers can read any profile.
+      allow read: if request.auth != null && (request.auth.uid == userId || isManagerOrAdmin(request.auth.uid));
+
+      // Users can update their own profile. Admins can update any profile.
+      // Managers can update MEMBER profiles.
+      allow update: if request.auth != null && (
+        request.auth.uid == userId || 
+        isAdmin(request.auth.uid) ||
+        (isManagerOrAdmin(request.auth.uid) && resource.data.role == 'MEMBER')
+      );
+      
+      // Users cannot delete their own profile.
+      // Admins can delete any profile except other Admins.
+      // Managers can delete MEMBER profiles.
+      allow delete: if request.auth != null && (
+        (isAdmin(request.auth.uid) && resource.data.role != 'ADMIN') ||
+        (isManagerOrAdmin(request.auth.uid) && resource.data.role == 'MEMBER')
+      );
     }
   }
 }
