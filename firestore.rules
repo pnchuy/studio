@@ -1,39 +1,61 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+  
     function isManagerOrAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
-    }
-
-    match /users/{userId} {
-      allow read: if true;
-      allow create: if request.auth.uid == userId;
-      allow update, delete: if isManagerOrAdmin();
+      // Check if the user is authenticated and has the role of ADMIN or MANAGER.
+      // This relies on the user's role being stored in a 'role' field in their user document.
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
     }
 
     match /books/{bookId} {
+      // Anyone can read books.
       allow read: if true;
-      allow create, update, delete: if isManagerOrAdmin();
+      // Only admins or managers can create, update, or delete books.
+      allow write: if isManagerOrAdmin();
     }
 
     match /authors/{authorId} {
+      // Anyone can read author information.
       allow read: if true;
-      allow create, update, delete: if isManagerOrAdmin();
-    }
-
-    match /genres/{genreId} {
-      allow read: if true;
-      allow create, update, delete: if isManagerOrAdmin();
-    }
-
-    match /series/{seriesId} {
-      allow read: if true;
-      allow create, update, delete: if isManagerOrAdmin();
+      // Only admins or managers can create, update, or delete authors.
+      allow write: if isManagerOrAdmin();
     }
     
-    match /system/settings {
+    match /genres/{genreId} {
+      // Anyone can read genre information.
       allow read: if true;
+      // Only admins or managers can create, update, or delete genres.
       allow write: if isManagerOrAdmin();
+    }
+    
+    match /series/{seriesId} {
+        // Anyone can read series information.
+        allow read: if true;
+        // Only admins or managers can create, update, or delete series.
+        allow write: if isManagerOrAdmin();
+    }
+
+    match /users/{userId} {
+      // Anyone can read public user profiles (needed for author names etc.)
+      allow read: if true;
+      
+      // A user can create their own profile upon signup.
+      allow create: if request.auth != null && request.auth.uid == userId;
+      
+      // A user can update their own profile. Admins/Managers can update any user's profile.
+      allow update: if request.auth != null && (request.auth.uid == userId || isManagerOrAdmin());
+      
+      // Only Admins or Managers can delete users.
+      allow delete: if isManagerOrAdmin();
+    }
+
+    match /system/{docId} {
+        // Anyone can read system settings (like the logo URL)
+        allow read: if true;
+        // Only admins and managers can change system settings
+        allow write: if isManagerOrAdmin();
     }
   }
 }
