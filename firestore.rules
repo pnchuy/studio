@@ -2,53 +2,39 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions to check user roles
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function getUserRole(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data.role;
-    }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    function isManagerOrAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
     }
 
     function isAdmin() {
-      return isSignedIn() && getUserRole(request.auth.uid) == 'ADMIN';
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
     }
 
-    function isManager() {
-      return isSignedIn() && getUserRole(request.auth.uid) == 'MANAGER';
-    }
-
-    function isManagerOrAdmin() {
-      return isSignedIn() && (isAdmin() || isManager());
-    }
-
-    // Public collections can be read by anyone, but only written to by managers/admins
-    match /{collection}/{docId}
-      where collection in ['books', 'authors', 'genres', 'series', 'system'] {
+    match /{collection}/{docId} 
+      where collection in ['books', 'authors', 'genres', 'series'] {
       allow read: if true;
       allow write: if isManagerOrAdmin();
     }
     
-    // User collection rules
-    match /users/{userId} {
-      // Any authenticated user can read any user's public profile
-      allow read: if isSignedIn();
+    match /system/{docId} {
+        allow read: if true;
+        allow write: if isAdmin();
+    }
 
-      // Users can create their own profile
-      allow create: if isOwner(userId);
+    match /users/{userId} {
+      // Allow user creation by anyone (signup)
+      allow create: if true;
       
-      // Users can update their own profile. Admins can update any profile.
-      // Managers can update MEMBER profiles.
-      allow update: if isOwner(userId) || isAdmin() || (isManager() && getUserRole(userId) == 'MEMBER');
+      // Allow users to read their own profile. Admins/Managers can read any profile.
+      allow read: if request.auth.uid == userId || isManagerOrAdmin();
+      
+      // Allow users to update their own profile.
+      // Allow admins to update any profile.
+      // Allow managers to update members.
+      allow update: if request.auth.uid == userId || isAdmin() || (isManagerOrAdmin() && resource.data.role == 'MEMBER');
 
       // Only Admins can delete users.
-      // A Manager can delete a MEMBER.
-      allow delete: if isAdmin() || (isManager() && getUserRole(userId) == 'MEMBER');
+      allow delete: if isAdmin();
     }
   }
 }
