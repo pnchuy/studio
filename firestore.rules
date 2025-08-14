@@ -2,50 +2,43 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     function isManagerOrAdmin() {
-      // Check if the user is authenticated and if their role in the users collection is ADMIN or MANAGER.
-      // The `exists()` check is crucial to prevent errors when a user exists in Auth but not yet in Firestore.
-      return request.auth != null && 
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
+      // Check if the user is a manager or admin by looking up their role in the users collection.
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
+    }
+
+    match /users/{userId} {
+      allow read: if true; // Allow public read for user profiles to display author names, etc.
+      allow create: if request.auth != null; // Allow any authenticated user to create their own profile
+      allow update: if request.auth.uid == userId || isManagerOrAdmin(); // User can update their own profile, or an admin/manager can
+      allow delete: if isManagerOrAdmin(); // Only admin/manager can delete users
     }
 
     match /books/{bookId} {
       allow read: if true;
-      allow write: if isManagerOrAdmin();
+      allow create, update, delete: if isManagerOrAdmin();
     }
 
     match /authors/{authorId} {
       allow read: if true;
-      allow write: if isManagerOrAdmin();
+      allow create, update, delete: if isManagerOrAdmin();
     }
-    
+
     match /genres/{genreId} {
       allow read: if true;
-      allow write: if isManagerOrAdmin();
+      allow create, update, delete: if isManagerOrAdmin();
     }
     
     match /series/{seriesId} {
       allow read: if true;
-      allow write: if isManagerOrAdmin();
+      allow create, update, delete: if isManagerOrAdmin();
     }
 
-    match /users/{userId} {
-      // Allow public read for user profiles. This is safe as no sensitive data is stored here.
-      // This is necessary for features like displaying author names on book pages to unauthenticated users.
-      allow read: if true;
-      
-      // Allow user creation only if the UID of the new document matches the authenticated user.
-      allow create: if request.auth.uid == userId;
-      
-      // Allow updates only if the user is updating their own document, or if the requester is an Admin/Manager.
-      allow update: if request.auth.uid == userId || isManagerOrAdmin();
-    }
-
-    match /system/{docId} {
-      allow read: if true;
-      allow write: if isManagerOrAdmin();
+    // System settings, e.g., logo URL
+    match /system/settings {
+        allow read: if true;
+        allow write: if isManagerOrAdmin();
     }
   }
 }
