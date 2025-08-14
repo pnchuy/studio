@@ -3,23 +3,31 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Helper function to check if a user is an admin or manager.
+    // It verifies if the user's UID exists in the 'admins' collection.
+    // This is more reliable than using get() on the users collection during writes.
     function isManagerOrAdmin() {
-      // Check if the user is a manager or admin by looking up their role in the users collection.
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
+      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
     match /users/{userId} {
-      allow read: if true; // Allow public read for user profiles to display author names, etc.
-      allow create: if request.auth != null; // Allow any authenticated user to create their own profile
-      allow update: if request.auth.uid == userId || isManagerOrAdmin(); // User can update their own profile, or an admin/manager can
-      allow delete: if isManagerOrAdmin(); // Only admin/manager can delete users
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (request.auth.uid == userId || isManagerOrAdmin());
+      allow delete: if isManagerOrAdmin();
     }
 
+    match /admins/{userId} {
+      allow read: if true;
+      // Only an existing admin can add or remove other admins.
+      allow write: if isManagerOrAdmin();
+    }
+    
     match /books/{bookId} {
       allow read: if true;
       allow create, update, delete: if isManagerOrAdmin();
     }
-
+    
     match /authors/{authorId} {
       allow read: if true;
       allow create, update, delete: if isManagerOrAdmin();
@@ -29,14 +37,13 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if isManagerOrAdmin();
     }
-    
+
     match /series/{seriesId} {
       allow read: if true;
       allow create, update, delete: if isManagerOrAdmin();
     }
 
-    // System settings, e.g., logo URL
-    match /system/settings {
+    match /system/{docId} {
         allow read: if true;
         allow write: if isManagerOrAdmin();
     }
