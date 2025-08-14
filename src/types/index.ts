@@ -1,3 +1,4 @@
+
 export type Author = {
   id: string;
   name: string;
@@ -53,6 +54,7 @@ export type User = {
     email: string;
     joinDate: string;
     role: 'ADMIN' | 'MANAGER' | 'MEMBER';
+    status: 'active' | 'inactivated';
 };
 
 export type Comment = {

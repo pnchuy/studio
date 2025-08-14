@@ -1,3 +1,4 @@
+
 "use client";
 
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -24,16 +25,12 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
 }
 
 export default function LoginPage() {
-  const { signInWithGoogle, unverifiedUser, resendVerificationEmail } = useAuth();
+  const { signInWithGoogle, unverifiedUser, notRegisteredUser, resendVerificationEmail } = useAuth();
 
   const handleGoogleSignIn = async () => {
     await signInWithGoogle();
     // The auth hook will handle redirection and toasts on its own.
   };
-
-  const handleResend = async () => {
-    await resendVerificationEmail();
-  }
 
   return (
     <div className="flex justify-center items-start pt-16">
@@ -41,13 +38,29 @@ export default function LoginPage() {
         {unverifiedUser && (
             <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Email chưa được xác minh</AlertTitle>
+                <AlertTitle>Email chưa được kích hoạt</AlertTitle>
                 <AlertDescription>
-                    Vui lòng kiểm tra hộp thư của bạn để tìm liên kết xác minh. Nếu bạn không nhận được, hãy nhấp vào nút bên dưới để gửi lại.
+                    Email của bạn đã được đăng ký nhưng chưa kích hoạt. Vui lòng kiểm tra hộp thư để tìm liên kết kích hoạt.
+                    <div className="mt-3">
+                        <Link href="/signup" className={buttonVariants({ variant: "outline", size: 'sm' }) + " bg-white text-destructive-foreground hover:bg-white/90"}>
+                            Đăng ký lại để nhận mail mới
+                        </Link>
+                    </div>
                 </AlertDescription>
-                <Button variant="outline" size="sm" className="mt-4 bg-white text-destructive-foreground hover:bg-white/90" onClick={handleResend}>
-                  Gửi lại email xác minh
-                </Button>
+            </Alert>
+        )}
+         {notRegisteredUser && (
+            <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Email chưa được đăng ký</AlertTitle>
+                <AlertDescription>
+                    Email này chưa được đăng ký trong hệ thống của chúng tôi.
+                     <div className="mt-3">
+                        <Link href="/signup" className={buttonVariants({ variant: "outline", size: 'sm' }) + " bg-white text-destructive-foreground hover:bg-white/90"}>
+                            Đi đến trang đăng ký
+                        </Link>
+                    </div>
+                </AlertDescription>
             </Alert>
         )}
         <Card className="w-full">

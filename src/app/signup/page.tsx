@@ -1,3 +1,4 @@
+
 "use client";
 
 import { SignUpForm } from "@/components/auth/SignUpForm";
@@ -33,9 +34,9 @@ export default function SignUpPage() {
     <div className="flex justify-center items-start pt-16">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
+          <CardTitle className="text-2xl font-headline">Tạo tài khoản</CardTitle>
           <CardDescription>
-            Join Bibliophile to start building your personal library.
+            Điền thông tin bên dưới để tạo tài khoản mới.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -48,7 +49,7 @@ export default function SignUpPage() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-card px-2 text-muted-foreground">
-                  Or continue with
+                  Hoặc tiếp tục với
                 </span>
               </div>
             </div>
@@ -59,9 +60,9 @@ export default function SignUpPage() {
             </Button>
           </div>
            <p className="mt-6 text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
+            Đã có tài khoản?{' '}
             <Link href="/login" className="underline text-primary hover:text-primary/80">
-              Login
+              Đăng nhập
             </Link>
           </p>
         </CardContent>

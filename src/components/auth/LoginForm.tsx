@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -17,7 +18,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  credential: z.string().min(3, { message: "Vui lòng nhập email hoặc username hợp lệ." }),
+  email: z.string().email({ message: "Vui lòng nhập một địa chỉ email hợp lệ." }),
   password: z.string().min(1, { message: "Mật khẩu là bắt buộc." }),
 });
 
@@ -28,21 +29,21 @@ export function LoginForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      credential: "",
+      email: "",
       password: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const result = await login(values.credential, values.password);
+    const result = await login(values.email, values.password);
     
-    if (!result.success && result.errorCode !== 'unverified') {
+    if (!result.success && result.errorCode !== 'unverified' && result.errorCode !== 'not-registered') {
       toast({
         variant: "destructive",
         title: "Đăng nhập thất bại",
-        description: result.message || "Thông tin không hợp lệ. Vui lòng kiểm tra lại email/username và mật khẩu.",
+        description: result.message || "Thông tin không hợp lệ. Vui lòng kiểm tra lại email và mật khẩu.",
       });
-      form.setError("credential", { message: " " });
+      form.setError("email", { message: " " });
       form.setError("password", { message: " " });
     }
   }
@@ -52,12 +53,12 @@ export function LoginForm() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="credential"
+          name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email hoặc Username</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="your_username hoặc you@example.com" {...field} />
+                <Input placeholder="you@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
