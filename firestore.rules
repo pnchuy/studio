@@ -1,13 +1,14 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
+  
     function isManagerOrAdmin() {
       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
     }
-
+    
     function isAdmin() {
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+       return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
     }
 
     match /{collection}/{docId} 
@@ -17,24 +18,18 @@ service cloud.firestore {
     }
     
     match /system/{docId} {
-        allow read: if true;
-        allow write: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
     }
-
+    
     match /users/{userId} {
-      // Allow user creation by anyone (signup)
-      allow create: if true;
-      
-      // Allow users to read their own profile. Admins/Managers can read any profile.
       allow read: if request.auth.uid == userId || isManagerOrAdmin();
-      
-      // Allow users to update their own profile.
-      // Allow admins to update any profile.
-      // Allow managers to update members.
-      allow update: if request.auth.uid == userId || isAdmin() || (isManagerOrAdmin() && resource.data.role == 'MEMBER');
-
-      // Only Admins can delete users.
-      allow delete: if isAdmin();
+      allow create: if true;
+      allow update(newData): if request.auth.uid == userId 
+          // Make sure user cannot change their own role
+          && newData.role == resource.data.role;
+      allow update: if isManagerOrAdmin(); 
+      allow delete: if isManagerOrAdmin();
     }
   }
 }
