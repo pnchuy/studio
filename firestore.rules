@@ -2,50 +2,48 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Helper function to check if a user is an admin or manager.
-    // It verifies if the user's UID exists in the 'admins' collection.
-    // This is more reliable than using get() on the users collection during writes.
+  
     function isManagerOrAdmin() {
-      return exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+      // Allow if user is signed in and their role in the 'users' collection is ADMIN or MANAGER.
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['ADMIN', 'MANAGER'];
     }
 
-    match /users/{userId} {
-      allow read: if true;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if request.auth != null && (request.auth.uid == userId || isManagerOrAdmin());
-      allow delete: if isManagerOrAdmin();
+    function isAdmin() {
+      // Allow if user is signed in and their role in the 'users' collection is ADMIN.
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
     }
 
-    match /admins/{userId} {
+    // Rules for 'books', 'authors', 'genres', 'series' collections
+    // Anyone can read. Only admins/managers can write.
+    match /{collection}/{doc} where collection in ['books', 'authors', 'genres', 'series'] {
       allow read: if true;
-      // Only an existing admin can add or remove other admins.
       allow write: if isManagerOrAdmin();
     }
     
-    match /books/{bookId} {
+    // Rules for 'users' collection
+    match /users/{userId} {
+      // Anyone can see the public profile of any user.
       allow read: if true;
-      allow create, update, delete: if isManagerOrAdmin();
+
+      // Any authenticated user can create their own user document.
+      allow create: if request.auth != null && request.auth.uid == userId;
+
+      // A user can update their own document.
+      // A manager can update a member's document.
+      // An admin can update anyone's document.
+      allow update: if request.auth != null &&
+                    (request.auth.uid == userId ||
+                    (isAdmin()) ||
+                    (isManagerOrAdmin() && resource.data.role == 'MEMBER'));
+                    
+      // Only admins can delete users.
+      allow delete: if isAdmin();
     }
     
-    match /authors/{authorId} {
-      allow read: if true;
-      allow create, update, delete: if isManagerOrAdmin();
-    }
-
-    match /genres/{genreId} {
-      allow read: if true;
-      allow create, update, delete: if isManagerOrAdmin();
-    }
-
-    match /series/{seriesId} {
-      allow read: if true;
-      allow create, update, delete: if isManagerOrAdmin();
-    }
-
-    match /system/{docId} {
-        allow read: if true;
-        allow write: if isManagerOrAdmin();
+    // Rules for system settings
+    match /system/{doc} {
+        // Only Admins can read or write system settings.
+        allow read, write: if isAdmin();
     }
   }
 }
