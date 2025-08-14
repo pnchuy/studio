@@ -25,7 +25,6 @@ const formSchema = z.object({
     .max(20, { message: "Username must not exceed 20 characters."})
     .regex(/^[a-z0-9]+$/, { message: "Username can only contain lowercase letters and numbers."}),
   email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
 export function SignUpForm() {
@@ -39,12 +38,13 @@ export function SignUpForm() {
       name: "",
       username: "",
       email: "",
-      password: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const result = await signup(values.name, values.email, values.username, values.password);
+    // The password is no longer collected from the form.
+    // The auth hook will handle sending a verification/login link.
+    const result = await signup(values.name, values.email, values.username, "password-placeholder");
     
     if (result.success) {
         toast({
@@ -60,7 +60,7 @@ export function SignUpForm() {
         description: result.message,
       });
       if (result.field) {
-        form.setError(result.field as "name" | "username" | "email" | "password", { message: result.message });
+        form.setError(result.field as "name" | "username" | "email", { message: result.message });
       }
     }
   }
@@ -107,21 +107,8 @@ export function SignUpForm() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Mật khẩu</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-          {form.formState.isSubmitting ? "Creating Account..." : "Create Account"}
+          {form.formState.isSubmitting ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
         </Button>
       </form>
     </Form>

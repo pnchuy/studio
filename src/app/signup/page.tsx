@@ -36,7 +36,7 @@ export default function SignUpPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline">Tạo tài khoản</CardTitle>
           <CardDescription>
-            Điền thông tin bên dưới để tạo tài khoản mới.
+            Điền thông tin bên dưới, chúng tôi sẽ gửi liên kết kích hoạt đến email của bạn.
           </CardDescription>
         </CardHeader>
         <CardContent>

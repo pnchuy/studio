@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
@@ -65,9 +65,9 @@ export default function LoginPage() {
         )}
         <Card className="w-full">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-headline">Welcome Back</CardTitle>
+            <CardTitle className="text-2xl font-headline">Chào mừng trở lại</CardTitle>
             <CardDescription>
-              Enter your credentials to access your library.
+              Nhập email của bạn để đăng nhập hoặc đăng ký.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -80,7 +80,7 @@ export default function LoginPage() {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-card px-2 text-muted-foreground">
-                    Or continue with
+                    Hoặc
                   </span>
                 </div>
               </div>
@@ -91,9 +91,9 @@ export default function LoginPage() {
               </Button>
             </div>
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{' '}
+              Chưa có tài khoản?{' '}
               <Link href="/signup" className="underline text-primary hover:text-primary/80">
-                Sign up
+                Đăng ký ngay
               </Link>
             </p>
           </CardContent>
